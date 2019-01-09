@@ -61,7 +61,8 @@ body {
 }
 
 article img,p img {
-    width: 90%;
+    max-width: 90%;
+    width:auto;
     border-radius: 3px;
     margin: auto;
     display: block;
