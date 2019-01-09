@@ -3,14 +3,125 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="/blog/tags/php.xml" rel="self"/>
     <link href="/"/>
-    <updated>2019-01-09T16:59:49+00:00</updated>
+    <updated>2019-01-09T19:55:54+00:00</updated>
     <id>/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
+            <title type="html"><![CDATA[Laravel tap vs tap vs pipe]]></title>
+            <link href="/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
+            <updated>2019-01-08T00:00:00+00:00</updated>
+            <id>/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
+            <content type="html"><![CDATA[<p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
+
+<ul>
+<li>The tap() function :</li>
+</ul>
+
+<p>The reason of having tap 2 times in the article header is that, there are 2 implementations of tap helper function in laravel. One is in generic context and one specific to handling collections.</p>
+
+<ul>
+<li>The generic tap() function :</li>
+</ul>
+
+<p>The name tap suggests that it basically does set of actions using the value and then returns the value as if nothing happened. In other words, the tap function accepts two arguments <code>$value</code> and <code>a Closure</code>. The <code>$value</code> will be passed to the closure function. You can perform your actions in the closure where the return value of the Closure is irrelevant. At the end tap returns the same <code>$value</code> at the end.</p>
+
+<p>For example :</p>
+
+<pre><code class="php">$user = tap($user, function ($user) {
+
+    $user-&gt;notify(new SendWelcomeEmail());
+
+});
+</code></pre>
+
+<p>In the above snippet, we are passing <code>$user</code> instance to tap as first argument which is then cascaded as a parameter to closure. The closure will execute and basically send a new welcome email. Then control will come back to tap which will return the <code>$user</code> instance back.</p>
+
+<p>Even you can just eliminate the closure and call function on it directly like below.</p>
+
+<pre><code class="php">$user = tap($user)-&gt;notify(new SendWelcomeEmail());
+</code></pre>
+
+<p>The above will still return the user instance. The beauty of it is, you can chain the tap calls. Let's say you need to update the user role, then send the welcome email and then assign user some permissions. You can chain it all like :</p>
+
+<pre><code class="php">$user = tap($user)-&gt;update([
+    'role' =&gt; 'Customer' 
+])
+-&gt;notify(new SendWelcomeEmail())
+-&gt;assignPermissions('CustomerRole');
+</code></pre>
+
+<p>The use of this method can be handy when certain methods do not return the object as you want. A great example is the update method itself on the eloquent model. It returns integer when used otherwise. But if used as above with tap function, it returns the object it performed the update.</p>
+
+<ul>
+<li>The collection tap() function :</li>
+</ul>
+
+<p>The tap function for collection can be used in collection function chaining. I think of it similar to javascript debug breakpoints. You pin it to print something at a point of time in your javascript and then move ahead after removing the breakpoint.</p>
+
+<p>For example consider following example :</p>
+
+<pre><code class="php"><br />$customers = collect([
+    ['name' =&gt; 'mihir',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'george', 'is_active' =&gt; true,  'category' =&gt; 'silver'],
+    ['name' =&gt; 'nathen', 'is_active' =&gt; false, 'category' =&gt; 'platinum'],
+    ['name' =&gt; 'steve',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'shawn',  'is_active' =&gt; false, 'category' =&gt; 'gold']
+]);
+
+$activeGoldCustomers = collect($customers)
+    -&gt;where('is_active', true)
+    -&gt;tap(function ($activeCustomers) {
+        $this-&gt;sendActiveCustomerEmail($activeCustomers);
+    })
+    -&gt;where('category', 'gold')
+    -&gt;tap(function ($goldCustomers) {
+        $this-&gt;sendOfferCode('100%Discount');
+    });
+</code></pre>
+
+<p>In above example, we are just returning the customers who are currently active and fall under category gold. However, using the tap function we can perform certain actions on the go as we filter those. When we filtered for <code>is_active = true</code>, we sent activation email. Then when we added another filter for <code>category = gold</code>, we sent offer code just for active customer from gold category.</p>
+
+<p>You can also find this handy in dumping data for debugging during the developement cycle.</p>
+
+<p>The fundamental concept of <code>tap()</code> is just use the value and perform actions but NEVER CHANGE the value. If you think then what can change the value? <code>pipe()</code> is the answer.</p>
+
+<ul>
+<li>The pipe() function :</li>
+</ul>
+
+<p>Pipe function is just applicable for collections. For example consider following example :</p>
+
+<pre><code class="php"><br />$customers = collect([
+    ['name' =&gt; 'mihir',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'george', 'is_active' =&gt; true,  'category' =&gt; 'silver'],
+    ['name' =&gt; 'nathen', 'is_active' =&gt; false, 'category' =&gt; 'platinum'],
+    ['name' =&gt; 'steve',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'shawn',  'is_active' =&gt; false, 'category' =&gt; 'gold']
+]);
+
+$counts = collect($customers)
+ -&gt;pipe(function($customers) {
+    return [
+        'active_count'      =&gt; $customers-&gt;where('is_active', true)-&gt;count(),
+        'gold_count'        =&gt; $customers-&gt;where('category', 'gold')-&gt;count(),
+        'silver_count'      =&gt; $customers-&gt;where('category', 'silver')-&gt;count(),
+        'platinum_count'    =&gt; $customers-&gt;where('category', 'platinum')-&gt;count()
+    ];
+});
+</code></pre>
+
+<p>Above will basicaly return <code>[3, 3, 1, 1]</code>, but it is very clean and less code is always better.</p>
+
+<p>Please note that the <code>pipe()</code> helper method is different than the <code>laravel pipelines</code>. However, if you read about pipelines, its is kind of similar conceptually to generic tap function where you can pass an object through multiple classes to perform set of task and then return the result value once all the tasks have been finished. A <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">handy article</a> for the same is <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">here</a> if you want a quick read.</p>
+
+<p>Even if these methods are very handy, sometimes if you chain it to much it loses the element fo readability. I will suggest it is preferable to follow what the domain logic wants and group the similar processes together to tap or pipe.</p>
+]]></content>
+        </entry>
+            <entry>
             <title type="html"><![CDATA[Laravel Module Pattern]]></title>
-            <link href="/blog/2018/01/09/laravel-module-pattern/"/>
-            <updated>2018-01-09T00:00:00+00:00</updated>
-            <id>/blog/2018/01/09/laravel-module-pattern/</id>
+            <link href="/blog/2019/01/06/laravel-module-pattern/"/>
+            <updated>2019-01-06T00:00:00+00:00</updated>
+            <id>/blog/2019/01/06/laravel-module-pattern/</id>
             <content type="html"><![CDATA[<p>Laravel has a folder structure which ties similar entities of MVC together e.g. controllers in one folder, views into another. There are few set-backs of this approach :</p>
 
 <ul>
@@ -571,9 +682,9 @@ class TicketServiceProvider extends BaseServiceProvider
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel restricting unfiltered queries]]></title>
-            <link href="/blog/2018/01/07/laravel-restricting-unfiltered-queries/"/>
-            <updated>2018-01-07T00:00:00+00:00</updated>
-            <id>/blog/2018/01/07/laravel-restricting-unfiltered-queries/</id>
+            <link href="/blog/2019/01/04/laravel-restricting-unfiltered-queries/"/>
+            <updated>2019-01-04T00:00:00+00:00</updated>
+            <id>/blog/2019/01/04/laravel-restricting-unfiltered-queries/</id>
             <content type="html"><![CDATA[<p>Laravel eloquent is a very powerful ORM. I came across a situation for a project of mine long time ago. There was a table <code>api_logs</code> which basically logged all API requests and responses. Evidently the table grew exponentially. One of the developers created an analytics module in which he forgot to add a where clause. It queried millions of rows at a time on production. It was a silly mistake but server was overwhelmed and you can imagine the rest of story (I can tell you it is not that good).</p>
 
 <p>I imagined if there was a way to just throw an error if any function queries all rows from a table like <code>api_logs</code>. Two advantages :</p>

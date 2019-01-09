@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>Laravel tap vs tap vs pipe &mdash; Tech.Semicolon &mdash; By Mihir Bhende</title>
+        <meta charset="utf-8">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <meta name="robots" content="index, follow">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,400i,600,600i,700,800|Yanone+Kaffeesatz:200,300,400,700" rel="stylesheet">
+        <link href="/components/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="/css/style.css" rel="stylesheet" type="text/css" />
+
+        <link rel="apple-touch-startup-image" href="/images/jackson/2048x2048.png">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="shortcut icon" sizes="76x76" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="120x120" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="128x128" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="152x152" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="196x196" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="512x512" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="1024x1024" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="2048x2048" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="128x128" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="196x196" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="1024x1024" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="2048x2048" href="/images/fav.png">
+
+        <link rel="stylesheet" href="/components/highlightjs/styles/github.css" />
+        <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Tech.Semicolon activity feed" />
+                                    </head>
+    <body>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-header">
+                <div class="container">
+                    <a class="navbar-brand" href="/">
+                        <img src="/images/logo.png" class="logo-img"/>
+                    </a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item"><a class="nav-link" href="/blog">Posts Archive</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/blog/categories">Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/blog/tags">Tags</a></li>
+                            <li class="nav-item"><a target="_blank" class="nav-link" href="https://github.com/techsemicolon">GitHub</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <main role="main" class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                        <article>
+        <header>
+            <h2>Laravel tap vs tap vs pipe</h2>
+        </header>
+        <div>
+            <p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
+
+<ul>
+<li>The tap() function :</li>
+</ul>
+
+<p>The reason of having tap 2 times in the article header is that, there are 2 implementations of tap helper function in laravel. One is in generic context and one specific to handling collections.</p>
+
+<ul>
+<li>The generic tap() function :</li>
+</ul>
+
+<p>The name tap suggests that it basically does set of actions using the value and then returns the value as if nothing happened. In other words, the tap function accepts two arguments <code>$value</code> and <code>a Closure</code>. The <code>$value</code> will be passed to the closure function. You can perform your actions in the closure where the return value of the Closure is irrelevant. At the end tap returns the same <code>$value</code> at the end.</p>
+
+<p>For example :</p>
+
+<pre><code class="php">$user = tap($user, function ($user) {
+
+    $user-&gt;notify(new SendWelcomeEmail());
+
+});
+</code></pre>
+
+<p>In the above snippet, we are passing <code>$user</code> instance to tap as first argument which is then cascaded as a parameter to closure. The closure will execute and basically send a new welcome email. Then control will come back to tap which will return the <code>$user</code> instance back.</p>
+
+<p>Even you can just eliminate the closure and call function on it directly like below.</p>
+
+<pre><code class="php">$user = tap($user)-&gt;notify(new SendWelcomeEmail());
+</code></pre>
+
+<p>The above will still return the user instance. The beauty of it is, you can chain the tap calls. Let's say you need to update the user role, then send the welcome email and then assign user some permissions. You can chain it all like :</p>
+
+<pre><code class="php">$user = tap($user)-&gt;update([
+    'role' =&gt; 'Customer' 
+])
+-&gt;notify(new SendWelcomeEmail())
+-&gt;assignPermissions('CustomerRole');
+</code></pre>
+
+<p>The use of this method can be handy when certain methods do not return the object as you want. A great example is the update method itself on the eloquent model. It returns integer when used otherwise. But if used as above with tap function, it returns the object it performed the update.</p>
+
+<ul>
+<li>The collection tap() function :</li>
+</ul>
+
+<p>The tap function for collection can be used in collection function chaining. I think of it similar to javascript debug breakpoints. You pin it to print something at a point of time in your javascript and then move ahead after removing the breakpoint.</p>
+
+<p>For example consider following example :</p>
+
+<pre><code class="php"><br />$customers = collect([
+    ['name' =&gt; 'mihir',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'george', 'is_active' =&gt; true,  'category' =&gt; 'silver'],
+    ['name' =&gt; 'nathen', 'is_active' =&gt; false, 'category' =&gt; 'platinum'],
+    ['name' =&gt; 'steve',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'shawn',  'is_active' =&gt; false, 'category' =&gt; 'gold']
+]);
+
+$activeGoldCustomers = collect($customers)
+    -&gt;where('is_active', true)
+    -&gt;tap(function ($activeCustomers) {
+        $this-&gt;sendActiveCustomerEmail($activeCustomers);
+    })
+    -&gt;where('category', 'gold')
+    -&gt;tap(function ($goldCustomers) {
+        $this-&gt;sendOfferCode('100%Discount');
+    });
+</code></pre>
+
+<p>In above example, we are just returning the customers who are currently active and fall under category gold. However, using the tap function we can perform certain actions on the go as we filter those. When we filtered for <code>is_active = true</code>, we sent activation email. Then when we added another filter for <code>category = gold</code>, we sent offer code just for active customer from gold category.</p>
+
+<p>You can also find this handy in dumping data for debugging during the developement cycle.</p>
+
+<p>The fundamental concept of <code>tap()</code> is just use the value and perform actions but NEVER CHANGE the value. If you think then what can change the value? <code>pipe()</code> is the answer.</p>
+
+<ul>
+<li>The pipe() function :</li>
+</ul>
+
+<p>Pipe function is just applicable for collections. For example consider following example :</p>
+
+<pre><code class="php"><br />$customers = collect([
+    ['name' =&gt; 'mihir',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'george', 'is_active' =&gt; true,  'category' =&gt; 'silver'],
+    ['name' =&gt; 'nathen', 'is_active' =&gt; false, 'category' =&gt; 'platinum'],
+    ['name' =&gt; 'steve',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'shawn',  'is_active' =&gt; false, 'category' =&gt; 'gold']
+]);
+
+$counts = collect($customers)
+ -&gt;pipe(function($customers) {
+    return [
+        'active_count'      =&gt; $customers-&gt;where('is_active', true)-&gt;count(),
+        'gold_count'        =&gt; $customers-&gt;where('category', 'gold')-&gt;count(),
+        'silver_count'      =&gt; $customers-&gt;where('category', 'silver')-&gt;count(),
+        'platinum_count'    =&gt; $customers-&gt;where('category', 'platinum')-&gt;count()
+    ];
+});
+</code></pre>
+
+<p>Above will basicaly return <code>[3, 3, 1, 1]</code>, but it is very clean and less code is always better.</p>
+
+<p>Please note that the <code>pipe()</code> helper method is different than the <code>laravel pipelines</code>. However, if you read about pipelines, its is kind of similar conceptually to generic tap function where you can pass an object through multiple classes to perform set of task and then return the result value once all the tasks have been finished. A <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">handy article</a> for the same is <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">here</a> if you want a quick read.</p>
+
+<p>Even if these methods are very handy, sometimes if you chain it to much it loses the element fo readability. I will suggest it is preferable to follow what the domain logic wants and group the similar processes together to tap or pipe.</p>
+
+        </div>
+        <div class="cat-tags">
+            <span class="tags col-md-6">By : Mihir Bhende</span>
+                            <span class="categories col-md-6">
+                Categories : 
+                                <a href="/blog/categories/laravel">laravel</a>,                                 <a href="/blog/categories/php">php</a>                                </span>
+                                        <span class="tags col-md-6">
+                Tags : 
+                                <a href="/blog/tags/laravel">laravel</a>,                                 <a href="/blog/tags/php">php</a>,                                 <a href="/blog/tags/helpers">helpers</a>,                                 <a href="/blog/tags/collections">collections</a>                                </span>
+                    </div>
+
+        
+    </article>
+
+
+
+                </div>
+            </div>
+        </main>
+        <footer class="container">
+            <span>Tech.Semicolon | &copy; 2019 </span>
+        </footer>
+
+        <script src="/components/jquery/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="/components/bootstrap/js/bootstrap.min.js"></script>
+                
+                <script src="/components/highlightjs/highlight.pack.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+
+                    </body>
+</html>
