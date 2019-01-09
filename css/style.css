@@ -115,3 +115,8 @@ article h2 a, h1 {
     height: 400px;
     width: auto;
 }
+
+.home-article-body {
+    max-height: 200px;
+    overflow: hidden;
+}
