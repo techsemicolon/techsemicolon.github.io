@@ -125,3 +125,7 @@ article h2 a, h1 {
     border-bottom: 1px solid #627986;
     margin-bottom: 20px;
 }
+.home-article:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
