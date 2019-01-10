@@ -3,9 +3,249 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="/atom.xml" rel="self"/>
     <link href="/"/>
-    <updated>2019-01-09T19:58:15+00:00</updated>
+    <updated>2019-01-10T16:35:59+00:00</updated>
     <id>/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Laravel improving readability with blade directives]]></title>
+            <link href="/blog/2019/01/10/laravel-improving-readility-with-blade-directives/"/>
+            <updated>2019-01-10T00:00:00+00:00</updated>
+            <id>/blog/2019/01/10/laravel-improving-readility-with-blade-directives/</id>
+            <content type="html"><![CDATA[<p>Laravel's blade templating system comes with ability to define custom directives. These directives can be very handly to improve readability of the view files. Let's do a quick recap of directives :</p>
+
+<h3 id="blade-directives-%3A">Blade directives :</h3>
+
+<ul>
+<li>Generic directive :</li>
+</ul>
+
+<p>These directive take an argument and simply return the actions done in callback.</p>
+
+<pre><code class="php">Blade::directive('caps', function ($expression) {
+    return "&lt;?php echo ucwords($expression); ?&gt;";
+});
+</code></pre>
+
+<p>You can use above in blade templates directly :</p>
+
+<p></p>
+
+<pre><code class="php">&lt;div&gt;{{ @cap('john smith') }}&lt;/div&gt;
+</code></pre>
+
+<p></p>
+
+<p>It is little tricky to handle the <code>$expresssion</code> in the callback, as if you pass an array or multiple string arguments, those are passed as single string expressions. You can see that shortly in action in usage ideas section.</p>
+
+<ul>
+<li>Conditional directive :</li>
+</ul>
+
+<p>These directives take an argument and use it inside callback to return value. Now the callback's return value is then casted as boolean to consider if statements inside it will be showed or now. It is just like <code>@if ... @endif</code> directive, but more intuitive.</p>
+
+<pre><code class="php">Blade::if('isadmin', function ($user) {
+    return $user-&gt;role == 'admin';
+});
+</code></pre>
+
+<p>You can use above in blade templates directly :</p>
+
+<p></p>
+
+<pre><code class="php">@isadmin($user)
+    &lt;div&gt;
+        &lt;a href="{{ route('users.all') }}"&gt;See all users&lt;/a&gt;
+    &lt;/div&gt;
+@endisadmin
+</code></pre>
+
+<p></p>
+
+<p>Above is similar to this if done in usual without the conditional directive :</p>
+
+<p></p>
+
+<pre><code class="php">@if($user-&gt;role == 'admin')
+    &lt;div&gt;
+        &lt;a href="{{ route('users.all') }}"&gt;See all users&lt;/a&gt;
+    &lt;/div&gt;
+@endif
+</code></pre>
+
+<p></p>
+
+<h3 id="some-usage-ideas-%3A">Some usage ideas :</h3>
+
+<p>These directive give a great advantage to simplify your blade views and make them more readable. See few examples below :</p>
+
+<ol>
+<li>Conditional role checks :</li>
+</ol>
+
+<pre><code class="php">Blade::if('role', function ($role) {
+
+    // Not logged in
+    if(!auth()-&gt;check()){
+        return false;
+    }
+
+    // Multiple roles passed in argument
+    if(is_array($role)){
+        return in_array(auth()-&gt;user()-&gt;role, $role);
+    }
+
+    // Single role passed in argument
+    return auth()-&gt;user()-&gt;role == $role;
+});
+</code></pre>
+
+<p>This makes the role conditional checks in blade much easier :</p>
+
+<p></p>
+
+<pre><code class="php">@role('admin')
+   &lt;!-- something only an admin can see--&gt;
+@elserole(['customer', 'seller'])
+   &lt;!-- something only a customer or a seller an see--&gt;
+@endrole
+</code></pre>
+
+<p></p>
+
+<ol start="2">
+<li>Rendering form errors :</li>
+</ol>
+
+<pre><code class="php">Blade::directive('validation', function ($expression) {
+
+    // $expression is a string expression and 
+    // hence will be a string maintaing start and end quotes
+    // Trimming the quotes
+    $expression = str_replace(['(', ')'], '', $expression);
+    $fieldName  = trim(trim($expression, '"'), '\'');
+
+    $errors = \Session::get('errors', new \Illuminate\Support\MessageBag);
+
+    if($errors-&gt;has($fieldName)){
+        return '&lt;span role="alert"&gt;&lt;strong&gt;' . $errors-&gt;first($fieldName) . '&lt;/strong&gt;&lt;/span&gt;';
+    }
+
+    return;
+});
+</code></pre>
+
+<p>This makes the the validation errors from server end much easier in forms :</p>
+
+<p></p>
+
+<pre><code>&lt;form role="form" method="POST" action="{{ route('some.url') }}"&gt;
+    @csrf
+    &lt;div class="form-group"&gt;
+        &lt;label&gt;First Name *&lt;/label&gt;
+        &lt;input class="form-control" placeholder="Enter your first name" name="first_name"&gt;
+        @validation("first_name")
+    &lt;/div&gt;
+    &lt;div class="form-group"&gt;
+        &lt;label&gt;Last Name *&lt;/label&gt;
+        &lt;input class="form-control" placeholder="Enter your last name" name="last_name"&gt;
+        @validation("last_name")
+    &lt;/div&gt;
+    &lt;button type="submit" class="btn btn-primary"&gt;Submit Ticket&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+
+<p></p>
+
+<ol start="3">
+<li>Dumping values in views fo debugging :</li>
+</ol>
+
+<pre><code class="php">Blade::directive('dd', function ($expression) {
+
+    // $expression is a string expression and 
+    // It can not be directly passed in dd($expression)
+    // We can use with() helper which basically encapsulate the syntax
+    // to render it properly in blade files
+    return "&lt;?php dd(with({$expression})); ?&gt;";
+});
+</code></pre>
+
+<p>Please note that above will not work for multiple arguments, can dd one argumenet only. Above can be then used :</p>
+
+<p></p>
+
+<pre><code class="php">@dd([1,2,3,4]);
+</code></pre>
+
+<p></p>
+
+<ol start="4">
+<li>Assigning values to variables in a view :</li>
+</ol>
+
+<p>Now this might be a very less possible requirement but if you want to assign a variable in a view, generally you do something like :</p>
+
+<p></p>
+
+<pre><code class="php">@php 
+    $name = "John Doe";
+@endphp
+</code></pre>
+
+<p></p>
+
+<p>However, we can do this using blade directive :</p>
+
+<pre><code class="php">Blade::directive('assign', function ($expression) {
+
+    // The $expression passed in closure is a string in format '($name), value'
+    // Hence we first remove the paranthesis and explode by comma
+    list($name, $value) = explode(', ', str_replace(['(', ')'], '', $expression));
+    return "&lt;?php {$name} = {$value}; ?&gt;";
+});
+</code></pre>
+
+<p>And then simply use it as (Below example is very very simple but you can use as per your preference) :</p>
+
+<p></p>
+
+<pre><code class="php">@assign($name, 'John Doe')
+
+&lt;div&gt; {{ $name }} &lt;/div&gt;
+</code></pre>
+
+<p></p>
+
+<ol start="5">
+<li>Frequent HTML elements :</li>
+</ol>
+
+<p>If you are using 3rd party HTML libraries like glyphicon or font-awesome, you need to use those in lot of places. You can use blade directive like :</p>
+
+<pre><code class="php">Blade::directive('icon', function ($expression) {
+
+    // The $expression passed in closure is a string in format '($name), value'
+    // Hence we first remove the paranthesis and explode by comma
+    $classes = str_replace(['(', ')'], '', $expression);
+    $classes = str_replace(['"', '\''], '', $expression);
+    $classes = str_replace(',', ' ', $classes);
+
+    return '&lt;i class="fa ' . $classes . '" aria-hidden="false"&gt;&lt;/i&gt;';
+});
+</code></pre>
+
+<p>Then it is as easy as it can get to use :</p>
+
+<p></p>
+
+<pre><code class="php">&lt;label&gt; @icon('fa-user', 'fa-2x') User Name &lt;/label&gt;
+</code></pre>
+
+<p></p>
+
+<p>You can also extend this idea for input, select etc. I think once you set such directives in a project, your blade views become readble. Plus less code in a bladel file is always better.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Laravel tap vs tap vs pipe]]></title>
             <link href="/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
@@ -13,7 +253,7 @@
             <id>/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
             <content type="html"><![CDATA[<p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
 
-<h4 id="the-tap-function-%3A">The tap() function :</h4>
+<h3 id="the-tap-function-%3A">The tap() function :</h3>
 
 <p>The reason of having tap 2 times in the article header is that, there are 2 implementations of tap helper function in laravel. One is in generic context and one specific to handling collections.</p>
 
@@ -83,7 +323,7 @@ $activeGoldCustomers = collect($customers)
 
 <p>The fundamental concept of <code>tap()</code> is just use the value and perform actions but NEVER CHANGE the value. If you think then what can change the value? <code>pipe()</code> is the answer.</p>
 
-<h4 id="the-pipe-function-%3A">The pipe() function :</h4>
+<h3 id="the-pipe-function-%3A">The pipe() function :</h3>
 
 <p>Pipe function is just applicable for collections. For example consider following example :</p>
 

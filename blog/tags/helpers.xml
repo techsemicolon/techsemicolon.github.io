@@ -3,7 +3,7 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="/blog/tags/helpers.xml" rel="self"/>
     <link href="/"/>
-    <updated>2019-01-09T19:58:15+00:00</updated>
+    <updated>2019-01-10T16:35:59+00:00</updated>
     <id>/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
@@ -13,7 +13,7 @@
             <id>/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
             <content type="html"><![CDATA[<p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
 
-<h4 id="the-tap-function-%3A">The tap() function :</h4>
+<h3 id="the-tap-function-%3A">The tap() function :</h3>
 
 <p>The reason of having tap 2 times in the article header is that, there are 2 implementations of tap helper function in laravel. One is in generic context and one specific to handling collections.</p>
 
@@ -83,7 +83,7 @@ $activeGoldCustomers = collect($customers)
 
 <p>The fundamental concept of <code>tap()</code> is just use the value and perform actions but NEVER CHANGE the value. If you think then what can change the value? <code>pipe()</code> is the answer.</p>
 
-<h4 id="the-pipe-function-%3A">The pipe() function :</h4>
+<h3 id="the-pipe-function-%3A">The pipe() function :</h3>
 
 <p>Pipe function is just applicable for collections. For example consider following example :</p>
 

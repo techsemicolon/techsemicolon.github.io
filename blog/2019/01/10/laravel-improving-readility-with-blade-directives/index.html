@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>Laravel improving readability with blade directives &mdash; Tech.Semicolon &mdash; By Mihir Bhende</title>
+        <meta charset="utf-8">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <meta name="robots" content="index, follow">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,400i,600,600i,700,800|Yanone+Kaffeesatz:200,300,400,700" rel="stylesheet">
+        <link href="/components/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="/css/style.css" rel="stylesheet" type="text/css" />
+
+        <link rel="apple-touch-startup-image" href="/images/jackson/2048x2048.png">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="shortcut icon" sizes="76x76" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="120x120" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="128x128" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="152x152" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="196x196" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="512x512" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="1024x1024" href="/images/fav.png">
+        <link rel="shortcut icon" sizes="2048x2048" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="128x128" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="196x196" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="1024x1024" href="/images/fav.png">
+        <link rel="apple-touch-icon" sizes="2048x2048" href="/images/fav.png">
+
+        <link rel="stylesheet" href="/components/highlightjs/styles/github.css" />
+        <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Tech.Semicolon activity feed" />
+                                    </head>
+    <body>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-header">
+                <div class="container">
+                    <a class="navbar-brand" href="/">
+                        <img src="/images/logo.png" class="logo-img"/>
+                    </a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item"><a class="nav-link" href="/blog">Posts Archive</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/blog/categories">Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/blog/tags">Tags</a></li>
+                            <li class="nav-item"><a target="_blank" class="nav-link" href="https://github.com/techsemicolon">GitHub</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <main role="main" class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                        <article>
+        <header>
+            <h2>Laravel improving readability with blade directives</h2>
+        </header>
+        <div>
+            <p>Laravel's blade templating system comes with ability to define custom directives. These directives can be very handly to improve readability of the view files. Let's do a quick recap of directives :</p>
+
+<h3 id="blade-directives-%3A">Blade directives :</h3>
+
+<ul>
+<li>Generic directive :</li>
+</ul>
+
+<p>These directive take an argument and simply return the actions done in callback.</p>
+
+<pre><code class="php">Blade::directive('caps', function ($expression) {
+    return "&lt;?php echo ucwords($expression); ?&gt;";
+});
+</code></pre>
+
+<p>You can use above in blade templates directly :</p>
+
+<p></p>
+
+<pre><code class="php">&lt;div&gt;{{ @cap('john smith') }}&lt;/div&gt;
+</code></pre>
+
+<p></p>
+
+<p>It is little tricky to handle the <code>$expresssion</code> in the callback, as if you pass an array or multiple string arguments, those are passed as single string expressions. You can see that shortly in action in usage ideas section.</p>
+
+<ul>
+<li>Conditional directive :</li>
+</ul>
+
+<p>These directives take an argument and use it inside callback to return value. Now the callback's return value is then casted as boolean to consider if statements inside it will be showed or now. It is just like <code>@if ... @endif</code> directive, but more intuitive.</p>
+
+<pre><code class="php">Blade::if('isadmin', function ($user) {
+    return $user-&gt;role == 'admin';
+});
+</code></pre>
+
+<p>You can use above in blade templates directly :</p>
+
+<p></p>
+
+<pre><code class="php">@isadmin($user)
+    &lt;div&gt;
+        &lt;a href="{{ route('users.all') }}"&gt;See all users&lt;/a&gt;
+    &lt;/div&gt;
+@endisadmin
+</code></pre>
+
+<p></p>
+
+<p>Above is similar to this if done in usual without the conditional directive :</p>
+
+<p></p>
+
+<pre><code class="php">@if($user-&gt;role == 'admin')
+    &lt;div&gt;
+        &lt;a href="{{ route('users.all') }}"&gt;See all users&lt;/a&gt;
+    &lt;/div&gt;
+@endif
+</code></pre>
+
+<p></p>
+
+<h3 id="some-usage-ideas-%3A">Some usage ideas :</h3>
+
+<p>These directive give a great advantage to simplify your blade views and make them more readable. See few examples below :</p>
+
+<ol>
+<li>Conditional role checks :</li>
+</ol>
+
+<pre><code class="php">Blade::if('role', function ($role) {
+
+    // Not logged in
+    if(!auth()-&gt;check()){
+        return false;
+    }
+
+    // Multiple roles passed in argument
+    if(is_array($role)){
+        return in_array(auth()-&gt;user()-&gt;role, $role);
+    }
+
+    // Single role passed in argument
+    return auth()-&gt;user()-&gt;role == $role;
+});
+</code></pre>
+
+<p>This makes the role conditional checks in blade much easier :</p>
+
+<p></p>
+
+<pre><code class="php">@role('admin')
+   &lt;!-- something only an admin can see--&gt;
+@elserole(['customer', 'seller'])
+   &lt;!-- something only a customer or a seller an see--&gt;
+@endrole
+</code></pre>
+
+<p></p>
+
+<ol start="2">
+<li>Rendering form errors :</li>
+</ol>
+
+<pre><code class="php">Blade::directive('validation', function ($expression) {
+
+    // $expression is a string expression and 
+    // hence will be a string maintaing start and end quotes
+    // Trimming the quotes
+    $expression = str_replace(['(', ')'], '', $expression);
+    $fieldName  = trim(trim($expression, '"'), '\'');
+
+    $errors = \Session::get('errors', new \Illuminate\Support\MessageBag);
+
+    if($errors-&gt;has($fieldName)){
+        return '&lt;span role="alert"&gt;&lt;strong&gt;' . $errors-&gt;first($fieldName) . '&lt;/strong&gt;&lt;/span&gt;';
+    }
+
+    return;
+});
+</code></pre>
+
+<p>This makes the the validation errors from server end much easier in forms :</p>
+
+<p></p>
+
+<pre><code>&lt;form role="form" method="POST" action="{{ route('some.url') }}"&gt;
+    @csrf
+    &lt;div class="form-group"&gt;
+        &lt;label&gt;First Name *&lt;/label&gt;
+        &lt;input class="form-control" placeholder="Enter your first name" name="first_name"&gt;
+        @validation("first_name")
+    &lt;/div&gt;
+    &lt;div class="form-group"&gt;
+        &lt;label&gt;Last Name *&lt;/label&gt;
+        &lt;input class="form-control" placeholder="Enter your last name" name="last_name"&gt;
+        @validation("last_name")
+    &lt;/div&gt;
+    &lt;button type="submit" class="btn btn-primary"&gt;Submit Ticket&lt;/button&gt;
+&lt;/form&gt;
+</code></pre>
+
+<p></p>
+
+<ol start="3">
+<li>Dumping values in views fo debugging :</li>
+</ol>
+
+<pre><code class="php">Blade::directive('dd', function ($expression) {
+
+    // $expression is a string expression and 
+    // It can not be directly passed in dd($expression)
+    // We can use with() helper which basically encapsulate the syntax
+    // to render it properly in blade files
+    return "&lt;?php dd(with({$expression})); ?&gt;";
+});
+</code></pre>
+
+<p>Please note that above will not work for multiple arguments, can dd one argumenet only. Above can be then used :</p>
+
+<p></p>
+
+<pre><code class="php">@dd([1,2,3,4]);
+</code></pre>
+
+<p></p>
+
+<ol start="4">
+<li>Assigning values to variables in a view :</li>
+</ol>
+
+<p>Now this might be a very less possible requirement but if you want to assign a variable in a view, generally you do something like :</p>
+
+<p></p>
+
+<pre><code class="php">@php 
+    $name = "John Doe";
+@endphp
+</code></pre>
+
+<p></p>
+
+<p>However, we can do this using blade directive :</p>
+
+<pre><code class="php">Blade::directive('assign', function ($expression) {
+
+    // The $expression passed in closure is a string in format '($name), value'
+    // Hence we first remove the paranthesis and explode by comma
+    list($name, $value) = explode(', ', str_replace(['(', ')'], '', $expression));
+    return "&lt;?php {$name} = {$value}; ?&gt;";
+});
+</code></pre>
+
+<p>And then simply use it as (Below example is very very simple but you can use as per your preference) :</p>
+
+<p></p>
+
+<pre><code class="php">@assign($name, 'John Doe')
+
+&lt;div&gt; {{ $name }} &lt;/div&gt;
+</code></pre>
+
+<p></p>
+
+<ol start="5">
+<li>Frequent HTML elements :</li>
+</ol>
+
+<p>If you are using 3rd party HTML libraries like glyphicon or font-awesome, you need to use those in lot of places. You can use blade directive like :</p>
+
+<pre><code class="php">Blade::directive('icon', function ($expression) {
+
+    // The $expression passed in closure is a string in format '($name), value'
+    // Hence we first remove the paranthesis and explode by comma
+    $classes = str_replace(['(', ')'], '', $expression);
+    $classes = str_replace(['"', '\''], '', $expression);
+    $classes = str_replace(',', ' ', $classes);
+
+    return '&lt;i class="fa ' . $classes . '" aria-hidden="false"&gt;&lt;/i&gt;';
+});
+</code></pre>
+
+<p>Then it is as easy as it can get to use :</p>
+
+<p></p>
+
+<pre><code class="php">&lt;label&gt; @icon('fa-user', 'fa-2x') User Name &lt;/label&gt;
+</code></pre>
+
+<p></p>
+
+<p>You can also extend this idea for input, select etc. I think once you set such directives in a project, your blade views become readble. Plus less code in a bladel file is always better.</p>
+
+        </div>
+        <div class="cat-tags">
+            <span class="tags col-md-6">By : Mihir Bhende</span>
+                            <span class="categories col-md-6">
+                Categories : 
+                                <a href="/blog/categories/laravel">laravel</a>,                                 <a href="/blog/categories/php">php</a>                                </span>
+                                        <span class="tags col-md-6">
+                Tags : 
+                                <a href="/blog/tags/laravel">laravel</a>,                                 <a href="/blog/tags/php">php</a>,                                 <a href="/blog/tags/blade">blade</a>,                                 <a href="/blog/tags/directives">directives</a>                                </span>
+                    </div>
+
+        
+    </article>
+
+
+
+                </div>
+            </div>
+        </main>
+        <footer class="container">
+            <span>Tech.Semicolon | &copy; 2019 </span>
+        </footer>
+
+        <script src="/components/jquery/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="/components/bootstrap/js/bootstrap.min.js"></script>
+                
+                <script src="/components/highlightjs/highlight.pack.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+
+                    </body>
+</html>
