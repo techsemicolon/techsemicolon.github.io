@@ -120,3 +120,8 @@ article h2 a, h1 {
     max-height: 200px;
     overflow: hidden;
 }
+
+.home-article{
+    border-bottom: 1px solid #627986;
+    margin-bottom: 20px;
+}
