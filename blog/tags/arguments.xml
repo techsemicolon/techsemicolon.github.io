@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Tech.Semicolon]]></title>
+    <link href="https://techsemicolon.github.io/blog/tags/arguments.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-01-13T06:38:41+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[PHP argument validation using assert]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/"/>
+            <updated>2019-01-12T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/</id>
+            <content type="html"><![CDATA[<p>When creating classes, we either pass arguments to the constructor function or have setter-getter functions to access class properties. These arguments may sometime have a specific format or requirements. For Example :</p>
+
+<pre><code class="php">/**
+ * $age integer
+ *
+ * @return  string
+ */
+function($age){
+    return "You are $age years old";
+}
+</code></pre>
+
+<p>Above function expects $age to be an integer. If any other type is passed, function will no work as expected.</p>
+
+<p>The example was very granular. When your core classes have functions which affect important domain logics of your project, argument validation becomes an  important part.</p>
+
+<p>PHP comes with default function(or more specifically a language construct for PHP version 7) called <a href="http://php.net/manual/en/function.assert.php"><code>assert</code></a>, which basically checks if provided assertion if false. If yes then you can handle the exceptions in callback. Even if this is useful, I will strongly suggest using composer plugin <a href="https://github.com/webmozart/assert">webmozart/assert</a> for this. It has very useful intuitive methods for the same.</p>
+
+<ul>
+<li>Example :</li>
+</ul>
+
+<p>Let's consider a function <code>placeOrder()</code> which takes array of <code>$items</code> having instances of <code>Item</code> class, a <code>$shippingPrice</code> and <code>$customer</code> having instance of <code>Customer</code> class.</p>
+
+<pre><code class="php">&lt;?php 
+
+use Webmozart\Assert\Assert;
+
+Class Order{
+
+    /**
+     * Array of Item instances
+     * @var array
+     */
+    private $items;
+
+    /**
+     * Shipping Price
+     * @var float
+     */
+    private $shippingPrice;
+
+    /**
+     * Customer Instance
+     * @var Customer
+     */
+    private $customer;
+
+    /**
+     * Instantiate Order class
+     * 
+     * @param $items
+     * @param $shippingPrice
+     * @param $customer
+     */
+    function __construct($items, $shippingPrice, $customer)
+    {
+        Assert::isArray($items, '$items must be an array. Got: %s');
+        Assert::allIsInstanceOf($items, '\Item', '$items must contain array of Item class instances. Got: %s');
+        Assert::numeric($shippingPrice, '$shippingPrice must be numeric. Got: %s');
+        Assert::isInstanceOf($customer, '\Customer', '$customer must be an instance of Customer class. Got: %s');
+
+        $this-&gt;shippingPrice    = $shippingPrice;
+        $this-&gt;customer         = $customer;
+        $this-&gt;items            = $items;
+    }
+
+    /**
+     * Places order
+     * 
+     * @return Order
+     */
+    public function placeOrder(){
+
+        // PlaceOrder
+    }
+}
+</code></pre>
+
+<p>Now, when we instantiate the order class :</p>
+
+<pre><code class="php">$customer = new Customer('John Doe');
+
+$order = new Order([], 12.22, $customer);
+</code></pre>
+
+<p>We are passing an invalid value for <code>$items</code> argument. It will throw <code>\InvalidArgumentException</code> with error message : <code>$items must contain array of Item class instances. Got: Array</code>.</p>
+
+<p>If you are using setter-getter functions instead of constructor parameters, you can have these assertions inside the setter functions. Above methodology is sometimes referred as defensive programming where we are making sure function will not break at the intial stages itself. The counter concept of defensive programming will be validating these arguments as and when they are actually used inside <code>placeOrder</code> function.</p>
+
+<p>Advantages :</p>
+
+<ol>
+<li>Prevents errors caused due to unexpected type of arguments passed</li>
+<li>Easier to debug</li>
+<li>Easier to create unit tests and catch asset exceptions</li>
+<li>Easier to write readable custom error messages</li>
+</ol>
+
+<p>Disadvantages :</p>
+
+<p>If not properly thought, duplicate validations can cause redundancies. For example in above case, if instance of <code>Item</code> class contains a valid price is a concern of <code>Item</code> class. If that validation is also present in <code>Order</code> class as well, it created redundancies.</p>
+
+<p>You can find more assertion options available here : <a href="https://github.com/webmozart/assert">https://github.com/webmozart/assert</a></p>
+]]></content>
+        </entry>
+    </feed>
