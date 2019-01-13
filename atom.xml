@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="/atom.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2019-01-13T04:48:33+00:00</updated>
-    <id>/</id>
+    <link href="https://techsemicolon.github.io/atom.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-01-13T05:06:34+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel make custom class using console command]]></title>
-            <link href="/blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
             <updated>2019-01-11T00:00:00+00:00</updated>
-            <id>/blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
+            <id>https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
             <content type="html"><![CDATA[<p>Laravel ships with built in console <code>make</code> commands to generate class files for controllers, models, migrations etc. For example creating a resourse controller, you can do :</p>
 
 <pre><code class="bash">php artisan make:controller CustomerController --resource
@@ -272,9 +272,9 @@ class CustomerRepository
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel improving readability with blade directives]]></title>
-            <link href="/blog/2019/01/10/laravel-improving-readility-with-blade-directives/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/"/>
             <updated>2019-01-10T00:00:00+00:00</updated>
-            <id>/blog/2019/01/10/laravel-improving-readility-with-blade-directives/</id>
+            <id>https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/</id>
             <content type="html"><![CDATA[<p>Laravel's blade templating system comes with ability to define custom directives. These directives can be very handly to improve readability of the view files. Let's do a quick recap of directives :</p>
 
 <h3 id="blade-directives-%3A">Blade directives :</h3>
@@ -512,9 +512,9 @@ class CustomerRepository
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel tap vs tap vs pipe]]></title>
-            <link href="/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
             <updated>2019-01-08T00:00:00+00:00</updated>
-            <id>/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
+            <id>https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
             <content type="html"><![CDATA[<p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
 
 <h3 id="the-tap-function-%3A">The tap() function :</h3>
@@ -619,9 +619,9 @@ $counts = collect($customers)
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel Module Pattern]]></title>
-            <link href="/blog/2019/01/06/laravel-module-pattern/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/"/>
             <updated>2019-01-06T00:00:00+00:00</updated>
-            <id>/blog/2019/01/06/laravel-module-pattern/</id>
+            <id>https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/</id>
             <content type="html"><![CDATA[<p>Laravel has a folder structure which ties similar entities of MVC together e.g. controllers in one folder, views into another. There are few set-backs of this approach :</p>
 
 <ul>
@@ -1182,9 +1182,9 @@ class TicketServiceProvider extends BaseServiceProvider
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel restricting unfiltered queries]]></title>
-            <link href="/blog/2019/01/04/laravel-restricting-unfiltered-queries/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/01/04/laravel-restricting-unfiltered-queries/"/>
             <updated>2019-01-04T00:00:00+00:00</updated>
-            <id>/blog/2019/01/04/laravel-restricting-unfiltered-queries/</id>
+            <id>https://techsemicolon.github.io/blog/2019/01/04/laravel-restricting-unfiltered-queries/</id>
             <content type="html"><![CDATA[<p>Laravel eloquent is a very powerful ORM. I came across a situation for a project of mine long time ago. There was a table <code>api_logs</code> which basically logged all API requests and responses. Evidently the table grew exponentially. One of the developers created an analytics module in which he forgot to add a where clause. It queried millions of rows at a time on production. It was a silly mistake but server was overwhelmed and you can imagine the rest of story (I can tell you it is not that good).</p>
 
 <p>I imagined if there was a way to just throw an error if any function queries all rows from a table like <code>api_logs</code>. Two advantages :</p>
@@ -1327,9 +1327,9 @@ class ApiLog extends Model
         </entry>
             <entry>
             <title type="html"><![CDATA[Mysql tips for shell client]]></title>
-            <link href="/blog/2018/12/25/mysql-tips-for-local-shell-client/"/>
+            <link href="https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/"/>
             <updated>2018-12-25T00:00:00+00:00</updated>
-            <id>/blog/2018/12/25/mysql-tips-for-local-shell-client/</id>
+            <id>https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/</id>
             <content type="html"><![CDATA[<p>How many of you use terminal when operating mysql instead of a GUI client like sequel pro or mysql workbench? There is nothing bad in using either of it as it depends on your choice of comfort.</p>
 
 <p>I like to use terminal for it. Here are few tips which you might find helpful. These are not relelated to how you use mysql database in general, these are specific to the option files and mysql terminal client.</p>

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="/blog/tags/shell.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2019-01-13T04:48:33+00:00</updated>
-    <id>/</id>
+    <link href="https://techsemicolon.github.io/blog/tags/shell.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-01-13T05:06:34+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Mysql tips for shell client]]></title>
-            <link href="/blog/2018/12/25/mysql-tips-for-local-shell-client/"/>
+            <link href="https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/"/>
             <updated>2018-12-25T00:00:00+00:00</updated>
-            <id>/blog/2018/12/25/mysql-tips-for-local-shell-client/</id>
+            <id>https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/</id>
             <content type="html"><![CDATA[<p>How many of you use terminal when operating mysql instead of a GUI client like sequel pro or mysql workbench? There is nothing bad in using either of it as it depends on your choice of comfort.</p>
 
 <p>I like to use terminal for it. Here are few tips which you might find helpful. These are not relelated to how you use mysql database in general, these are specific to the option files and mysql terminal client.</p>

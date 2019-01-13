@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="/blog/tags/module.xml" rel="self"/>
-    <link href="/"/>
-    <updated>2019-01-13T04:48:33+00:00</updated>
-    <id>/</id>
+    <link href="https://techsemicolon.github.io/blog/tags/module.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-01-13T05:06:34+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel Module Pattern]]></title>
-            <link href="/blog/2019/01/06/laravel-module-pattern/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/"/>
             <updated>2019-01-06T00:00:00+00:00</updated>
-            <id>/blog/2019/01/06/laravel-module-pattern/</id>
+            <id>https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/</id>
             <content type="html"><![CDATA[<p>Laravel has a folder structure which ties similar entities of MVC together e.g. controllers in one folder, views into another. There are few set-backs of this approach :</p>
 
 <ul>
