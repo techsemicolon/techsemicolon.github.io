@@ -3,11 +3,11 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/categories/mysql.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-01-13T06:58:52+00:00</updated>
+    <updated>2019-01-19T13:59:18+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
-            <title type="html"><![CDATA[Mysql tips for shell client]]></title>
+            <title type="html"><![CDATA[MySQL tips for shell client]]></title>
             <link href="https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/"/>
             <updated>2018-12-25T00:00:00+00:00</updated>
             <id>https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/</id>
