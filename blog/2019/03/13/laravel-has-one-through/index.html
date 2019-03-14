@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html>
     <head lang="en">
-        <title>Posts Archive &mdash; Tech.Semicolon</title>
+        <title>Laravel has one through &mdash; Tech.Semicolon</title>
         <meta charset="utf-8">
         <meta name="theme-color" content="#ffffff">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-                    <meta name="robots" content="noindex, follow">
-        
+            <meta name="robots" content="index, follow">
+
         <!-- Meta Tags -->
-        <meta name="description" content="" />
-        <meta property="og:title" content="Posts Archive" />
+        <meta name="description" content="Laravel 5.8 now includes a hasonethrough relationship by default" />
+        <meta property="og:title" content="Laravel has one through" />
         <meta property="og:type" content="article" />
         <meta property="og:url" content="https://techsemicolon.github.io" />
         <meta property="og:image" content="https://techsemicolon.github.io/images/logo.png" />
-        <meta property="og:description" content="" /> 
+        <meta property="og:description" content="Laravel 5.8 now includes a hasonethrough relationship by default" /> 
         <meta property="og:site_name" content="Tech Semicolon" />
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,400i,600,600i,700,800|Yanone+Kaffeesatz:200,300,400,700" rel="stylesheet">
         <link href="https://techsemicolon.github.io/components/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
@@ -76,41 +76,102 @@
         <main role="main" class="container">
             <div class="row">
                 <div class="col-sm-12">
-                    <h2>Posts Archive</h2>
-        <h3>March 2019</h3>
-  <div>
-    <a href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/">Laravel has one through</a>
-  </div>
-    <h3>February 2019</h3>
-  <div>
-    <a href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/">Laravel liming chunk collection</a>
-  </div>
-    <h3>January 2019</h3>
-  <div>
-    <a href="https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/">PHP argument validation using assert</a>
-  </div>
-  <div>
-    <a href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/">Laravel make custom class using console command</a>
-  </div>
-  <div>
-    <a href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/">Laravel improving readability with blade directives</a>
-  </div>
-  <div>
-    <a href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/">Laravel tap vs tap vs pipe</a>
-  </div>
-  <div>
-    <a href="https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/">Laravel Module Pattern</a>
-  </div>
-  <div>
-    <a href="https://techsemicolon.github.io/blog/2019/01/04/laravel-restricting-unfiltered-queries/">Laravel restricting unfiltered queries</a>
-  </div>
-        <h3>December 2018</h3>
-  <div>
-    <a href="https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/">MySQL tips for shell client</a>
-  </div>
+                        <article>
+        <header>
+            <h2>Laravel has one through</h2>
+        </header>
+        <div>
+            <p>Laravel 5.8 is now released and one thing from the release notes many people might be waiting for is the <code>hasOneThrough</code> relationship. Laravel ealier had <code>hasManyThrough</code>, but with the addition of <code>hasOneThrough</code> it's more flexible. Let's dive into an example :</p>
 
-<div>
-</div>                </div>
+<p>Consider we have <code>User</code> Model, <code>Reviewer</code> Model and <code>Activity</code> Model with structure :</p>
+
+<pre><code>users
+    id - integer
+    reviewer_id - integer
+
+reviewers
+    id - integer
+
+activities
+    id - integer
+    user_id - integer
+</code></pre>
+
+<p>Each <code>reviewer</code> has one <code>user</code>, and each <code>user</code> is associated with one user <code>activity</code> record. If we want to get <code>activity</code> from <code>reviewer</code>, there is no <code>reviewer_id</code> column in <code>activities</code> table, in such case we can use <code>hasOneThrough</code> relation. Let's define the relationship now :</p>
+
+<pre><code class="php">&lt;?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Reviewer extends Model
+{
+    /**
+     * Get the reviewer's activity.
+     */
+    public function activity()
+    {
+        return $this-&gt;hasOneThrough('App\Activity', 'App\User');
+    }
+}
+</code></pre>
+
+<p>To understand more, lets use Laravel conventional terms on the models. In this case the <code>Activity</code> is the final model we would need to relate, while <code>User</code> is the intermediate model.</p>
+
+<p>As all other relationships in Laravel, we can also explicitely specify the foreign keys while definining <code>hasOneThrough</code> relation, Let's do that for this example :</p>
+
+<pre><code class="php">&lt;?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Reviewer extends Model
+{
+    /**
+     * Get the reviewer's activity.
+     */
+    public function activity()
+    {
+        return $this-&gt;hasOneThrough(
+            'App\Activity',
+            'App\User',
+            'reviewer_id', // Foreign key on users table...
+            'user_id', // Foreign key on activities table...
+            'id', // Local key on reviewers table...
+            'id' // Local key on users table...
+        );
+    }
+}
+</code></pre>
+
+<p>Now you can easily do :</p>
+
+<pre><code class="php">$reviewer = Reviewer::first();
+$activity = $reviewer-&gt;activity;
+</code></pre>
+
+        </div>
+        <div class="cat-tags">
+            <span class="tags col-md-6">By : Mihir Bhende</span>
+                            <span class="categories col-md-6">
+                Categories : 
+                                <a href="https://techsemicolon.github.io/blog/categories/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/php">php</a>                                </span>
+                                        <span class="tags col-md-6">
+                Tags : 
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/eloquent">eloquent</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/hasonethrough">hasonethrough</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/relationships">relationships</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/5.8">5.8</a>                                </span>
+                    </div>
+
+        <div class="fb-comments" 
+            data-href="https://techsemicolon.github.io" 
+            data-numposts="5" width="100%">
+        </div>
+    </article>
+
+
+
+                </div>
             </div>
         </main>
         <footer class="container">

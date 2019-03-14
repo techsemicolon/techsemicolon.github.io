@@ -78,6 +78,89 @@
                 <div class="col-sm-12">
                         <article class="home-article">
         <header>
+            <h2><a href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/">Laravel has one through</a></h2>
+        </header>
+        <div class="home-article-body">
+            <p>Laravel 5.8 is now released and one thing from the release notes many people might be waiting for is the <code>hasOneThrough</code> relationship. Laravel ealier had <code>hasManyThrough</code>, but with the addition of <code>hasOneThrough</code> it's more flexible. Let's dive into an example :</p>
+
+<p>Consider we have <code>User</code> Model, <code>Reviewer</code> Model and <code>Activity</code> Model with structure :</p>
+
+<pre><code>users
+    id - integer
+    reviewer_id - integer
+
+reviewers
+    id - integer
+
+activities
+    id - integer
+    user_id - integer
+</code></pre>
+
+<p>Each <code>reviewer</code> has one <code>user</code>, and each <code>user</code> is associated with one user <code>activity</code> record. If we want to get <code>activity</code> from <code>reviewer</code>, there is no <code>reviewer_id</code> column in <code>activities</code> table, in such case we can use <code>hasOneThrough</code> relation. Let's define the relationship now :</p>
+
+<pre><code class="php">&lt;?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Reviewer extends Model
+{
+    /**
+     * Get the reviewer's activity.
+     */
+    public function activity()
+    {
+        return $this-&gt;hasOneThrough('App\Activity', 'App\User');
+    }
+}
+</code></pre>
+
+<p>To understand more, lets use Laravel conventional terms on the models. In this case the <code>Activity</code> is the final model we would need to relate, while <code>User</code> is the intermediate model.</p>
+
+<p>As all other relationships in Laravel, we can also explicitely specify the foreign keys while definining <code>hasOneThrough</code> relation, Let's do that for this example :</p>
+
+<pre><code class="php">&lt;?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Reviewer extends Model
+{
+    /**
+     * Get the reviewer's activity.
+     */
+    public function activity()
+    {
+        return $this-&gt;hasOneThrough(
+            'App\Activity',
+            'App\User',
+            'reviewer_id', // Foreign key on users table...
+            'user_id', // Foreign key on activities table...
+            'id', // Local key on reviewers table...
+            'id' // Local key on users table...
+        );
+    }
+}
+</code></pre>
+
+<p>Now you can easily do :</p>
+
+<pre><code class="php">$reviewer = Reviewer::first();
+$activity = $reviewer-&gt;activity;
+</code></pre>
+
+        </div>
+        <p>.....</p>
+        <a href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/">Read full article</a>
+                    <p class="tags">
+            Tags:
+                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/eloquent">eloquent</a>,                         <a href="https://techsemicolon.github.io/blog/tags/hasonethrough">hasonethrough</a>,                         <a href="https://techsemicolon.github.io/blog/tags/relationships">relationships</a>,                         <a href="https://techsemicolon.github.io/blog/tags/5.8">5.8</a>                        </p>
+            </article>
+    <article class="home-article">
+        <header>
             <h2><a href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/">Laravel liming chunk collection</a></h2>
         </header>
         <div class="home-article-body">
