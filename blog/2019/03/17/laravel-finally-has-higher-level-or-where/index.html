@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <html>
     <head lang="en">
-        <title>Tag Archive "5.8" &mdash; Tech.Semicolon</title>
+        <title>Laravel finally has higher level orWhere for query scopes &mdash; Tech.Semicolon</title>
         <meta charset="utf-8">
         <meta name="theme-color" content="#ffffff">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-            <link rel="alternate" type="application/atom+xml" href="https://techsemicolon.github.io/blog/tags/5.8.xml" title="Tech.Semicolon '5.8' tag feed" />
-    <meta name="robots" content="noindex, follow">
+            <meta name="robots" content="index, follow">
 
         <!-- Meta Tags -->
-        <meta name="description" content="" />
-        <meta property="og:title" content="Tag Archive" />
+        <meta name="description" content="Laravel 5.8 now includes a higher order orWhere clause which makes things so much simpler when deaing with query scopes" />
+        <meta property="og:title" content="Laravel finally has higher level orWhere for query scopes" />
         <meta property="og:type" content="article" />
         <meta property="og:url" content="https://techsemicolon.github.io" />
         <meta property="og:image" content="https://techsemicolon.github.io/images/logo.png" />
-        <meta property="og:description" content="" /> 
+        <meta property="og:description" content="Laravel 5.8 now includes a higher order orWhere clause which makes things so much simpler when deaing with query scopes" /> 
         <meta property="og:site_name" content="Tech Semicolon" />
         <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,400i,600,600i,700,800|Yanone+Kaffeesatz:200,300,400,700" rel="stylesheet">
         <link href="https://techsemicolon.github.io/components/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
@@ -77,17 +76,109 @@
         <main role="main" class="container">
             <div class="row">
                 <div class="col-sm-12">
-                    <h2>"5.8"</h2>
-        <h3>March 2019</h3>
-<article>
-  <div><a href="https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/">Laravel finally has higher level orWhere for query scopes</a></div>
-</article>
-<article>
-  <div><a href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/">Laravel has one through</a></div>
-</article>
+                        <article>
+        <header>
+            <h2>Laravel finally has higher level orWhere for query scopes</h2>
+        </header>
+        <div>
+            <p>Laravel's excellent querybuilder and Eloquent ORM is handy as ever. But with newer version of laravel, it's much more simpler. 5.8 is here already and this feature has not been talked as much because it seems a minor feature release. Let's dive in with an example :</p>
 
-<div>
-</div>
+<pre><code class="php">&lt;?php
+
+namespace App;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Role;
+
+class User extends Authenticatable
+{
+    /**
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array
+     */
+    protected $hidden = [
+
+        'password', 'remember_token',
+    ];
+
+    /*
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = ['deleted_at'];
+
+    /**
+     * Scope a query to only filter admin users.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeAdmin($query)
+    {
+        return $query-&gt;where('role', Role::Admin);
+    }
+
+    /**
+     * Scope a query to only filter reviewer users.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeReviewer($query)
+    {
+        return $query-&gt;where('role', Role::Reviewer);
+    }
+
+    /**
+     * Scope a query to only filter customer users.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeCustomer($query)
+    {
+        return $query-&gt;where('role', Role::Customer);
+    }
+}
+</code></pre>
+
+<p>The use case is, we want to get the users who are either has <code>admin</code> or <code>reviewer</code> role.</p>
+
+<p>For earlier versions of laravel(version &lt; 5.8), we would do :</p>
+
+<pre><code class="php">$users = App\User::admin()-&gt;orWhere(function (Builder $query) {
+    $query-&gt;reviewer();
+})-&gt;get();
+</code></pre>
+
+<p>There is nothing difficult in above eloquent query but having a closure just to filter a scope for an orWhere clause seems too much sometimes. But that case is no more valid after 5.8 releases. Now we can do :</p>
+
+<pre><code class="php">$users = App\User::admin()-&gt;orWhere-&gt;reviewer()-&gt;get();
+</code></pre>
+
+<p>And that's it. It's a very small change but makes the code much more simpler to implement and read. Sometimes you might get lost in the closures when the query is large. Features like this makes it much more comfortable to implement.</p>
+
+        </div>
+        <div class="cat-tags">
+            <span class="tags col-md-6">By : Mihir Bhende</span>
+                            <span class="categories col-md-6">
+                Categories : 
+                                <a href="https://techsemicolon.github.io/blog/categories/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/php">php</a>                                </span>
+                                        <span class="tags col-md-6">
+                Tags : 
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/orWhere">orWhere</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/where">where</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/eloquent">eloquent</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/querybuilder">querybuilder</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/5.8">5.8</a>                                </span>
+                    </div>
+
+        <div class="fb-comments" 
+            data-href="https://techsemicolon.github.io" 
+            data-numposts="5" width="100%">
+        </div>
+    </article>
+
+
+
                 </div>
             </div>
         </main>
