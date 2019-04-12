@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>Laravel use secure SSL connection while using AWS RDS &mdash; Tech.Semicolon</title>
+        <meta charset="utf-8">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <meta name="robots" content="index, follow">
+
+        <!-- Meta Tags -->
+        <meta name="description" content="Use secure SSL connection for encryption in transit whiule connecting to AWS RDS from Laravel" />
+        <meta property="og:title" content="Laravel use secure SSL connection while using AWS RDS" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://techsemicolon.github.io" />
+        <meta property="og:image" content="https://techsemicolon.github.io/images/logo.png" />
+        <meta property="og:description" content="Use secure SSL connection for encryption in transit whiule connecting to AWS RDS from Laravel" /> 
+        <meta property="og:site_name" content="Tech Semicolon" />
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,400i,600,600i,700,800|Yanone+Kaffeesatz:200,300,400,700" rel="stylesheet">
+        <link href="https://techsemicolon.github.io/components/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="https://techsemicolon.github.io/css/style.css" rel="stylesheet" type="text/css" />
+
+        <link rel="apple-touch-startup-image" href="https://techsemicolon.github.io/images/fav.png">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="shortcut icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+
+        <link rel="stylesheet" href="https://techsemicolon.github.io/components/highlightjs/styles/github.css" />
+        <link rel="alternate" type="application/atom+xml" href="https://techsemicolon.github.io/atom.xml" title="Tech.Semicolon activity feed" />
+                                    </head>
+    <body>
+        <div id="fb-root"></div>
+        <script>(function(d, s, id) {
+              var js, fjs = d.getElementsByTagName(s)[0];
+              if (d.getElementById(id)) return;
+              js = d.createElement(s); js.id = id;
+              js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2&appId=1919280101503437&autoLogAppEvents=1';
+              fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        </script>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-header">
+                <div class="container">
+                    <a class="navbar-brand" href="https://techsemicolon.github.io/">
+                        <img src="https://techsemicolon.github.io/images/logo.png" class="logo-img"/>
+                    </a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog">Posts Archive</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/categories">Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/tags">Tags</a></li>
+                            <li class="nav-item"><a target="_blank" class="nav-link" href="https://github.com/techsemicolon">GitHub</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/about">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <main role="main" class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                        <article>
+        <header>
+            <h2>Laravel use secure SSL connection while using AWS RDS</h2>
+        </header>
+        <div>
+            <p>Amazon Relational Database Service Amazon RDS is a cloud based web service that makes things easier to set up, operate, and scale a relational databases on the cloud. It has become one of the popular choices when setting up laravel database infrastructure.</p>
+
+<ul>
+<li>Quick question :</li>
+</ul>
+
+<p>If you are using AWS RDS in your laravel application, is your connection encrypted in transit? Or so ask other way around, is your laravel application connecting to AWS RDS using a secure SSL connection?</p>
+
+<p>If you think that RDS comes up with secure encryption in transit, you are right, it implements SSL. However, is it turned on somehow by default or is it there when we use it directly? Not really.. I had a perception that my laravel app is secured in transit by SSL encryption until I found out its not.</p>
+
+<ul>
+<li>Let's find out :</li>
+</ul>
+
+<p>Connect to the environment/server/container where laravel is hosted and run tinker :</p>
+
+<pre><code class="bash">php artisan tinker
+</code></pre>
+
+<p>Once, the tinker prompt is open, run following :</p>
+
+<pre><code class="bash">&gt;&gt;&gt; DB::select("SHOW STATUS LIKE 'Ssl_cipher'")
+</code></pre>
+
+<p>If it gives output like following :</p>
+
+<pre><code class="bash">=&gt; [
+    {
+        +"Variable_name": "Ssl_cipher",
+        +"Value": "DHE-RSA-AES128-SHA",
+    },
+]
+</code></pre>
+
+<p>Then laravel application is connecting to AWS RDS via a secure SSL connection.</p>
+
+<p>However, if the output is like this  :</p>
+
+<pre><code class="bash">=&gt; [
+    {
+        +"Variable_name": "Ssl_cipher",
+        +"Value": "",
+    },
+]
+</code></pre>
+
+<p>Then the connection is not sure. There are number of variables which you can help us get more information about the SSL connection paramaters. We checked <code>Ssl_cipher</code> above, you can also check <code>Ssl_version</code> which might give you blank or something like <code>TLSv1</code> if SSL is working.</p>
+
+<p>To get all information about SSL connection run following in tinker prompt :</p>
+
+<pre><code class="bash">&gt;&gt;&gt; DB::select("SHOW STATUS LIKE '%Ssl%'")
+</code></pre>
+
+<ul>
+<li>Next steps to secure the connection :</li>
+</ul>
+
+<p>If you found out that the laravel application connection is not using SSL while connecting to AWS RDS, you can follow below steps to enable the same.</p>
+
+<p>Firstly, let us understand how it works. When you connect to AWS RDS normally via mysql cli, you do :</p>
+
+<pre><code class="bash">mysql -h myinstance.c9akciq32.rds-us-east-1.amazonaws.com -u username -p
+</code></pre>
+
+<p>You can pass SSL certificate using <code>--ssl-ca</code> option in above command like below :</p>
+
+<pre><code class="bash">mysql -h myinstance.c9akciq32.rds-us-east-1.amazonaws.com --ssl-ca=/path/to/certificate-authority-file.pem -u username -p
+</code></pre>
+
+<p>Optionally, you can pass <code>-ssl-mode</code> and <code>--ssl-verify-server-cert</code>. For more details about this please refer mysql's official <a href="https://dev.mysql.com/doc/refman/5.7/en/encrypted-connection-options.html">documentation</a>.</p>
+
+<p>Now let's get back to the original problem which we are here to solve. How we are going to do this in Laravel?</p>
+
+<p>Step 1 : Downloading the <code>certificate authority file</code>. AWS RDS has a commonly published pem file called <code>rds-combined-ca-bundle.pem</code> which you can download directly from <a href="https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem">here</a>. It is an officially published pem file which will work in all default RDS SSL connections.</p>
+
+<p>Step 2 : Save the downloaded file from step 1 inside a new directory called <code>RDSCerts</code> inside laravel root. Quick note that in this step itself, I would add this inside gitignore because there is no need to add pem and cert files inside the version control.</p>
+
+<p>Step 3 : Laravel's database configurations are inside <code>config/database.php</code> file. It already has a <code>mysql</code> section. Let's not change that, lets copy that entirely into a new configuration section called <code>mysql_ssl</code> where we will also add the certification authority file in options like below :</p>
+
+<pre><code class="php">'mysql_ssl' =&gt; [
+    'driver' =&gt; 'mysql',
+    'host' =&gt; env('DB_HOST', '127.0.0.1'),
+    'port' =&gt; env('DB_PORT', '3306'),
+    'database' =&gt; env('DB_DATABASE', 'forge'),
+    'username' =&gt; env('DB_USERNAME', 'forge'),
+    'password' =&gt; env('DB_PASSWORD', ''),
+    'unix_socket' =&gt; env('DB_SOCKET', ''),
+    'charset' =&gt; 'utf8mb4',
+    'collation' =&gt; 'utf8mb4_unicode_ci',
+    'prefix' =&gt; '',
+    'prefix_indexes' =&gt; true,
+    'strict' =&gt; false,
+    'engine' =&gt; null,
+    'options' =&gt; [    
+        PDO::MYSQL_ATTR_SSL_CA =&gt; base_path('RDSCerts/rds-combined-ca-bundle.pem')
+    ],
+],
+</code></pre>
+
+<p>Important note, You might be thinking that when we need to pass <code>--ssl-verify-server-cert</code> option somehow from laravel's configuration as well. Don't worry it's enabled by default. If you want to disable it then you can pass <code>PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT = false</code> which I would not suggest.</p>
+
+<p>There are more options about SSL which you can check in the official PDO <a href="https://www.php.net/manual/en/ref.pdo-mysql.php">documentation</a>.</p>
+
+<p>Once you follow above 3 steps, you should be good to go. Cross check by running <code>DB::select("SHOW STATUS LIKE '%Ssl%'")</code> in tinker as we did earlier in this article. You should see ciphers and ssl version mentioned in the connection.</p>
+
+        </div>
+        <div class="cat-tags">
+            <span class="tags col-md-6">By : Mihir Bhende</span>
+                            <span class="categories col-md-6">
+                Categories : 
+                                <a href="https://techsemicolon.github.io/blog/categories/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/aws">aws</a>                                </span>
+                                        <span class="tags col-md-6">
+                Tags : 
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/aws">aws</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/rds">rds</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/ssl">ssl</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/encryption">encryption</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/transit">transit</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/secure">secure</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/connection">connection</a>                                </span>
+                    </div>
+
+        <div class="fb-comments" 
+            data-href="https://techsemicolon.github.io" 
+            data-numposts="5" width="100%">
+        </div>
+    </article>
+
+
+
+                </div>
+            </div>
+        </main>
+        <footer class="container">
+            <span>Tech.Semicolon | &copy; 2019 </span>
+        </footer>
+
+        <script src="https://techsemicolon.github.io/components/jquery/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="https://techsemicolon.github.io/components/bootstrap/js/bootstrap.min.js"></script>
+                
+                <script src="https://techsemicolon.github.io/components/highlightjs/highlight.pack.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+
+                    </body>
+</html>
