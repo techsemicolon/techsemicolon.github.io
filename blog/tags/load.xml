@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Tech.Semicolon]]></title>
+    <link href="https://techsemicolon.github.io/blog/tags/load.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-04-19T19:22:53+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[AWS Load Balancer stickiness and load distribution]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/"/>
+            <updated>2019-04-19T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/</id>
+            <content type="html"><![CDATA[<p>AWS load balancing is an interesting cloud service which automatically distributes incoming application traffic across multiple available target servers, such as Amazon EC2 instances, containers, IP addresses, and Lambda functions. It helps the infrastructure to have high availability, automatic scaling and as a result makes application more fault tolerant.</p>
+
+<ul>
+<li>Quick question :</li>
+</ul>
+
+<p>As per the concept of AWS load balancer with autoscaling, if the traffic is increased which current servers can not handle, new server is launched automatically and added under the load balancer so that the traffic is distributed across available target servers.</p>
+
+<p>Let's say for an example :</p>
+
+<p>We have an Application load balancer(ALB) which has minimum 2 servers, maximum it can autoscale to 10 servers. Each server can serve user traffic for 50 users.</p>
+
+<p>The server has autoscaling policy based on <code>CPUUtilization</code>, when server goes above 75% for CPUUtilization metrix, autoscaling shoul spin up new instance.</p>
+
+<p>At 8AM there are 50 users, the traffic is distributed across 2 servers and everything is normal.
+AT 10AM there are 95 user and the CPUUtilization is greater than 75% threashold, a new server spins up.</p>
+
+<p>Now, at 10.15AM can you be sure that the traffic load is distributed evenly by the autoscaling?</p>
+
+<ul>
+<li>Let's find out :</li>
+</ul>
+
+<ol>
+<li>Server spin up time :</li>
+</ol>
+
+<p>Server spin up time, also called as instance warmup time, is the duration in which server spin up is initiated and server is ready to server requests. This depends upon the configuration scripts and start up commands which are run when server is spinning up.</p>
+
+<p>The instances use a configuration script to install and configure software before the instance is put into service. As a result, it takes around two or three minutes from the time the instance launches until it comes in service. This is not entirely in our hands and AWS internal infrastructure also contributes to this time. The actual time depends on several factors, such as the size of the instance and whether there are startup scripts to complete.</p>
+
+<p>However, this is important to know how much time your server takes on an average to be ready. Because if your server takes on an average 15 minutes to spin up, all the increased traffic will still served by old overwhelmed servers for that 15 minute period.</p>
+
+<p>AWS uses <a href="https://docs.aws.amazon.com/autoscaling/ec2/userguide/Cooldown.html">cooldown period</a> setting for simple autoscaling policy to handle the startup time.</p>
+
+<ol start="2">
+<li>Sticky session or stickyness of the load balancer :</li>
+</ol>
+
+<p><a href="https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html#sticky-sessions">Sticky session</a> or stickyness of load balancer the setting to route the traffic incoming requests for a particular session to the same target server that serviced the initial request for that session. In short, under load balancer having 3 servers S1, S2 and S3, if User A's first request was served by S2 server, his subsqeuent requests will be also served by S2 server until the request stickyness is expired or disabled or deliberatly updated(by sending differnet AWSALB cookie in request)</p>
+
+<p>More interestingly, the load balancer will always distribute traffic in a round robin algorithm. This is done with each request without stickiness and done on each session with stickiness.</p>
+
+<p>As soon as a new instance is spun up and joins the group, it will not immediately get all the traffic. but it will join in the pool of round robin distribution of incoming traffic.</p>
+
+<p>With stickiness setting enabled, existing sessions <code>will still have all requests routed to existing instances</code>. Only <code>new</code> sessions may hit the new instance. Being round robin, new sessions may also get routed to the existing instances.</p>
+
+<p>Without stickiness, request from existing users will immediately get routed to the new instance. Hence it's safe to say that how quickly traffic load will be equilized and distributed across all available instances will depend on stickiness.</p>
+
+<p>Sticky session comes up with a setting of expiration. You can specify a time from 1 second to 7 days. This setting is really important and you should definitely pay attension to the value you are setting. If this value is very large, spinning up new instances when autoscaling kicks in will not be useful as existing traffic is still stick with old servers.</p>
+
+<p>Also a key point to note that for sticky session expiration Period, type the cookie expiration period, in seconds. If you do not specify an expiration period, the sticky session lasts for the duration of the browser session.</p>
+
+<ul>
+<li>Know if you need sticky sessions :</li>
+</ul>
+
+<p>Even if the sticky session setting is a good choice, it's for the applications which maintain the session state on service target instance. For example, a php web server maintaining sessions in local filesystem of EC2 instance. In that case if user request is served by other EC2 instance, then user will be logged out die to that session not being present there.</p>
+
+<p>However, if your session state is managed by a separate service like RDS, Redis, Elasticache etc which is independent of which target server is serving your request, you probably do not even need sticky sessions.</p>
+
+<ul>
+<li>The bottom line :</li>
+</ul>
+
+<p>Test and find the best settings as per your application when setting up auto-scaling policies. Because, if your server is not ready quickly when the application needs it for serving increased traffic, it's going to affect your application performance specially during peak hours.</p>
+]]></content>
+        </entry>
+    </feed>
