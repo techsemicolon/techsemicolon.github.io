@@ -3,7 +3,7 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/atom.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-04-24T11:29:45+00:00</updated>
+    <updated>2019-04-24T16:34:22+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
@@ -38,9 +38,9 @@
 
 <p><code>The gzip module during the compression determines the length only from the “Content-Length” response header field</code></p>
 
-<p>So, if your app server is <code>NOT</code> having <code>Content-Length</code> header, <code>gzip_min_length</code> directive is not going to determine the response size and hence it will default to <code>all responses being compresses</code> before their transmittion to client.</p>
+<p>So, if your app server is <code>NOT</code> having <code>Content-Length</code> header, <code>gzip_min_length</code> directive is not going to determine the response size and hence it will default to <code>all responses being compressed</code> before their transmittion to client.</p>
 
-<p>This is pretty bad for a server which is serving lot of requests as nginz gzip is utilizing unneccessary resources for compression of responses very tiny in size.</p>
+<p>This is pretty bad for a server which is serving lot of requests as nginx    gzip is utilizing unneccessary resources for compression of responses very tiny in size.</p>
 
 <ul>
 <li>The solution :</li>
@@ -92,7 +92,7 @@ class ContentLegthMiddleware
 <p>It is important to see if these changes have made any difference. I used <a href="https://github.com/JoeDog/siege"><code>Siege</code></a> load testing framework to test my server before and after the above changes were done. I could definitely see quicker response times and less CPU utilization. Please note that, this will be significantly seen on a high workload. If you have couple of requests on your server, the difference in performance will be negligible.</p>
 
 <ul>
-<li>Quick note on <code>gzip_comp_level</code> :</li>
+<li>Quick note on gzip_comp_level :</li>
 </ul>
 
 <p>The gzip compression as another directive called <code>gzip_comp_level</code> which receives values from <code>1</code> to <code>9</code>, where compression increases from 1 to 9. This is another vital directive. If you have comression level, it is going to consume more resources for compressing the response. For most servers value of 2 or 3 is enough as difference between compression from level to level is not significant.</p>
@@ -280,35 +280,6 @@ AT 10AM there are 95 user and the CPUUtilization is greater than 75% threashold,
 <p>There are more options about SSL which you can check in the official PDO <a href="https://www.php.net/manual/en/ref.pdo-mysql.php">documentation</a>.</p>
 
 <p>Once you follow above 3 steps, you should be good to go. Cross check by running <code>DB::select("SHOW STATUS LIKE '%Ssl%'")</code> in tinker as we did earlier in this article. You should see ciphers and ssl version mentioned in the connection.</p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Laravel tips for a secure healthcare application]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/03/25/laravel-tips-for-a-secure-healthcare-application/"/>
-            <updated>2019-03-25T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/03/25/laravel-tips-for-a-secure-healthcare-application/</id>
-            <content type="html"><![CDATA[<p>Laravel being a very flexible framework, it can be a great choice for building large applications in domains which require higher levels of application security. Some of such domains are Healthcare, Banking, Government, Ecommerce. Any website no matter what is the domain, needs to be secure. However, with the beforementioned domains, liabilities are much more because you are dealing with very sensitive data.</p>
-
-<p>Security breaches can occure from many ways, not just from application's development vulnerabilities but some of the architecture level server backdoors or may be poor levels of access control. We will be just discussing the steps you can take on Laravel framework level to make sure there are no such loopholes or backdoors open for exploitation.</p>
-
-<h3 id="1.-authentication-and-acl-%3A">1. Authentication and ACL :</h3>
-
-<p>Let's get the basic definition of authentication first, <code>Its the process of verifying the identity of a user</code>. Authentication process is a key entry point using which user in your application logs in. It can be stateful which maintains a user session on server and client level or stateless/token based authentication. All the secure domains MUST have extremely robust and full proof authentication set up.</p>
-
-<p>Below are some of the pointers you SHOULD consider : 
-- Get minimum information about the user but make sure its verified/authentic. Earlier email verification was a key. Now a days there are so many disposable email services available or simply creating a new fake gmail account is not much of a pain, its no more a safe way to verify. You can use more personalized way of verification which is from user's mobile number.
-- Log the user's IP address and access geolocation. This will give you a couple of locations from which user frequently accesses the application login. If someone logs in from a different/new location, you can shoot an email or text message for an approval. This is extremely handy as if user denies that its not him/her, you can immediately block that user automatically until some futher unblock action is taken from the original user.
-- If your website allows passwords like <code>test123</code> or <code>abcd1234</code> or <code>qwerty</code>, it is a high time you need to go back and update that without thinking twice. You SHOULD enforce password strength policies.
-- Make sure you are not fooling around with the default password hashing in Laravel. If you do, make sure its a very strong authentication which is NOT reversible. The thumb rule is <code>Implement a cryptography which is a one way function which means that you can convert your password to a hash, but you can not easily convert your hash to a password</code>.
-- Enable throttling and if you see the large consecutive failed attempts, log it and report it to the user. Lock the user until he verifies its him/her.
-- If you are having username as the main login reference instead of email, do not override entire login functionality in Laravel. Laravel provides a handy way to do the same. 
-- If you are using one time passwords(OTP) for any set of login authentication, make sure those are unique and enabled for limited duration with an expory time. Also, the route urls in which user enters the OTP can be a temporary signed url with an expiration time as well.
-- There should be NO admin with all access. The main misconception is, if there is an owner/higher level person, he/she has to have a login to see all information. There has to be a limit on what the higher level people see.
-- This can be a totally big topic of discussion, but I do not see a point of having 3rd party social logins in a secure website. You have to have total control over the authentication process. If I am logging through google, you know how easy it is to have a face gmail account.
-- STOP integrating 3rd party plugin directly into authentication unless you study them entirely, view issues threads or may be contact the developers for more details infomation on how their plugin is maintaining basic security. The last think you would want is, having your application secured but a 3rd party plugin you installed has a backdoor for exploitation.
-- 
-- Even if your website has just few sets of user types, set role for each user.
--</p>
 ]]></content>
         </entry>
             <entry>
@@ -1215,6 +1186,113 @@ class CustomerRepository
 <p></p>
 
 <p>You can also extend this idea for input, select etc. I think once you set such directives in a project, your blade views become readble. Plus less code in a bladel file is always better.</p>
+]]></content>
+        </entry>
+            <entry>
+            <title type="html"><![CDATA[Laravel tap vs tap vs pipe]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
+            <updated>2019-01-08T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
+            <content type="html"><![CDATA[<p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
+
+<h3 id="the-tap-function-%3A">The tap() function :</h3>
+
+<p>The reason of having tap 2 times in the article header is that, there are 2 implementations of tap helper function in laravel. One is in generic context and one specific to handling collections.</p>
+
+<ul>
+<li>The generic tap() function :</li>
+</ul>
+
+<p>The name tap suggests that it basically does set of actions using the value and then returns the value as if nothing happened. In other words, the tap function accepts two arguments <code>$value</code> and <code>a Closure</code>. The <code>$value</code> will be passed to the closure function. You can perform your actions in the closure where the return value of the Closure is irrelevant. At the end tap returns the same <code>$value</code> at the end.</p>
+
+<p>For example :</p>
+
+<pre><code class="php">$user = tap($user, function ($user) {
+
+    $user-&gt;notify(new SendWelcomeEmail());
+
+});
+</code></pre>
+
+<p>In the above snippet, we are passing <code>$user</code> instance to tap as first argument which is then cascaded as a parameter to closure. The closure will execute and basically send a new welcome email. Then control will come back to tap which will return the <code>$user</code> instance back.</p>
+
+<p>Even you can just eliminate the closure and call function on it directly like below.</p>
+
+<pre><code class="php">$user = tap($user)-&gt;notify(new SendWelcomeEmail());
+</code></pre>
+
+<p>The above will still return the user instance. The beauty of it is, you can chain the tap calls. Let's say you need to update the user role, then send the welcome email and then assign user some permissions. You can chain it all like :</p>
+
+<pre><code class="php">$user = tap($user)-&gt;update([
+    'role' =&gt; 'Customer' 
+])
+-&gt;notify(new SendWelcomeEmail())
+-&gt;assignPermissions('CustomerRole');
+</code></pre>
+
+<p>The use of this method can be handy when certain methods do not return the object as you want. A great example is the update method itself on the eloquent model. It returns integer when used otherwise. But if used as above with tap function, it returns the object it performed the update.</p>
+
+<ul>
+<li>The collection tap() function :</li>
+</ul>
+
+<p>The tap function for collection can be used in collection function chaining. I think of it similar to javascript debug breakpoints. You pin it to print something at a point of time in your javascript and then move ahead after removing the breakpoint.</p>
+
+<p>For example consider following example :</p>
+
+<pre><code class="php"><br />$customers = collect([
+    ['name' =&gt; 'mihir',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'george', 'is_active' =&gt; true,  'category' =&gt; 'silver'],
+    ['name' =&gt; 'nathen', 'is_active' =&gt; false, 'category' =&gt; 'platinum'],
+    ['name' =&gt; 'steve',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'shawn',  'is_active' =&gt; false, 'category' =&gt; 'gold']
+]);
+
+$activeGoldCustomers = collect($customers)
+    -&gt;where('is_active', true)
+    -&gt;tap(function ($activeCustomers) {
+        $this-&gt;sendActiveCustomerEmail($activeCustomers);
+    })
+    -&gt;where('category', 'gold')
+    -&gt;tap(function ($goldCustomers) {
+        $this-&gt;sendOfferCode('100%Discount');
+    });
+</code></pre>
+
+<p>In above example, we are just returning the customers who are currently active and fall under category gold. However, using the tap function we can perform certain actions on the go as we filter those. When we filtered for <code>is_active = true</code>, we sent activation email. Then when we added another filter for <code>category = gold</code>, we sent offer code just for active customer from gold category.</p>
+
+<p>You can also find this handy in dumping data for debugging during the developement cycle.</p>
+
+<p>The fundamental concept of <code>tap()</code> is just use the value and perform actions but NEVER CHANGE the value. If you think then what can change the value? <code>pipe()</code> is the answer.</p>
+
+<h3 id="the-pipe-function-%3A">The pipe() function :</h3>
+
+<p>Pipe function is just applicable for collections. For example consider following example :</p>
+
+<pre><code class="php"><br />$customers = collect([
+    ['name' =&gt; 'mihir',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'george', 'is_active' =&gt; true,  'category' =&gt; 'silver'],
+    ['name' =&gt; 'nathen', 'is_active' =&gt; false, 'category' =&gt; 'platinum'],
+    ['name' =&gt; 'steve',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
+    ['name' =&gt; 'shawn',  'is_active' =&gt; false, 'category' =&gt; 'gold']
+]);
+
+$counts = collect($customers)
+ -&gt;pipe(function($customers) {
+    return [
+        'active_count'      =&gt; $customers-&gt;where('is_active', true)-&gt;count(),
+        'gold_count'        =&gt; $customers-&gt;where('category', 'gold')-&gt;count(),
+        'silver_count'      =&gt; $customers-&gt;where('category', 'silver')-&gt;count(),
+        'platinum_count'    =&gt; $customers-&gt;where('category', 'platinum')-&gt;count()
+    ];
+});
+</code></pre>
+
+<p>Above will basicaly return <code>[3, 3, 1, 1]</code>, but it is very clean and less code is always better.</p>
+
+<p>Please note that the <code>pipe()</code> helper method is different than the <code>laravel pipelines</code>. However, if you read about pipelines, its is kind of similar conceptually to generic tap function where you can pass an object through multiple classes to perform set of task and then return the result value once all the tasks have been finished. A <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">handy article</a> for the same is <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">here</a> if you want a quick read.</p>
+
+<p>Even if these methods are very handy, sometimes if you chain it to much it loses the element fo readability. I will suggest it is preferable to follow what the domain logic wants and group the similar processes together to tap or pipe.</p>
 ]]></content>
         </entry>
     </feed>

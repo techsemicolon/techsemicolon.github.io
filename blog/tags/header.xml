@@ -3,7 +3,7 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/tags/header.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-04-24T11:29:45+00:00</updated>
+    <updated>2019-04-24T16:34:22+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
@@ -38,9 +38,9 @@
 
 <p><code>The gzip module during the compression determines the length only from the “Content-Length” response header field</code></p>
 
-<p>So, if your app server is <code>NOT</code> having <code>Content-Length</code> header, <code>gzip_min_length</code> directive is not going to determine the response size and hence it will default to <code>all responses being compresses</code> before their transmittion to client.</p>
+<p>So, if your app server is <code>NOT</code> having <code>Content-Length</code> header, <code>gzip_min_length</code> directive is not going to determine the response size and hence it will default to <code>all responses being compressed</code> before their transmittion to client.</p>
 
-<p>This is pretty bad for a server which is serving lot of requests as nginz gzip is utilizing unneccessary resources for compression of responses very tiny in size.</p>
+<p>This is pretty bad for a server which is serving lot of requests as nginx    gzip is utilizing unneccessary resources for compression of responses very tiny in size.</p>
 
 <ul>
 <li>The solution :</li>
@@ -92,7 +92,7 @@ class ContentLegthMiddleware
 <p>It is important to see if these changes have made any difference. I used <a href="https://github.com/JoeDog/siege"><code>Siege</code></a> load testing framework to test my server before and after the above changes were done. I could definitely see quicker response times and less CPU utilization. Please note that, this will be significantly seen on a high workload. If you have couple of requests on your server, the difference in performance will be negligible.</p>
 
 <ul>
-<li>Quick note on <code>gzip_comp_level</code> :</li>
+<li>Quick note on gzip_comp_level :</li>
 </ul>
 
 <p>The gzip compression as another directive called <code>gzip_comp_level</code> which receives values from <code>1</code> to <code>9</code>, where compression increases from 1 to 9. This is another vital directive. If you have comression level, it is going to consume more resources for compressing the response. For most servers value of 2 or 3 is enough as difference between compression from level to level is not significant.</p>
