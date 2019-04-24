@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Tech.Semicolon]]></title>
+    <link href="https://techsemicolon.github.io/blog/tags/gzip.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-04-24T11:25:14+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Laravel content-length header issue with gzip compression]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/"/>
+            <updated>2019-04-23T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/</id>
+            <content type="html"><![CDATA[<p>As an optimization process from server side responses, we use gzip compression which compresses the response before sending it to the client. Compressing responses as a result significantly reduces the size of data being transmitted.</p>
+
+<p>As you can imagine any type of compression requires certain amount of memory and processing power. Considering the gzip compression happens at runtime, it consumes considerable processing resources. Which is why it is important to configure the compression for the responses which really need it.</p>
+
+<ul>
+<li>Configuring compression :</li>
+</ul>
+
+<p>An application web server has different types of responses, some might be extremely small having size of 10byte or some with very large data having size more than 1MB. It is fairly good to consider  that the 10byte response does not need compression as it's already very very tiny in size. If your server is attempting to compresses such smal responses as well, its consuming unnccessary resources in response compression.</p>
+
+<p>To avoid this, we use <code>gzip directives</code> to notify gzip compression mechanism that only compress the responses which have size greater then the defined directive value. We use <code>gzip_min_length</code> directive for it which takes numeric value representing <code>bytes</code>.</p>
+
+<pre><code>gzip_min_length 1000;
+</code></pre>
+
+<p>As per above gzip configuration, any response having size less than 1000 bytes will be transmitted to the client as it is without any compression. Any response having size greater than 1000 bytes will be compressed first at runtime and then transmitted to the client.</p>
+
+<p>Note : The value of <code>1000</code> bytes is taken just as an example for this article. Please change it as per your requirements.</p>
+
+<ul>
+<li>Now here is the catch :</li>
+</ul>
+
+<p>Even if you have the <code>gzip_min_length</code> directive value set, it under the hood relies on <code>Content-Length</code> header present in response.</p>
+
+<p><code>The gzip module during the compression determines the length only from the “Content-Length” response header field</code></p>
+
+<p>So, if your app server is <code>NOT</code> having <code>Content-Length</code> header, <code>gzip_min_length</code> directive is not going to determine the response size and hence it will default to <code>all responses being compresses</code> before their transmittion to client.</p>
+
+<p>This is pretty bad for a server which is serving lot of requests as nginz gzip is utilizing unneccessary resources for compression of responses very tiny in size.</p>
+
+<ul>
+<li>The solution :</li>
+</ul>
+
+<p>The solution is fairly simple, we need to add <code>Content-Length</code> in each of our response so that gzip can determine the response size and decide if compression is to be done or not.</p>
+
+<p>As we are focusing on laravel in this article, we can add content length using a simple middleware. Let's call it <code>ContentLegthMiddleware</code> :</p>
+
+<pre><code class="php">&lt;?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+
+class ContentLegthMiddleware
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return mixed
+     */
+    public function handle($request, Closure $next)
+    {
+        $response = $next($request);
+
+        // Get response length
+        $responseLength = strlen($response-&gt;getOriginalContent());
+
+        // Add the header
+        $response-&gt;header('Content-Length', $responseLength);
+
+        // Return the response
+        return $response;
+    }
+}
+</code></pre>
+
+<p>Last but not the least, you need to add the middleware in <code>app/Http/Kernel.php</code>.</p>
+
+<p>Now you will be able to see <code>Content-Length: xxx</code> in your dev tools under response headers.</p>
+
+<ul>
+<li>Benchmarking :</li>
+</ul>
+
+<p>It is important to see if these changes have made any difference. I used <a href="https://github.com/JoeDog/siege"><code>Siege</code></a> load testing framework to test my server before and after the above changes were done. I could definitely see quicker response times and less CPU utilization. Please note that, this will be significantly seen on a high workload. If you have couple of requests on your server, the difference in performance will be negligible.</p>
+
+<ul>
+<li>Quick note on <code>gzip_comp_level</code> :</li>
+</ul>
+
+<p>The gzip compression as another directive called <code>gzip_comp_level</code> which receives values from <code>1</code> to <code>9</code>, where compression increases from 1 to 9. This is another vital directive. If you have comression level, it is going to consume more resources for compressing the response. For most servers value of 2 or 3 is enough as difference between compression from level to level is not significant.</p>
+]]></content>
+        </entry>
+    </feed>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>Laravel content-length header issue with gzip compression &mdash; Tech.Semicolon</title>
+        <meta charset="utf-8">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <meta name="robots" content="index, follow">
+
+        <!-- Meta Tags -->
+        <meta name="description" content="Use secure SSL connection for encryption in transit whiule connecting to AWS RDS from Laravel" />
+        <meta property="og:title" content="Laravel content-length header issue with gzip compression" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://techsemicolon.github.io" />
+        <meta property="og:image" content="https://techsemicolon.github.io/images/logo.png" />
+        <meta property="og:description" content="Use secure SSL connection for encryption in transit whiule connecting to AWS RDS from Laravel" /> 
+        <meta property="og:site_name" content="Tech Semicolon" />
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,400i,600,600i,700,800|Yanone+Kaffeesatz:200,300,400,700" rel="stylesheet">
+        <link href="https://techsemicolon.github.io/components/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="https://techsemicolon.github.io/css/style.css" rel="stylesheet" type="text/css" />
+
+        <link rel="apple-touch-startup-image" href="https://techsemicolon.github.io/images/fav.png">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="shortcut icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+
+        <link rel="stylesheet" href="https://techsemicolon.github.io/components/highlightjs/styles/github.css" />
+        <link rel="alternate" type="application/atom+xml" href="https://techsemicolon.github.io/atom.xml" title="Tech.Semicolon activity feed" />
+                                    </head>
+    <body>
+        <div id="fb-root"></div>
+        <script>(function(d, s, id) {
+              var js, fjs = d.getElementsByTagName(s)[0];
+              if (d.getElementById(id)) return;
+              js = d.createElement(s); js.id = id;
+              js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2&appId=1919280101503437&autoLogAppEvents=1';
+              fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        </script>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-header">
+                <div class="container">
+                    <a class="navbar-brand" href="https://techsemicolon.github.io/">
+                        <img src="https://techsemicolon.github.io/images/logo.png" class="logo-img"/>
+                    </a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog">Posts Archive</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/categories">Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/tags">Tags</a></li>
+                            <li class="nav-item"><a target="_blank" class="nav-link" href="https://github.com/techsemicolon">GitHub</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/about">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <main role="main" class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                        <article>
+        <header>
+            <h2>Laravel content-length header issue with gzip compression</h2>
+        </header>
+        <div>
+            <p>As an optimization process from server side responses, we use gzip compression which compresses the response before sending it to the client. Compressing responses as a result significantly reduces the size of data being transmitted.</p>
+
+<p>As you can imagine any type of compression requires certain amount of memory and processing power. Considering the gzip compression happens at runtime, it consumes considerable processing resources. Which is why it is important to configure the compression for the responses which really need it.</p>
+
+<ul>
+<li>Configuring compression :</li>
+</ul>
+
+<p>An application web server has different types of responses, some might be extremely small having size of 10byte or some with very large data having size more than 1MB. It is fairly good to consider  that the 10byte response does not need compression as it's already very very tiny in size. If your server is attempting to compresses such smal responses as well, its consuming unnccessary resources in response compression.</p>
+
+<p>To avoid this, we use <code>gzip directives</code> to notify gzip compression mechanism that only compress the responses which have size greater then the defined directive value. We use <code>gzip_min_length</code> directive for it which takes numeric value representing <code>bytes</code>.</p>
+
+<pre><code>gzip_min_length 1000;
+</code></pre>
+
+<p>As per above gzip configuration, any response having size less than 1000 bytes will be transmitted to the client as it is without any compression. Any response having size greater than 1000 bytes will be compressed first at runtime and then transmitted to the client.</p>
+
+<p>Note : The value of <code>1000</code> bytes is taken just as an example for this article. Please change it as per your requirements.</p>
+
+<ul>
+<li>Now here is the catch :</li>
+</ul>
+
+<p>Even if you have the <code>gzip_min_length</code> directive value set, it under the hood relies on <code>Content-Length</code> header present in response.</p>
+
+<p><code>The gzip module during the compression determines the length only from the “Content-Length” response header field</code></p>
+
+<p>So, if your app server is <code>NOT</code> having <code>Content-Length</code> header, <code>gzip_min_length</code> directive is not going to determine the response size and hence it will default to <code>all responses being compresses</code> before their transmittion to client.</p>
+
+<p>This is pretty bad for a server which is serving lot of requests as nginz gzip is utilizing unneccessary resources for compression of responses very tiny in size.</p>
+
+<ul>
+<li>The solution :</li>
+</ul>
+
+<p>The solution is fairly simple, we need to add <code>Content-Length</code> in each of our response so that gzip can determine the response size and decide if compression is to be done or not.</p>
+
+<p>As we are focusing on laravel in this article, we can add content length using a simple middleware. Let's call it <code>ContentLegthMiddleware</code> :</p>
+
+<pre><code class="php">&lt;?php
+
+namespace App\Http\Middleware;
+
+use Closure;
+
+class ContentLegthMiddleware
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @return mixed
+     */
+    public function handle($request, Closure $next)
+    {
+        $response = $next($request);
+
+        // Get response length
+        $responseLength = strlen($response-&gt;getOriginalContent());
+
+        // Add the header
+        $response-&gt;header('Content-Length', $responseLength);
+
+        // Return the response
+        return $response;
+    }
+}
+</code></pre>
+
+<p>Last but not the least, you need to add the middleware in <code>app/Http/Kernel.php</code>.</p>
+
+<p>Now you will be able to see <code>Content-Length: xxx</code> in your dev tools under response headers.</p>
+
+<ul>
+<li>Benchmarking :</li>
+</ul>
+
+<p>It is important to see if these changes have made any difference. I used <a href="https://github.com/JoeDog/siege"><code>Siege</code></a> load testing framework to test my server before and after the above changes were done. I could definitely see quicker response times and less CPU utilization. Please note that, this will be significantly seen on a high workload. If you have couple of requests on your server, the difference in performance will be negligible.</p>
+
+<ul>
+<li>Quick note on <code>gzip_comp_level</code> :</li>
+</ul>
+
+<p>The gzip compression as another directive called <code>gzip_comp_level</code> which receives values from <code>1</code> to <code>9</code>, where compression increases from 1 to 9. This is another vital directive. If you have comression level, it is going to consume more resources for compressing the response. For most servers value of 2 or 3 is enough as difference between compression from level to level is not significant.</p>
+
+        </div>
+        <div class="cat-tags">
+            <span class="tags col-md-6">By : Mihir Bhende</span>
+                            <span class="categories col-md-6">
+                Categories : 
+                                <a href="https://techsemicolon.github.io/blog/categories/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/nginx">nginx</a>                                </span>
+                                        <span class="tags col-md-6">
+                Tags : 
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/content">content</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/length">length</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/header">header</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/compression">compression</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/gzip">gzip</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/nginx">nginx</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/middleware">middleware</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/memory">memory</a>                                </span>
+                    </div>
+
+        <div class="fb-comments" 
+            data-href="https://techsemicolon.github.io" 
+            data-numposts="5" width="100%">
+        </div>
+    </article>
+
+
+
+                </div>
+            </div>
+        </main>
+        <footer class="container">
+            <span>Tech.Semicolon | &copy; 2019 </span>
+        </footer>
+
+        <script src="https://techsemicolon.github.io/components/jquery/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="https://techsemicolon.github.io/components/bootstrap/js/bootstrap.min.js"></script>
+                
+                <script src="https://techsemicolon.github.io/components/highlightjs/highlight.pack.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+
+                    </body>
+</html>
