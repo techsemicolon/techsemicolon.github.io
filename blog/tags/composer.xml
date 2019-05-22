@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Tech.Semicolon]]></title>
+    <link href="https://techsemicolon.github.io/blog/tags/composer.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-05-22T12:40:17+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Composer stuck at Something&#039;s changed looking at all rules again]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/"/>
+            <updated>2019-05-20T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/</id>
+            <content type="html"><![CDATA[<p>While upgrading one of my laravel application from version 5.3 to 5.4, I came across a weird situation which was coming from composer dependency management. The situation was that when running composer install it was getting stuck at  <code>Something's changed looking at all rules again(1)</code> and composer was showing counter of attempts in brackets which was increasing from 1 to 900+. It took arund 2+ hours composer update was stuck in this situation and attempts counter was increasing, even when the system where application was hosted had pretty good configurations.</p>
+
+<ul>
+<li>How do I get this information :</li>
+</ul>
+
+<p>When you run composer command, lets say <code>composer install</code>, it does internal steps it's supposed to do one by one. However, we just see the high level output in command promt and not the details of steps. Similarly, the error message I saw can not be seen directly if you just do <code>composer install</code>. You need to make the output more verbose by passing <code>-v</code> command line argument. You can pass upto 3 v's to get more verbosity</p>
+
+<p>For e.g. :</p>
+
+<pre><code class="bash">`composer install -vvv`
+</code></pre>
+
+<p>When I did this, I got lot of detailed steps whats composer is doing internally, one of these verbose messages was the error message <code>Something's changed looking at all rules again(1)</code></p>
+
+<ul>
+<li>Why composer gets stuck :</li>
+</ul>
+
+<p>Okay, to explain it's comparatively easy to understand why it gets stuck. Let's take an example that application has 2 packages <code>techsemicolon/package-first</code> and  <code>techsemicolon/package-second</code>:</p>
+
+<pre><code class="json">"require": {
+    "php": "&gt;=5.6.4",
+    "techsemicolon/package-first": "5.4.*",
+    "techsemicolon/package-second": "2.3.*",
+    .
+    .
+    .
+    .
+}
+</code></pre>
+
+<p>Now the both these packages have package <code>techsemicolon/dependency-package</code> in their own dependencies. But</p>
+
+<pre><code>`techsemicolon/package-first` requires `techsemicolon/dependency-package` at version `2.*.*` 
+`techsemicolon/package-second` requires `techsemicolon/dependency-package` at version `3.*.*`. 
+</code></pre>
+
+<p>Now, it's really confusing for composer to now decide if it should install the <code>techsemicolon/dependency-package</code> at version <code>2.*.*</code> or <code>3.*.*</code>. When we do composer install or update, it calculates these dependency trees and decide which version to install/update to. It checks the dependency rules defined in <code>composer.json</code> of application as well as those in individual package as their dependencies. Hence it gets stuck at <code>Something's changed looking at all rules again</code>.</p>
+
+<p>Now, there can be situation where it recalculatues the rules again and shows this message but within a minute or two it finds the version which can satisfy the dependencies and proceeds. But in cases like mine, it calculates the rules in circles and gets stuck for really really long time.</p>
+
+<ul>
+<li>The solution :</li>
+</ul>
+
+<p>A note to start with, this is not the only or best solution to resolve this. But, considering this error is little different than commonly occuring composer errors, this is what I could do to resolve this quickly and effectively.</p>
+
+<ol>
+<li><p>Let's consider your composer has 15 packages in <code>require</code> dependency section of your app's main <code>composer.json</code>. I followed an approach which is very neive, I divided those 15 depencies into 3 sections of 5. I commented out first 5 and ran composer install. It if still gets stuck at error, then I commented out next 5 and uncommented first 5 and ran composer install again. I kept doing this until I found a faulty batch which if I comment out then composer install works properly. I kept composer install with verbosity of <code>--vvv</code>so it shows detailed output.</p>
+
+<p>Then you will have n number of packages from the commented out batch, 5 in my case.</p></li>
+<li><p>Then I went to <a href="https://packagist.org"><code>https://packagist.org</code></a> and went to each of that package from the faulty batch. I checked their internal dependencies or requirements of php version etc. Cross checked with other packages in the same batch if there is a conflict of version.</p></li>
+<li><p>But I still did not find the dependency conflict. So I came back to my app where composer install worked when I commented out the failty batch. Then I did <code>composer show --tree</code>. That time I found that :</p></li>
+</ol>
+
+<pre><code>`barryvdh/laravel-dompdf` required `dompdf/dompdf` at version `^0.8` 
+`laravel-datatables-oracle` required `dompdf/dompdf` at version `^0.7`
+</code></pre>
+
+<p>I had to upgrade version of <code>laravel-datatables-oracle</code> so that its dependency of <code>dompdf/dompdf</code> is at version <code>^0.8</code> which matches with <code>barryvdh/laravel-dompdf</code>'s installed version.</p>
+
+<p>Don't worry, once you do this in your own app you will figure it out that it's not that hard. I freaked out myself when I saw the error for the first time.</p>
+
+<ul>
+<li>Quick note on composer diagnosis :</li>
+</ul>
+
+<p>You can run <code>composer diagnose</code> which gives you suggestions and warnings to improve the <code>composer.json</code> package version calculations. e.g.</p>
+
+<pre><code>require.barryvdh/laravel-debugbar : exact version constraints (2.3.2) should be avoided if the package follows semantic versioning
+require.webmozart/assert : exact version constraints (1.2) should be avoided if the package follows semantic versioning
+</code></pre>
+]]></content>
+        </entry>
+    </feed>

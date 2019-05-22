@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>Composer stuck at Something&#039;s changed looking at all rules again &mdash; Tech.Semicolon</title>
+        <meta charset="utf-8">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <meta name="robots" content="index, follow">
+
+        <!-- Meta Tags -->
+        <meta name="description" content="Diagnosing and resolving composer error &quot;Something&#039;s changed looking at all rules again&quot;" />
+        <meta property="og:title" content="Composer stuck at Something&#039;s changed looking at all rules again" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://techsemicolon.github.io" />
+        <meta property="og:image" content="https://techsemicolon.github.io/images/logo.png" />
+        <meta property="og:description" content="Diagnosing and resolving composer error &quot;Something&#039;s changed looking at all rules again&quot;" /> 
+        <meta property="og:site_name" content="Tech Semicolon" />
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,400i,600,600i,700,800|Yanone+Kaffeesatz:200,300,400,700" rel="stylesheet">
+        <link href="https://techsemicolon.github.io/components/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="https://techsemicolon.github.io/css/style.css" rel="stylesheet" type="text/css" />
+
+        <link rel="apple-touch-startup-image" href="https://techsemicolon.github.io/images/fav.png">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="shortcut icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+
+        <link rel="stylesheet" href="https://techsemicolon.github.io/components/highlightjs/styles/github.css" />
+        <link rel="alternate" type="application/atom+xml" href="https://techsemicolon.github.io/atom.xml" title="Tech.Semicolon activity feed" />
+                                    </head>
+    <body>
+        <div id="fb-root"></div>
+        <script>(function(d, s, id) {
+              var js, fjs = d.getElementsByTagName(s)[0];
+              if (d.getElementById(id)) return;
+              js = d.createElement(s); js.id = id;
+              js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2&appId=1919280101503437&autoLogAppEvents=1';
+              fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        </script>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-header">
+                <div class="container">
+                    <a class="navbar-brand" href="https://techsemicolon.github.io/">
+                        <img src="https://techsemicolon.github.io/images/logo.png" class="logo-img"/>
+                    </a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog">Posts Archive</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/categories">Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/tags">Tags</a></li>
+                            <li class="nav-item"><a target="_blank" class="nav-link" href="https://github.com/techsemicolon">GitHub</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/about">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <main role="main" class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                        <article>
+        <header>
+            <h2>Composer stuck at Something&#039;s changed looking at all rules again</h2>
+        </header>
+        <div>
+            <p>While upgrading one of my laravel application from version 5.3 to 5.4, I came across a weird situation which was coming from composer dependency management. The situation was that when running composer install it was getting stuck at  <code>Something's changed looking at all rules again(1)</code> and composer was showing counter of attempts in brackets which was increasing from 1 to 900+. It took arund 2+ hours composer update was stuck in this situation and attempts counter was increasing, even when the system where application was hosted had pretty good configurations.</p>
+
+<ul>
+<li>How do I get this information :</li>
+</ul>
+
+<p>When you run composer command, lets say <code>composer install</code>, it does internal steps it's supposed to do one by one. However, we just see the high level output in command promt and not the details of steps. Similarly, the error message I saw can not be seen directly if you just do <code>composer install</code>. You need to make the output more verbose by passing <code>-v</code> command line argument. You can pass upto 3 v's to get more verbosity</p>
+
+<p>For e.g. :</p>
+
+<pre><code class="bash">`composer install -vvv`
+</code></pre>
+
+<p>When I did this, I got lot of detailed steps whats composer is doing internally, one of these verbose messages was the error message <code>Something's changed looking at all rules again(1)</code></p>
+
+<ul>
+<li>Why composer gets stuck :</li>
+</ul>
+
+<p>Okay, to explain it's comparatively easy to understand why it gets stuck. Let's take an example that application has 2 packages <code>techsemicolon/package-first</code> and  <code>techsemicolon/package-second</code>:</p>
+
+<pre><code class="json">"require": {
+    "php": "&gt;=5.6.4",
+    "techsemicolon/package-first": "5.4.*",
+    "techsemicolon/package-second": "2.3.*",
+    .
+    .
+    .
+    .
+}
+</code></pre>
+
+<p>Now the both these packages have package <code>techsemicolon/dependency-package</code> in their own dependencies. But</p>
+
+<pre><code>`techsemicolon/package-first` requires `techsemicolon/dependency-package` at version `2.*.*` 
+`techsemicolon/package-second` requires `techsemicolon/dependency-package` at version `3.*.*`. 
+</code></pre>
+
+<p>Now, it's really confusing for composer to now decide if it should install the <code>techsemicolon/dependency-package</code> at version <code>2.*.*</code> or <code>3.*.*</code>. When we do composer install or update, it calculates these dependency trees and decide which version to install/update to. It checks the dependency rules defined in <code>composer.json</code> of application as well as those in individual package as their dependencies. Hence it gets stuck at <code>Something's changed looking at all rules again</code>.</p>
+
+<p>Now, there can be situation where it recalculatues the rules again and shows this message but within a minute or two it finds the version which can satisfy the dependencies and proceeds. But in cases like mine, it calculates the rules in circles and gets stuck for really really long time.</p>
+
+<ul>
+<li>The solution :</li>
+</ul>
+
+<p>A note to start with, this is not the only or best solution to resolve this. But, considering this error is little different than commonly occuring composer errors, this is what I could do to resolve this quickly and effectively.</p>
+
+<ol>
+<li><p>Let's consider your composer has 15 packages in <code>require</code> dependency section of your app's main <code>composer.json</code>. I followed an approach which is very neive, I divided those 15 depencies into 3 sections of 5. I commented out first 5 and ran composer install. It if still gets stuck at error, then I commented out next 5 and uncommented first 5 and ran composer install again. I kept doing this until I found a faulty batch which if I comment out then composer install works properly. I kept composer install with verbosity of <code>--vvv</code>so it shows detailed output.</p>
+
+<p>Then you will have n number of packages from the commented out batch, 5 in my case.</p></li>
+<li><p>Then I went to <a href="https://packagist.org"><code>https://packagist.org</code></a> and went to each of that package from the faulty batch. I checked their internal dependencies or requirements of php version etc. Cross checked with other packages in the same batch if there is a conflict of version.</p></li>
+<li><p>But I still did not find the dependency conflict. So I came back to my app where composer install worked when I commented out the failty batch. Then I did <code>composer show --tree</code>. That time I found that :</p></li>
+</ol>
+
+<pre><code>`barryvdh/laravel-dompdf` required `dompdf/dompdf` at version `^0.8` 
+`laravel-datatables-oracle` required `dompdf/dompdf` at version `^0.7`
+</code></pre>
+
+<p>I had to upgrade version of <code>laravel-datatables-oracle</code> so that its dependency of <code>dompdf/dompdf</code> is at version <code>^0.8</code> which matches with <code>barryvdh/laravel-dompdf</code>'s installed version.</p>
+
+<p>Don't worry, once you do this in your own app you will figure it out that it's not that hard. I freaked out myself when I saw the error for the first time.</p>
+
+<ul>
+<li>Quick note on composer diagnosis :</li>
+</ul>
+
+<p>You can run <code>composer diagnose</code> which gives you suggestions and warnings to improve the <code>composer.json</code> package version calculations. e.g.</p>
+
+<pre><code>require.barryvdh/laravel-debugbar : exact version constraints (2.3.2) should be avoided if the package follows semantic versioning
+require.webmozart/assert : exact version constraints (1.2) should be avoided if the package follows semantic versioning
+</code></pre>
+
+        </div>
+        <div class="cat-tags">
+            <span class="tags col-md-6">By : Mihir Bhende</span>
+                            <span class="categories col-md-6">
+                Categories : 
+                                <a href="https://techsemicolon.github.io/blog/categories/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/composer">composer</a>                                </span>
+                                        <span class="tags col-md-6">
+                Tags : 
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/composer">composer</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/hangs">hangs</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/stuck">stuck</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/Something">Something</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/changed">changed</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/rules">rules</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/package">package</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/dependency">dependency</a>                                </span>
+                    </div>
+
+        <div class="fb-comments" 
+            data-href="https://techsemicolon.github.io" 
+            data-numposts="5" width="100%">
+        </div>
+    </article>
+
+
+
+                </div>
+            </div>
+        </main>
+        <footer class="container">
+            <span>Tech.Semicolon | &copy; 2019 </span>
+        </footer>
+
+        <script src="https://techsemicolon.github.io/components/jquery/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="https://techsemicolon.github.io/components/bootstrap/js/bootstrap.min.js"></script>
+                
+                <script src="https://techsemicolon.github.io/components/highlightjs/highlight.pack.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+
+                    </body>
+</html>

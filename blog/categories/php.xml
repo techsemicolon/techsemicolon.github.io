@@ -3,9 +3,89 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/categories/php.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-04-24T16:34:22+00:00</updated>
+    <updated>2019-05-22T12:40:17+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Composer stuck at Something&#039;s changed looking at all rules again]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/"/>
+            <updated>2019-05-20T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/</id>
+            <content type="html"><![CDATA[<p>While upgrading one of my laravel application from version 5.3 to 5.4, I came across a weird situation which was coming from composer dependency management. The situation was that when running composer install it was getting stuck at  <code>Something's changed looking at all rules again(1)</code> and composer was showing counter of attempts in brackets which was increasing from 1 to 900+. It took arund 2+ hours composer update was stuck in this situation and attempts counter was increasing, even when the system where application was hosted had pretty good configurations.</p>
+
+<ul>
+<li>How do I get this information :</li>
+</ul>
+
+<p>When you run composer command, lets say <code>composer install</code>, it does internal steps it's supposed to do one by one. However, we just see the high level output in command promt and not the details of steps. Similarly, the error message I saw can not be seen directly if you just do <code>composer install</code>. You need to make the output more verbose by passing <code>-v</code> command line argument. You can pass upto 3 v's to get more verbosity</p>
+
+<p>For e.g. :</p>
+
+<pre><code class="bash">`composer install -vvv`
+</code></pre>
+
+<p>When I did this, I got lot of detailed steps whats composer is doing internally, one of these verbose messages was the error message <code>Something's changed looking at all rules again(1)</code></p>
+
+<ul>
+<li>Why composer gets stuck :</li>
+</ul>
+
+<p>Okay, to explain it's comparatively easy to understand why it gets stuck. Let's take an example that application has 2 packages <code>techsemicolon/package-first</code> and  <code>techsemicolon/package-second</code>:</p>
+
+<pre><code class="json">"require": {
+    "php": "&gt;=5.6.4",
+    "techsemicolon/package-first": "5.4.*",
+    "techsemicolon/package-second": "2.3.*",
+    .
+    .
+    .
+    .
+}
+</code></pre>
+
+<p>Now the both these packages have package <code>techsemicolon/dependency-package</code> in their own dependencies. But</p>
+
+<pre><code>`techsemicolon/package-first` requires `techsemicolon/dependency-package` at version `2.*.*` 
+`techsemicolon/package-second` requires `techsemicolon/dependency-package` at version `3.*.*`. 
+</code></pre>
+
+<p>Now, it's really confusing for composer to now decide if it should install the <code>techsemicolon/dependency-package</code> at version <code>2.*.*</code> or <code>3.*.*</code>. When we do composer install or update, it calculates these dependency trees and decide which version to install/update to. It checks the dependency rules defined in <code>composer.json</code> of application as well as those in individual package as their dependencies. Hence it gets stuck at <code>Something's changed looking at all rules again</code>.</p>
+
+<p>Now, there can be situation where it recalculatues the rules again and shows this message but within a minute or two it finds the version which can satisfy the dependencies and proceeds. But in cases like mine, it calculates the rules in circles and gets stuck for really really long time.</p>
+
+<ul>
+<li>The solution :</li>
+</ul>
+
+<p>A note to start with, this is not the only or best solution to resolve this. But, considering this error is little different than commonly occuring composer errors, this is what I could do to resolve this quickly and effectively.</p>
+
+<ol>
+<li><p>Let's consider your composer has 15 packages in <code>require</code> dependency section of your app's main <code>composer.json</code>. I followed an approach which is very neive, I divided those 15 depencies into 3 sections of 5. I commented out first 5 and ran composer install. It if still gets stuck at error, then I commented out next 5 and uncommented first 5 and ran composer install again. I kept doing this until I found a faulty batch which if I comment out then composer install works properly. I kept composer install with verbosity of <code>--vvv</code>so it shows detailed output.</p>
+
+<p>Then you will have n number of packages from the commented out batch, 5 in my case.</p></li>
+<li><p>Then I went to <a href="https://packagist.org"><code>https://packagist.org</code></a> and went to each of that package from the faulty batch. I checked their internal dependencies or requirements of php version etc. Cross checked with other packages in the same batch if there is a conflict of version.</p></li>
+<li><p>But I still did not find the dependency conflict. So I came back to my app where composer install worked when I commented out the failty batch. Then I did <code>composer show --tree</code>. That time I found that :</p></li>
+</ol>
+
+<pre><code>`barryvdh/laravel-dompdf` required `dompdf/dompdf` at version `^0.8` 
+`laravel-datatables-oracle` required `dompdf/dompdf` at version `^0.7`
+</code></pre>
+
+<p>I had to upgrade version of <code>laravel-datatables-oracle</code> so that its dependency of <code>dompdf/dompdf</code> is at version <code>^0.8</code> which matches with <code>barryvdh/laravel-dompdf</code>'s installed version.</p>
+
+<p>Don't worry, once you do this in your own app you will figure it out that it's not that hard. I freaked out myself when I saw the error for the first time.</p>
+
+<ul>
+<li>Quick note on composer diagnosis :</li>
+</ul>
+
+<p>You can run <code>composer diagnose</code> which gives you suggestions and warnings to improve the <code>composer.json</code> package version calculations. e.g.</p>
+
+<pre><code>require.barryvdh/laravel-debugbar : exact version constraints (2.3.2) should be avoided if the package follows semantic versioning
+require.webmozart/assert : exact version constraints (1.2) should be avoided if the package follows semantic versioning
+</code></pre>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Laravel content-length header issue with gzip compression]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/"/>
@@ -1220,569 +1300,6 @@ $counts = collect($customers)
 <p>Please note that the <code>pipe()</code> helper method is different than the <code>laravel pipelines</code>. However, if you read about pipelines, its is kind of similar conceptually to generic tap function where you can pass an object through multiple classes to perform set of task and then return the result value once all the tasks have been finished. A <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">handy article</a> for the same is <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">here</a> if you want a quick read.</p>
 
 <p>Even if these methods are very handy, sometimes if you chain it to much it loses the element fo readability. I will suggest it is preferable to follow what the domain logic wants and group the similar processes together to tap or pipe.</p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Laravel Module Pattern]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/"/>
-            <updated>2019-01-06T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/</id>
-            <content type="html"><![CDATA[<p>Laravel has a folder structure which ties similar entities of MVC together e.g. controllers in one folder, views into another. There are few set-backs of this approach :</p>
-
-<ul>
-<li>If your project scales exponentially having lot of module, each of these directories scale as well. It becomes difficult to maintain.</li>
-<li>If you want to remove the module entirely, there are files scattered in different folders to consider. This sometimes lead to unused files still present in your project repository.</li>
-<li>Re-using a module into different project is a hassle (unless you have it installed coumpled as a plugin via composer)</li>
-<li>While using code editors, as the module files are in different folders. We might need to expand the folders in project sidebar to view them at a glance. The scattered folder structure makes it difficult to for a quick view. (Forgive me for being picky here ;))</li>
-</ul>
-
-<h4 id="implementation-%3A">Implementation :</h4>
-
-<p>Before you dive in to further sections, if you are familier with basic concepts of larave, most part of the code will be very familier to you. Tt is really easier that you might think.</p>
-
-<ul>
-<li>Creating the module :</li>
-</ul>
-
-<p>Let's create a new folder called <code>Modules</code> in the project root. (You might want to create it inside app folder, I prefer it this way.) To use the <code>\Modules</code> namespace, we need to autoload it from composer.json in the psr-4 section.</p>
-
-<pre><code class="json"> "autoload": {
-        "psr-4": {
-            "App\\": "app/",
-            "Modules\\": "Modules/",
-        }
-    },
-</code></pre>
-
-<p>Let's dump the updated autoloads by doing following from terminal shell :</p>
-
-<pre><code class="bash">composer dump-autoload
-</code></pre>
-
-<p>Now we are good to start with the first module. Let's consider a ticket module where user can submit a ticket from frontend and we store it into the database. We will not focus much on the actual implementation of  the ticketing ystem. We will emphasize on the structure of module.</p>
-
-<ul>
-<li>Create a new directory <code>Ticket</code>.</li>
-</ul>
-
-<p>Create a new directory <code>Ticket</code> inside <code>Modules</code> folder. I like to keep module names singular (Ticket instead of Tickets).</p>
-
-<ul>
-<li>Creating a service provider class :</li>
-</ul>
-
-<p>On a broader level, frameworks like laravel have special entry point wrappers which can find, register and instantiate the core functionalities. In case of Laravel it's the ServiceProvider class.</p>
-
-<p>Create a new file <code>TicketServiceProvider.php</code> inside <code>Modules/Ticket</code>.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot() {}
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<p>To make sure laravel considers this while booting up, we need to register it. Add this inside <code>config/app.php</code>'s  <code>providers</code> array :</p>
-
-<pre><code class="php">App\Modules\Ticket\TicketServiceProvider::class,
-</code></pre>
-
-<ul>
-<li>Creating migrations :</li>
-</ul>
-
-<p>We need to create a table to store new ticket data. Create a folder <code>Migrations</code> inside <code>Modules/Ticket</code>. 
-Now we can create a new migration from terminal shell :</p>
-
-<pre><code class="bash">php artisan make:migration create_tickets_table --path=Modules/Ticket/Migrations
-</code></pre>
-
-<p>It will create a new migration class inside <code>Modules/Ticket/Migrations</code> path. Let's add the table script :</p>
-
-<pre><code class="php">&lt;?php
-
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
-
-class CreateTicketsTable extends Migration
-{
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
-    public function up()
-    {
-        Schema::create('tickets', function (Blueprint $table) {
-            $table-&gt;increments('id');
-            $table-&gt;string('title')-&gt;nullable();
-            $table-&gt;text('body')-&gt;nullable();
-            $table-&gt;boolean('is_closed')-&gt;default(0);
-            $table-&gt;timestamps();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-        Schema::dropIfExists('tickets');
-    }
-}
-</code></pre>
-
-<p>However, you must have noticed that this is not coming from Laravel's default <code>database/migrations</code> folder. We need to inform laravel to load this file as well for running migration. It can be done from service provider by adding following in boot method.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot() {
-
-        // Load ticket module migrations from 
-        // `Modules/Ticket/Migrations` folder path
-        $this-&gt;loadMigrationsFrom(__DIR__.'/Migrations');
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<p>Now to run the migration from terminal shell :</p>
-
-<pre><code class="bash">php artisan migrate
-</code></pre>
-
-<ul>
-<li>Alternatively:</li>
-</ul>
-
-<p>If you are thinking <code>migrations are done very rarely, so why should we register it in service provider for a registration overhead?</code> Laravel has got you covered.</p>
-
-<p>You can skip the step of doing <code>loadMigrationsFrom()</code> in service provider class. Instead you can specify the path while running migrations :</p>
-
-<pre><code class="bash">php artisan migrate --path=Modules/Ticket/Migrations
-</code></pre>
-
-<p>If your project has CICD deployments, mostly it will just have the migrate command without the path option. The first method is preferable to keep it simple for deployments.</p>
-
-<ul>
-<li>Creating Model :</li>
-</ul>
-
-<p>Create a file <code>Ticket.php</code> inside <code>Modules/Ticket</code>. (You may create a <code>Models</code> folder inside <code>Modules/Ticket</code> and create model class inside it as per your preference.)</p>
-
-<pre><code class="php">&lt;?php
-
-namespace App\Modules\Ticket;
-
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-
-class Ticket extends Model
-{
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'tickets';
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'title',
-        'body',
-        'is_closed'
-    ];
-
-}
-</code></pre>
-
-<ul>
-<li>Creating Controller :</li>
-</ul>
-
-<p>Create a new directory inside <code>Modules/Ticket</code> called <code>Http</code>. Let's create <code>TicketController.php</code> inside it :</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket\Http;
-
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Modules\Ticket\Ticket;
-
-class TicketController extends Controller
-{
-    /**
-     * Display a form for the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        return view('tickets.create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  Request  $request
-     * @param  UserRepository $users
-     * 
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $request-&gt;validate([
-            'title' =&gt; 'string|required|max:255',
-            'body'  =&gt; 'string|required'
-        ]);
-
-        // Create new ticket
-        $ticket = Ticket::create($request-&gt;only('title', 'body'));
-
-        return redirect()-&gt;route('ticket.new')-&gt;withSuccess('Thank you for raising a ticket. We will get back to you at the earliest.');
-    }
-}
-</code></pre>
-
-<ul>
-<li>Creating Routes :</li>
-</ul>
-
-<p>Create a new file called <code>TicketRoutes.php</code> inside <code>Modules/Ticket</code>.</p>
-
-<pre><code class="php">&lt;?php 
-
-Route::group(['namespace' =&gt; 'Modules\Ticket', 'middleware' =&gt; ['web', 'auth']], function () {
-
-    Route::get('ticket/new', [ 'as' =&gt; 'ticket.new', 'uses' =&gt; 'TicketController@create' ]);
-    Route::post('ticket/store', [ 'as' =&gt; 'ticket.store', 'uses' =&gt; 'TicketController@store' ]);
-});
-</code></pre>
-
-<p>We need to tell laravel to register these routes as those are coming from a custom folder. We can do that from service provider :</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot() {
-
-        // Load ticket module migrations from 
-        // `Modules/Ticket/Migrations` folder path
-        $this-&gt;loadMigrationsFrom(__DIR__.'/Migrations');
-
-        // Load routes
-        $this-&gt;loadRoutesFrom(__DIR__.'/TickerRoutes.php');
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<ul>
-<li>Creating Views :</li>
-</ul>
-
-<p>Create a new directory inside <code>Modules/Ticket</code> called <code>Views</code>. This will contain al views for our module. This is again not coming from Laravel's default <code>resources/views</code> folder. We need to tell laravel to load these views. It can be done from service provider by adding following in boot method.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot() {
-
-        // Load ticket module migrations from 
-        // `Modules/Ticket/Migrations`
-        $this-&gt;loadMigrationsFrom(__DIR__.'/Migrations');
-
-        // Load routes from `Modules/Ticket/TickerRoutes.php`
-        $this-&gt;loadRoutesFrom(__DIR__.'/TickerRoutes.php');
-
-        // Load views from `Modules/Ticket/Views`
-        $this-&gt;loadViewsFrom(__DIR__.'/Views', 'ticket');
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<p>Note : Sometimes you may see <code>loadViewsFrom()</code> called without the second argument which is the package name. The difference is if you want to render a view without a package name you do <code>ticket.create</code> (file path : <code>Modules/Ticket/Views/ticket/create.blade.php</code>. If you specify package name, you do <code>ticket::create</code> (file path : <code>Modules/Ticket/Views/create.blade.php</code>)</p>
-
-<p>Let's create a simple view <code>create.blade.php</code> which basically has a form :</p>
-
-<p></p>
-
-<pre><code>@extends('layouts.app')
-
-@section('content')
-    &lt;div class="panel panel-default"&gt;
-        &lt;div class="panel-body"&gt;
-            &lt;div class="col-md-4 col-md-offset-4"&gt;
-                &lt;form role="form" method="POST" action="{{ route('ticket.store') }}"&gt;
-                    @csrf
-                    &lt;div class="form-group"&gt;
-                        &lt;label&gt;Title *&lt;/label&gt;
-                        &lt;input class="form-control" placeholder="Title for your ticket" id="title" name="title"&gt;
-                        @if ($errors-&gt;has('title'))
-                            &lt;span class="invalid-feedback" role="alert"&gt;
-                                &lt;strong&gt;{{ $errors-&gt;first('title') }}&lt;/strong&gt;
-                            &lt;/span&gt;
-                        @endif
-                    &lt;/div&gt;
-                    &lt;div class="form-group"&gt;
-                        &lt;label&gt;Description *&lt;/label&gt;
-                        &lt;textarea class="form-control" placeholder="How can we assist you?" id="body" name="body"&gt;&lt;/textarea&gt;
-                        @if ($errors-&gt;has('body'))
-                            &lt;span class="invalid-feedback" role="alert"&gt;
-                                &lt;strong&gt;{{ $errors-&gt;first('body') }}&lt;/strong&gt;
-                            &lt;/span&gt;
-                        @endif
-                    &lt;/div&gt;
-                    &lt;button type="submit" class="btn btn-primary"&gt;Submit Ticket&lt;/button&gt;
-                &lt;/form&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-@endsection
-</code></pre>
-
-<p></p>
-
-<ul>
-<li>Creating Policies :</li>
-</ul>
-
-<p>If you would like to use policy to authorize the requests, create a file <code>TicketPolicy.php</code> inside <code>Modules/Ticket</code>.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace App\Modules;
-
-use App\User;
-
-
-class TicketPolicy
-{
-
-    /**
-     * Determines user access
-     *
-     * @param User $user
-     * @return bool
-     */
-    public function index($user)
-    {
-        return true;
-    }
-
-    /**
-     * Determines user access
-     *
-     * @param User $user
-     * @return bool
-     */
-    public function store($user)
-    {
-        return true;
-    }
-}
-</code></pre>
-
-<p>As you must have thought by now, we need to register the policy using the laravel Gate contract inside service provider :</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Modules\Ticket\Ticket.php;
-use Modules\Ticket\TicketPolicy.php;
-use Illuminate\Contracts\Auth\Access\Gate as GateContract;
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot(GateContract $gate) {
-
-        // Load ticket module migrations from 
-        // `Modules/Ticket/Migrations`
-        $this-&gt;loadMigrationsFrom(__DIR__.'/Migrations');
-
-        // Load routes from `Modules/Ticket/TickerRoutes.php`
-        $this-&gt;loadRoutesFrom(__DIR__.'/TickerRoutes.php');
-
-        // Load views from `Modules/Ticket/Views`
-        $this-&gt;loadViewsFrom(__DIR__.'/Views', 'ticket');
-
-        // Load the policies from `Modules/Ticket/TicketPolicy.php`
-        $gate-&gt;policy(Ticket::class, TicketPolicy::class);
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<ul>
-<li>Creating config files :</li>
-</ul>
-
-<p>We can have config files to access environmental variables specific for this module. For example in this ticket module let's say we need to configure an email to cc to. Create a file <code>TicketConfig.php</code> inside inside <code>Modules/Ticket</code>.</p>
-
-<pre><code class="php">&lt;?php
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Email to cc for submitted tickets
-    |--------------------------------------------------------------------------
-    |
-    | Type : string
-    |
-    */
-
-    'ticket_cc_email' =&gt; env('TICKET_CC_EMAIL', null),
-
-];
-</code></pre>
-
-<p>Now, let's register this inside service provider.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Modules\Ticket\Ticket.php;
-use Modules\Ticket\TicketPolicy.php;
-use Illuminate\Contracts\Auth\Access\Gate as GateContract;
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot(GateContract $gate) {
-
-        // Load ticket module migrations from 
-        // `Modules/Ticket/Migrations`
-        $this-&gt;loadMigrationsFrom(__DIR__.'/Migrations');
-
-        // Load routes from `Modules/Ticket/TickerRoutes.php`
-        $this-&gt;loadRoutesFrom(__DIR__.'/TickerRoutes.php');
-
-        // Load views from `Modules/Ticket/Views`
-        $this-&gt;loadViewsFrom(__DIR__.'/Views', 'ticket');
-
-        // Load the policies from `Modules/Ticket/TicketPolicy.php`
-        $gate-&gt;policy(Ticket::class, TicketPolicy::class);
-
-        // Load the configurations from `Modules/Ticket/TicketConfig.php`
-        $this-&gt;mergeConfigFrom(
-            __DIR__.'/TicketConfig.php', 'ticket';
-        );
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<p>We can then access the configurations as :</p>
-
-<pre><code class="php">$ccEmail = config('ticket.ticket_cc_email');
-</code></pre>
-
-<p>Now you can see entire module is bundled to a single folder. Easy to manage. There is a downside of registrations inside service provider class which in general you do not worry about. However, this is structurally more intuitive and re-usable.</p>
-
-<p>If you would like your module to have more extensive and detailed structure, you can simply use this ready composer plugin : <a href="https://nwidart.com/laravel-modules/v4/introduction">nwidart/laravel-modules</a></p>
-
-<p>Note : The structure and coding style are my personal opinions. There can be multiple ways to accomplish the same result. I feel just knowing the possibility that it can be done, opens new doors of imaginations based on personal comfort.</p>
 ]]></content>
         </entry>
     </feed>
