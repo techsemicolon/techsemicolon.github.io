@@ -87,8 +87,9 @@
         <header>
             <h2>Laravel restricting unfiltered queries</h2>
         </header>
-        <div class="col-sm-10 col-md-10 col-xs-12">
-            <p>Laravel eloquent is a very powerful ORM. I came across a situation for a project of mine long time ago. There was a table <code>api_logs</code> which basically logged all API requests and responses. Evidently the table grew exponentially. One of the developers created an analytics module in which he forgot to add a where clause. It queried millions of rows at a time on production. It was a silly mistake but server was overwhelmed and you can imagine the rest of story (I can tell you it is not that good).</p>
+        <div class="row">
+            <div class="col-sm-10 col-md-10 col-xs-12">
+                <p>Laravel eloquent is a very powerful ORM. I came across a situation for a project of mine long time ago. There was a table <code>api_logs</code> which basically logged all API requests and responses. Evidently the table grew exponentially. One of the developers created an analytics module in which he forgot to add a where clause. It queried millions of rows at a time on production. It was a silly mistake but server was overwhelmed and you can imagine the rest of story (I can tell you it is not that good).</p>
 
 <p>I imagined if there was a way to just throw an error if any function queries all rows from a table like <code>api_logs</code>. Two advantages :</p>
 
@@ -227,17 +228,36 @@ class ApiLog extends Model
 
 <p>There might be better way of implementing the same, I did it this way considering the urgency of situation. It is still there in project since then and working perfectly.</p>
 
-        </div>
-        <div class="col-sm-2 col-md-2 col-xs-12">
-            <ins class="adsbygoogle"
-                style="display:block"
-                data-ad-client="ca-pub-6453469589570319"
-                data-ad-slot="8792586132"
-                data-ad-format="auto"
-                data-full-width-responsive="true"></ins>
-           <script>
-                (adsbygoogle = window.adsbygoogle || []).push({});
-           </script>
+            </div>
+            <div class="col-sm-2 col-md-2 col-xs-12">
+                <ins class="adsbygoogle"
+                    style="display:block"
+                    data-ad-client="ca-pub-6453469589570319"
+                    data-ad-slot="8792586132"
+                    data-ad-format="auto"
+                    data-full-width-responsive="true"></ins>
+               <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+               </script>
+               <ins class="adsbygoogle"
+                    style="display:block"
+                    data-ad-client="ca-pub-6453469589570319"
+                    data-ad-slot="8792586132"
+                    data-ad-format="auto"
+                    data-full-width-responsive="true"></ins>
+                <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+                <ins class="adsbygoogle"
+                        style="display:block"
+                        data-ad-client="ca-pub-6453469589570319"
+                        data-ad-slot="8792586132"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
         </div>
 
         <ins class="adsbygoogle"
