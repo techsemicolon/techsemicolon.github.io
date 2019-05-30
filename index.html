@@ -85,6 +85,158 @@
                 <div class="col-sm-12">
                         <article class="home-article">
         <header>
+            <h2><a href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/">Everything you need to know about laravel required validations</a></h2>
+        </header>
+        <div class="home-article-body">
+            <p>One of the strong part of the laravel core is the set of <code>validations</code> which validate your application's incoming data. One of the most common validation rule which is used in applications is <code>required</code>. We will see how can we make use of different types of required rules as well as build custom required rules conditionally.</p>
+
+<ul>
+<li>Required rule :</li>
+</ul>
+
+<p>As per the laravel's documentation. when we use <code>required</code> rule, the field under validation must be present and also it should be non-empty. Empty includes null value, empty string, empty array and uploaded file with no path.</p>
+
+<p>In below request both <code>first_name</code> and <code>last_name</code> should be present and non-empty.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'first_name' =&gt; 'required|unique:posts|max:255',
+    'last_name' =&gt; 'required',
+]);
+</code></pre>
+
+<ul>
+<li>Required rule based on other/supporting field(s) :</li>
+</ul>
+
+<p>Many times when designing complex and nested forms, we need to have required validation <code>only if</code> an other incoming data field is present. Now there are multiple cases in this :</p>
+
+<ol>
+<li>When you want <code>just single supporting field to be present</code>, then  you can use <code>required_with</code> like below :</li>
+</ol>
+
+<p>In below request the <code>city</code>, <code>state</code>, <code>zipcode</code> and <code>country</code> will be required if <code>address_line</code> is present in the incoming data.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'address_line' =&gt; 'sometimes|boolean',
+    'city' =&gt; 'required_with:address_line',
+    'state' =&gt; 'required_with:address_line',
+    'zipcode' =&gt; 'required_with:address_line',
+    'country' =&gt; 'required_with:address_line'
+]);
+</code></pre>
+
+<ol start="2">
+<li>When you want <code>any one of the supporting set of fields just to be present</code>, then  you can use <code>required_with</code> and pass multiple fields like below :</li>
+</ol>
+
+<p>In below request the we want to set validation rule for the <code>notify_new_updates</code> field. We can not notify if we do not have either of user phone number, email or fax. So the validation  <code>required_with:phone,email,fax</code> signifies that <code>notify_new_updates</code> will be required if one of the field phone, email or fax is present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'name' =&gt; 'required|string',
+    'phone' =&gt; 'sometimes|string',
+    'email' =&gt; 'sometimes|email',
+    'fax' =&gt; 'sometimes|string',
+    'notify_new_updates' =&gt; 'boolean|required_with:phone,email,fax'
+]);
+</code></pre>
+
+<ol start="3">
+<li>When you want <code>all of the supporting set of fields to be present</code>, then you can use <code>required_with_all</code> and pass multiple fields like below :</li>
+</ol>
+
+<p>In below request the validation <code>required_with_all:phone,email,fax</code> signifies that <code>notify_new_updates</code> will be required if all the field phone, email and fax are present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'name' =&gt; 'required|string',
+    'phone' =&gt; 'sometimes|string',
+    'email' =&gt; 'sometimes|email',
+    'fax' =&gt; 'sometimes|string',
+    'notify_new_updates' =&gt; 'boolean|required_with_all:phone,email,fax'
+]);
+</code></pre>
+
+<ol start="4">
+<li>When you want <code>any one of the supporting set of fields NOT to be present</code>, then  you can use <code>required_without</code> and pass one or more fields like below :</li>
+</ol>
+
+<p>In below request the <code>use_billing_as_shipping</code> will be required when <code>shipping_address</code> is NOT present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'billing_address' =&gt; 'required|string',
+    'shipping_address' =&gt; 'sometimes|string',
+    'use_billing_as_shipping' =&gt; 'boolean|required_without:shipping_address'
+]);
+</code></pre>
+
+<p>Similarly you can use <code>required_without_all</code> where it will need <code>sll of the supporting set of fields NOT to be present</code>.</p>
+
+<ol start="5">
+<li>When you want the other field not only to be present but also it should have a very specific value, then you can use <code>required_if</code> like below</li>
+</ol>
+
+<p>In below request the <code>admin_notification_email</code> will be required if and only if the <code>is_admin</code> field is present having value of <code>1</code>.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'is_admin' =&gt; 'required|boolean',
+    'admin_notification_email' =&gt; 'required_if:is_admin,1|email',
+]);
+</code></pre>
+
+<ol start="6">
+<li>When you want the other field not only to be present but it should have a very specific value, then you can use <code>required_if</code> like below</li>
+</ol>
+
+<p>In below request the <code>displayname</code> will be required unless the <code>nickname</code> field is empty.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'nickname' =&gt; 'sometimes|string',
+    'displayname' =&gt; 'required_unless:nickname,',
+]);
+</code></pre>
+
+<ul>
+<li>Custom and complex required if validation rules :</li>
+</ul>
+
+<p>We sometimes need to have complex set of conditional rule for required if. With laravel it's much easier than you could have imagined.</p>
+
+<p>Laravel's <code>Rule</code> facade has <code>Rule::requiredIf()</code> method which we can use for this purpose. The beautify of this method is, it takes a boolean value or a closure which return a boolean value. This gives us lot of flexibility to have complex logic for required if rule.</p>
+
+<ol>
+<li>requiredIf() with simple boolean :</li>
+</ol>
+
+<p>Below example will make <code>employee_id</code> field required only if current user is an employee and the employee's company is still active.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'employee_id' =&gt; Rule::requiredIf($request-&gt;user()-&gt;is_employee &amp;&amp; $request-&gt;user()-&gt;employee-&gt;company-&gt;is_active)
+]);
+</code></pre>
+
+<ol start="2">
+<li>requiredIf() with closure :</li>
+</ol>
+
+<p>Below example will make <code>golden_discount_voucher</code> field required only if current user is a customer and has orders to fillfull criteria that the customer belongs to golden account category.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'golden_discount_voucher' =&gt; Rule::requiredIf(function() use($request){
+
+        return  $request-&gt;user()-&gt;is_customer &amp;&amp;
+                $request-&gt;user()-&gt;customer-&gt;orders-&gt;where('orders.grand_total', '&gt;', '1000')-&gt;count() &gt; 10;
+    })
+]);
+</code></pre>
+
+        </div>
+        <p>.....</p>
+        <a href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/">Read full article</a>
+                    <p class="tags">
+            Tags:
+                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/validation">validation</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required">required</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_if">required_if</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_unless">required_unless</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_with">required_with</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_with_all">required_with_all</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_without">required_without</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_without_all">required_without_all</a>,                         <a href="https://techsemicolon.github.io/blog/tags/custom">custom</a>,                         <a href="https://techsemicolon.github.io/blog/tags/if">if</a>,                         <a href="https://techsemicolon.github.io/blog/tags/with">with</a>,                         <a href="https://techsemicolon.github.io/blog/tags/unless">unless</a>                        </p>
+            </article>
+    <article class="home-article">
+        <header>
             <h2><a href="https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/">Composer stuck at Something&#039;s changed looking at all rules again</a></h2>
         </header>
         <div class="home-article-body">
@@ -1158,252 +1310,6 @@ class CustomerRepository
                     <p class="tags">
             Tags:
                         <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/helpers">helpers</a>,                         <a href="https://techsemicolon.github.io/blog/tags/collections">collections</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/">Laravel improving readability with blade directives</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>Laravel's blade templating system comes with ability to define custom directives. These directives can be very handly to improve readability of the view files. Let's do a quick recap of directives :</p>
-
-<h3 id="blade-directives-%3A">Blade directives :</h3>
-
-<ul>
-<li>Generic directive :</li>
-</ul>
-
-<p>These directive take an argument and simply return the actions done in callback.</p>
-
-<pre><code class="php">Blade::directive('caps', function ($expression) {
-    return "&lt;?php echo ucwords($expression); ?&gt;";
-});
-</code></pre>
-
-<p>You can use above in blade templates directly :</p>
-
-<p></p>
-
-<pre><code class="php">&lt;div&gt;{{ @cap('john smith') }}&lt;/div&gt;
-</code></pre>
-
-<p></p>
-
-<p>It is little tricky to handle the <code>$expresssion</code> in the callback, as if you pass an array or multiple string arguments, those are passed as single string expressions. You can see that shortly in action in usage ideas section.</p>
-
-<ul>
-<li>Conditional directive :</li>
-</ul>
-
-<p>These directives take an argument and use it inside callback to return value. Now the callback's return value is then casted as boolean to consider if statements inside it will be showed or now. It is just like <code>@if ... @endif</code> directive, but more intuitive.</p>
-
-<pre><code class="php">Blade::if('isadmin', function ($user) {
-    return $user-&gt;role == 'admin';
-});
-</code></pre>
-
-<p>You can use above in blade templates directly :</p>
-
-<p></p>
-
-<pre><code class="php">@isadmin($user)
-    &lt;div&gt;
-        &lt;a href="{{ route('users.all') }}"&gt;See all users&lt;/a&gt;
-    &lt;/div&gt;
-@endisadmin
-</code></pre>
-
-<p></p>
-
-<p>Above is similar to this if done in usual without the conditional directive :</p>
-
-<p></p>
-
-<pre><code class="php">@if($user-&gt;role == 'admin')
-    &lt;div&gt;
-        &lt;a href="{{ route('users.all') }}"&gt;See all users&lt;/a&gt;
-    &lt;/div&gt;
-@endif
-</code></pre>
-
-<p></p>
-
-<h3 id="some-usage-ideas-%3A">Some usage ideas :</h3>
-
-<p>These directive give a great advantage to simplify your blade views and make them more readable. See few examples below :</p>
-
-<ol>
-<li>Conditional role checks :</li>
-</ol>
-
-<pre><code class="php">Blade::if('role', function ($role) {
-
-    // Not logged in
-    if(!auth()-&gt;check()){
-        return false;
-    }
-
-    // Multiple roles passed in argument
-    if(is_array($role)){
-        return in_array(auth()-&gt;user()-&gt;role, $role);
-    }
-
-    // Single role passed in argument
-    return auth()-&gt;user()-&gt;role == $role;
-});
-</code></pre>
-
-<p>This makes the role conditional checks in blade much easier :</p>
-
-<p></p>
-
-<pre><code class="php">@role('admin')
-   &lt;!-- something only an admin can see--&gt;
-@elserole(['customer', 'seller'])
-   &lt;!-- something only a customer or a seller an see--&gt;
-@endrole
-</code></pre>
-
-<p></p>
-
-<ol start="2">
-<li>Rendering form errors :</li>
-</ol>
-
-<pre><code class="php">Blade::directive('validation', function ($expression) {
-
-    // $expression is a string expression and 
-    // hence will be a string maintaing start and end quotes
-    // Trimming the quotes
-    $expression = str_replace(['(', ')'], '', $expression);
-    $fieldName  = trim(trim($expression, '"'), '\'');
-
-    $errors = \Session::get('errors', new \Illuminate\Support\MessageBag);
-
-    if($errors-&gt;has($fieldName)){
-        return '&lt;span role="alert"&gt;&lt;strong&gt;' . $errors-&gt;first($fieldName) . '&lt;/strong&gt;&lt;/span&gt;';
-    }
-
-    return;
-});
-</code></pre>
-
-<p>This makes the the validation errors from server end much easier in forms :</p>
-
-<p></p>
-
-<pre><code>&lt;form role="form" method="POST" action="{{ route('some.url') }}"&gt;
-    @csrf
-    &lt;div class="form-group"&gt;
-        &lt;label&gt;First Name *&lt;/label&gt;
-        &lt;input class="form-control" placeholder="Enter your first name" name="first_name"&gt;
-        @validation("first_name")
-    &lt;/div&gt;
-    &lt;div class="form-group"&gt;
-        &lt;label&gt;Last Name *&lt;/label&gt;
-        &lt;input class="form-control" placeholder="Enter your last name" name="last_name"&gt;
-        @validation("last_name")
-    &lt;/div&gt;
-    &lt;button type="submit" class="btn btn-primary"&gt;Submit Ticket&lt;/button&gt;
-&lt;/form&gt;
-</code></pre>
-
-<p></p>
-
-<ol start="3">
-<li>Dumping values in views fo debugging :</li>
-</ol>
-
-<pre><code class="php">Blade::directive('dd', function ($expression) {
-
-    // $expression is a string expression and 
-    // It can not be directly passed in dd($expression)
-    // We can use with() helper which basically encapsulate the syntax
-    // to render it properly in blade files
-    return "&lt;?php dd(with({$expression})); ?&gt;";
-});
-</code></pre>
-
-<p>Please note that above will not work for multiple arguments, can dd one argumenet only. Above can be then used :</p>
-
-<p></p>
-
-<pre><code class="php">@dd([1,2,3,4]);
-</code></pre>
-
-<p></p>
-
-<ol start="4">
-<li>Assigning values to variables in a view :</li>
-</ol>
-
-<p>Now this might be a very less possible requirement but if you want to assign a variable in a view, generally you do something like :</p>
-
-<p></p>
-
-<pre><code class="php">@php 
-    $name = "John Doe";
-@endphp
-</code></pre>
-
-<p></p>
-
-<p>However, we can do this using blade directive :</p>
-
-<pre><code class="php">Blade::directive('assign', function ($expression) {
-
-    // The $expression passed in closure is a string in format '($name), value'
-    // Hence we first remove the paranthesis and explode by comma
-    list($name, $value) = explode(', ', str_replace(['(', ')'], '', $expression));
-    return "&lt;?php {$name} = {$value}; ?&gt;";
-});
-</code></pre>
-
-<p>And then simply use it as (Below example is very very simple but you can use as per your preference) :</p>
-
-<p></p>
-
-<pre><code class="php">@assign($name, 'John Doe')
-
-&lt;div&gt; {{ $name }} &lt;/div&gt;
-</code></pre>
-
-<p></p>
-
-<ol start="5">
-<li>Frequent HTML elements :</li>
-</ol>
-
-<p>If you are using 3rd party HTML libraries like glyphicon or font-awesome, you need to use those in lot of places. You can use blade directive like :</p>
-
-<pre><code class="php">Blade::directive('icon', function ($expression) {
-
-    // The $expression passed in closure is a string in format '($name), value'
-    // Hence we first remove the paranthesis and explode by comma
-    $classes = str_replace(['(', ')'], '', $expression);
-    $classes = str_replace(['"', '\''], '', $expression);
-    $classes = str_replace(',', ' ', $classes);
-
-    return '&lt;i class="fa ' . $classes . '" aria-hidden="false"&gt;&lt;/i&gt;';
-});
-</code></pre>
-
-<p>Then it is as easy as it can get to use :</p>
-
-<p></p>
-
-<pre><code class="php">&lt;label&gt; @icon('fa-user', 'fa-2x') User Name &lt;/label&gt;
-</code></pre>
-
-<p></p>
-
-<p>You can also extend this idea for input, select etc. I think once you set such directives in a project, your blade views become readble. Plus less code in a bladel file is always better.</p>
-
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/blade">blade</a>,                         <a href="https://techsemicolon.github.io/blog/tags/directives">directives</a>                        </p>
             </article>
     <nav>
         <br />

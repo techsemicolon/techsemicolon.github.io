@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>Everything you need to know about laravel required validations &mdash; Tech.Semicolon</title>
+        <meta charset="utf-8">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <meta name="robots" content="index, follow">
+
+        <!-- Meta Tags -->
+        <meta name="description" content="Everything you need to know about laravel required validations. We will look over all types of standalone as well as mutually dependent required validations present in laravel." />
+        <meta property="og:title" content="Everything you need to know about laravel required validations" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://techsemicolon.github.io" />
+        <meta property="og:image" content="https://techsemicolon.github.io/images/logo.png" />
+        <meta property="og:description" content="Everything you need to know about laravel required validations. We will look over all types of standalone as well as mutually dependent required validations present in laravel." /> 
+        <meta property="og:site_name" content="Tech Semicolon" />
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,400i,600,600i,700,800|Yanone+Kaffeesatz:200,300,400,700" rel="stylesheet">
+        <link href="https://techsemicolon.github.io/components/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="https://techsemicolon.github.io/css/style.css" rel="stylesheet" type="text/css" />
+
+        <link rel="apple-touch-startup-image" href="https://techsemicolon.github.io/images/fav.png">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="shortcut icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+
+        <link rel="stylesheet" href="https://techsemicolon.github.io/components/highlightjs/styles/github.css" />
+        <link rel="alternate" type="application/atom+xml" href="https://techsemicolon.github.io/atom.xml" title="Tech.Semicolon activity feed" />
+        <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        <script>
+        (adsbygoogle = window.adsbygoogle || []).push({
+            google_ad_client: "ca-pub-6453469589570319",
+            enable_page_level_ads: true
+        });
+        </script>
+                                    </head>
+    <body>
+        <div id="fb-root"></div>
+        <script>(function(d, s, id) {
+              var js, fjs = d.getElementsByTagName(s)[0];
+              if (d.getElementById(id)) return;
+              js = d.createElement(s); js.id = id;
+              js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2&appId=1919280101503437&autoLogAppEvents=1';
+              fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        </script>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-header">
+                <div class="container">
+                    <a class="navbar-brand" href="https://techsemicolon.github.io/">
+                        <img src="https://techsemicolon.github.io/images/logo.png" class="logo-img"/>
+                    </a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog">Posts Archive</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/categories">Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/tags">Tags</a></li>
+                            <li class="nav-item"><a target="_blank" class="nav-link" href="https://github.com/techsemicolon">GitHub</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/about">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <main role="main" class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                        <article>
+        <header>
+            <h2>Everything you need to know about laravel required validations</h2>
+        </header>
+        <div class="row">
+            <div class="col-sm-10 col-md-10 col-xs-12">
+                <p>One of the strong part of the laravel core is the set of <code>validations</code> which validate your application's incoming data. One of the most common validation rule which is used in applications is <code>required</code>. We will see how can we make use of different types of required rules as well as build custom required rules conditionally.</p>
+
+<ul>
+<li>Required rule :</li>
+</ul>
+
+<p>As per the laravel's documentation. when we use <code>required</code> rule, the field under validation must be present and also it should be non-empty. Empty includes null value, empty string, empty array and uploaded file with no path.</p>
+
+<p>In below request both <code>first_name</code> and <code>last_name</code> should be present and non-empty.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'first_name' =&gt; 'required|unique:posts|max:255',
+    'last_name' =&gt; 'required',
+]);
+</code></pre>
+
+<ul>
+<li>Required rule based on other/supporting field(s) :</li>
+</ul>
+
+<p>Many times when designing complex and nested forms, we need to have required validation <code>only if</code> an other incoming data field is present. Now there are multiple cases in this :</p>
+
+<ol>
+<li>When you want <code>just single supporting field to be present</code>, then  you can use <code>required_with</code> like below :</li>
+</ol>
+
+<p>In below request the <code>city</code>, <code>state</code>, <code>zipcode</code> and <code>country</code> will be required if <code>address_line</code> is present in the incoming data.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'address_line' =&gt; 'sometimes|boolean',
+    'city' =&gt; 'required_with:address_line',
+    'state' =&gt; 'required_with:address_line',
+    'zipcode' =&gt; 'required_with:address_line',
+    'country' =&gt; 'required_with:address_line'
+]);
+</code></pre>
+
+<ol start="2">
+<li>When you want <code>any one of the supporting set of fields just to be present</code>, then  you can use <code>required_with</code> and pass multiple fields like below :</li>
+</ol>
+
+<p>In below request the we want to set validation rule for the <code>notify_new_updates</code> field. We can not notify if we do not have either of user phone number, email or fax. So the validation  <code>required_with:phone,email,fax</code> signifies that <code>notify_new_updates</code> will be required if one of the field phone, email or fax is present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'name' =&gt; 'required|string',
+    'phone' =&gt; 'sometimes|string',
+    'email' =&gt; 'sometimes|email',
+    'fax' =&gt; 'sometimes|string',
+    'notify_new_updates' =&gt; 'boolean|required_with:phone,email,fax'
+]);
+</code></pre>
+
+<ol start="3">
+<li>When you want <code>all of the supporting set of fields to be present</code>, then you can use <code>required_with_all</code> and pass multiple fields like below :</li>
+</ol>
+
+<p>In below request the validation <code>required_with_all:phone,email,fax</code> signifies that <code>notify_new_updates</code> will be required if all the field phone, email and fax are present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'name' =&gt; 'required|string',
+    'phone' =&gt; 'sometimes|string',
+    'email' =&gt; 'sometimes|email',
+    'fax' =&gt; 'sometimes|string',
+    'notify_new_updates' =&gt; 'boolean|required_with_all:phone,email,fax'
+]);
+</code></pre>
+
+<ol start="4">
+<li>When you want <code>any one of the supporting set of fields NOT to be present</code>, then  you can use <code>required_without</code> and pass one or more fields like below :</li>
+</ol>
+
+<p>In below request the <code>use_billing_as_shipping</code> will be required when <code>shipping_address</code> is NOT present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'billing_address' =&gt; 'required|string',
+    'shipping_address' =&gt; 'sometimes|string',
+    'use_billing_as_shipping' =&gt; 'boolean|required_without:shipping_address'
+]);
+</code></pre>
+
+<p>Similarly you can use <code>required_without_all</code> where it will need <code>sll of the supporting set of fields NOT to be present</code>.</p>
+
+<ol start="5">
+<li>When you want the other field not only to be present but also it should have a very specific value, then you can use <code>required_if</code> like below</li>
+</ol>
+
+<p>In below request the <code>admin_notification_email</code> will be required if and only if the <code>is_admin</code> field is present having value of <code>1</code>.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'is_admin' =&gt; 'required|boolean',
+    'admin_notification_email' =&gt; 'required_if:is_admin,1|email',
+]);
+</code></pre>
+
+<ol start="6">
+<li>When you want the other field not only to be present but it should have a very specific value, then you can use <code>required_if</code> like below</li>
+</ol>
+
+<p>In below request the <code>displayname</code> will be required unless the <code>nickname</code> field is empty.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'nickname' =&gt; 'sometimes|string',
+    'displayname' =&gt; 'required_unless:nickname,',
+]);
+</code></pre>
+
+<ul>
+<li>Custom and complex required if validation rules :</li>
+</ul>
+
+<p>We sometimes need to have complex set of conditional rule for required if. With laravel it's much easier than you could have imagined.</p>
+
+<p>Laravel's <code>Rule</code> facade has <code>Rule::requiredIf()</code> method which we can use for this purpose. The beautify of this method is, it takes a boolean value or a closure which return a boolean value. This gives us lot of flexibility to have complex logic for required if rule.</p>
+
+<ol>
+<li>requiredIf() with simple boolean :</li>
+</ol>
+
+<p>Below example will make <code>employee_id</code> field required only if current user is an employee and the employee's company is still active.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'employee_id' =&gt; Rule::requiredIf($request-&gt;user()-&gt;is_employee &amp;&amp; $request-&gt;user()-&gt;employee-&gt;company-&gt;is_active)
+]);
+</code></pre>
+
+<ol start="2">
+<li>requiredIf() with closure :</li>
+</ol>
+
+<p>Below example will make <code>golden_discount_voucher</code> field required only if current user is a customer and has orders to fillfull criteria that the customer belongs to golden account category.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'golden_discount_voucher' =&gt; Rule::requiredIf(function() use($request){
+
+        return  $request-&gt;user()-&gt;is_customer &amp;&amp;
+                $request-&gt;user()-&gt;customer-&gt;orders-&gt;where('orders.grand_total', '&gt;', '1000')-&gt;count() &gt; 10;
+    })
+]);
+</code></pre>
+
+            </div>
+            <div class="col-sm-2 col-md-2 col-xs-12">
+                <ins class="adsbygoogle"
+                    style="display:block"
+                    data-ad-client="ca-pub-6453469589570319"
+                    data-ad-slot="8792586132"
+                    data-ad-format="auto"
+                    data-full-width-responsive="true"></ins>
+               <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+               </script>
+               <div class="ad-gap">&nbsp;</div>
+               <ins class="adsbygoogle"
+                    style="display:block"
+                    data-ad-client="ca-pub-6453469589570319"
+                    data-ad-slot="8792586132"
+                    data-ad-format="auto"
+                    data-full-width-responsive="true"></ins>
+                <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+                <div class="ad-gap">&nbsp;</div>
+                <ins class="adsbygoogle"
+                        style="display:block"
+                        data-ad-client="ca-pub-6453469589570319"
+                        data-ad-slot="8792586132"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+        </div>
+
+        <ins class="adsbygoogle"
+            style="display:block"
+            data-ad-client="ca-pub-6453469589570319"
+            data-ad-slot="6593798201"
+            data-ad-format="auto"
+            data-full-width-responsive="true"></ins>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+
+        <div class="cat-tags">
+            <span class="tags col-md-6">By : Mihir Bhende</span>
+                            <span class="categories col-md-6">
+                Categories : 
+                                <a href="https://techsemicolon.github.io/blog/categories/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/validation">validation</a>                                </span>
+                                        <span class="tags col-md-6">
+                Tags : 
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/validation">validation</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required">required</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_if">required_if</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_unless">required_unless</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_with">required_with</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_with_all">required_with_all</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_without">required_without</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_without_all">required_without_all</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/custom">custom</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/if">if</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/with">with</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/unless">unless</a>                                </span>
+                    </div>
+
+        <div class="fb-comments" 
+            data-href="https://techsemicolon.github.io" 
+            data-numposts="5" width="100%">
+        </div>
+    </article>
+
+
+
+                </div>
+            </div>
+        </main>
+        <footer class="container">
+            <span>Tech.Semicolon | &copy; 2019 </span>
+        </footer>
+
+        <script src="https://techsemicolon.github.io/components/jquery/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="https://techsemicolon.github.io/components/bootstrap/js/bootstrap.min.js"></script>
+                
+                <script src="https://techsemicolon.github.io/components/highlightjs/highlight.pack.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+
+                    </body>
+</html>

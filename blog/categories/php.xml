@@ -3,9 +3,155 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/categories/php.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-05-27T13:33:09+00:00</updated>
+    <updated>2019-05-30T12:15:06+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Everything you need to know about laravel required validations]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/"/>
+            <updated>2019-05-30T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/</id>
+            <content type="html"><![CDATA[<p>One of the strong part of the laravel core is the set of <code>validations</code> which validate your application's incoming data. One of the most common validation rule which is used in applications is <code>required</code>. We will see how can we make use of different types of required rules as well as build custom required rules conditionally.</p>
+
+<ul>
+<li>Required rule :</li>
+</ul>
+
+<p>As per the laravel's documentation. when we use <code>required</code> rule, the field under validation must be present and also it should be non-empty. Empty includes null value, empty string, empty array and uploaded file with no path.</p>
+
+<p>In below request both <code>first_name</code> and <code>last_name</code> should be present and non-empty.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'first_name' =&gt; 'required|unique:posts|max:255',
+    'last_name' =&gt; 'required',
+]);
+</code></pre>
+
+<ul>
+<li>Required rule based on other/supporting field(s) :</li>
+</ul>
+
+<p>Many times when designing complex and nested forms, we need to have required validation <code>only if</code> an other incoming data field is present. Now there are multiple cases in this :</p>
+
+<ol>
+<li>When you want <code>just single supporting field to be present</code>, then  you can use <code>required_with</code> like below :</li>
+</ol>
+
+<p>In below request the <code>city</code>, <code>state</code>, <code>zipcode</code> and <code>country</code> will be required if <code>address_line</code> is present in the incoming data.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'address_line' =&gt; 'sometimes|boolean',
+    'city' =&gt; 'required_with:address_line',
+    'state' =&gt; 'required_with:address_line',
+    'zipcode' =&gt; 'required_with:address_line',
+    'country' =&gt; 'required_with:address_line'
+]);
+</code></pre>
+
+<ol start="2">
+<li>When you want <code>any one of the supporting set of fields just to be present</code>, then  you can use <code>required_with</code> and pass multiple fields like below :</li>
+</ol>
+
+<p>In below request the we want to set validation rule for the <code>notify_new_updates</code> field. We can not notify if we do not have either of user phone number, email or fax. So the validation  <code>required_with:phone,email,fax</code> signifies that <code>notify_new_updates</code> will be required if one of the field phone, email or fax is present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'name' =&gt; 'required|string',
+    'phone' =&gt; 'sometimes|string',
+    'email' =&gt; 'sometimes|email',
+    'fax' =&gt; 'sometimes|string',
+    'notify_new_updates' =&gt; 'boolean|required_with:phone,email,fax'
+]);
+</code></pre>
+
+<ol start="3">
+<li>When you want <code>all of the supporting set of fields to be present</code>, then you can use <code>required_with_all</code> and pass multiple fields like below :</li>
+</ol>
+
+<p>In below request the validation <code>required_with_all:phone,email,fax</code> signifies that <code>notify_new_updates</code> will be required if all the field phone, email and fax are present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'name' =&gt; 'required|string',
+    'phone' =&gt; 'sometimes|string',
+    'email' =&gt; 'sometimes|email',
+    'fax' =&gt; 'sometimes|string',
+    'notify_new_updates' =&gt; 'boolean|required_with_all:phone,email,fax'
+]);
+</code></pre>
+
+<ol start="4">
+<li>When you want <code>any one of the supporting set of fields NOT to be present</code>, then  you can use <code>required_without</code> and pass one or more fields like below :</li>
+</ol>
+
+<p>In below request the <code>use_billing_as_shipping</code> will be required when <code>shipping_address</code> is NOT present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'billing_address' =&gt; 'required|string',
+    'shipping_address' =&gt; 'sometimes|string',
+    'use_billing_as_shipping' =&gt; 'boolean|required_without:shipping_address'
+]);
+</code></pre>
+
+<p>Similarly you can use <code>required_without_all</code> where it will need <code>sll of the supporting set of fields NOT to be present</code>.</p>
+
+<ol start="5">
+<li>When you want the other field not only to be present but also it should have a very specific value, then you can use <code>required_if</code> like below</li>
+</ol>
+
+<p>In below request the <code>admin_notification_email</code> will be required if and only if the <code>is_admin</code> field is present having value of <code>1</code>.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'is_admin' =&gt; 'required|boolean',
+    'admin_notification_email' =&gt; 'required_if:is_admin,1|email',
+]);
+</code></pre>
+
+<ol start="6">
+<li>When you want the other field not only to be present but it should have a very specific value, then you can use <code>required_if</code> like below</li>
+</ol>
+
+<p>In below request the <code>displayname</code> will be required unless the <code>nickname</code> field is empty.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'nickname' =&gt; 'sometimes|string',
+    'displayname' =&gt; 'required_unless:nickname,',
+]);
+</code></pre>
+
+<ul>
+<li>Custom and complex required if validation rules :</li>
+</ul>
+
+<p>We sometimes need to have complex set of conditional rule for required if. With laravel it's much easier than you could have imagined.</p>
+
+<p>Laravel's <code>Rule</code> facade has <code>Rule::requiredIf()</code> method which we can use for this purpose. The beautify of this method is, it takes a boolean value or a closure which return a boolean value. This gives us lot of flexibility to have complex logic for required if rule.</p>
+
+<ol>
+<li>requiredIf() with simple boolean :</li>
+</ol>
+
+<p>Below example will make <code>employee_id</code> field required only if current user is an employee and the employee's company is still active.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'employee_id' =&gt; Rule::requiredIf($request-&gt;user()-&gt;is_employee &amp;&amp; $request-&gt;user()-&gt;employee-&gt;company-&gt;is_active)
+]);
+</code></pre>
+
+<ol start="2">
+<li>requiredIf() with closure :</li>
+</ol>
+
+<p>Below example will make <code>golden_discount_voucher</code> field required only if current user is a customer and has orders to fillfull criteria that the customer belongs to golden account category.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'golden_discount_voucher' =&gt; Rule::requiredIf(function() use($request){
+
+        return  $request-&gt;user()-&gt;is_customer &amp;&amp;
+                $request-&gt;user()-&gt;customer-&gt;orders-&gt;where('orders.grand_total', '&gt;', '1000')-&gt;count() &gt; 10;
+    })
+]);
+</code></pre>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Composer stuck at Something&#039;s changed looking at all rules again]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/"/>
@@ -1193,113 +1339,6 @@ class CustomerRepository
 <p></p>
 
 <p>You can also extend this idea for input, select etc. I think once you set such directives in a project, your blade views become readble. Plus less code in a bladel file is always better.</p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Laravel tap vs tap vs pipe]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
-            <updated>2019-01-08T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
-            <content type="html"><![CDATA[<p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
-
-<h3 id="the-tap-function-%3A">The tap() function :</h3>
-
-<p>The reason of having tap 2 times in the article header is that, there are 2 implementations of tap helper function in laravel. One is in generic context and one specific to handling collections.</p>
-
-<ul>
-<li>The generic tap() function :</li>
-</ul>
-
-<p>The name tap suggests that it basically does set of actions using the value and then returns the value as if nothing happened. In other words, the tap function accepts two arguments <code>$value</code> and <code>a Closure</code>. The <code>$value</code> will be passed to the closure function. You can perform your actions in the closure where the return value of the Closure is irrelevant. At the end tap returns the same <code>$value</code> at the end.</p>
-
-<p>For example :</p>
-
-<pre><code class="php">$user = tap($user, function ($user) {
-
-    $user-&gt;notify(new SendWelcomeEmail());
-
-});
-</code></pre>
-
-<p>In the above snippet, we are passing <code>$user</code> instance to tap as first argument which is then cascaded as a parameter to closure. The closure will execute and basically send a new welcome email. Then control will come back to tap which will return the <code>$user</code> instance back.</p>
-
-<p>Even you can just eliminate the closure and call function on it directly like below.</p>
-
-<pre><code class="php">$user = tap($user)-&gt;notify(new SendWelcomeEmail());
-</code></pre>
-
-<p>The above will still return the user instance. The beauty of it is, you can chain the tap calls. Let's say you need to update the user role, then send the welcome email and then assign user some permissions. You can chain it all like :</p>
-
-<pre><code class="php">$user = tap($user)-&gt;update([
-    'role' =&gt; 'Customer' 
-])
--&gt;notify(new SendWelcomeEmail())
--&gt;assignPermissions('CustomerRole');
-</code></pre>
-
-<p>The use of this method can be handy when certain methods do not return the object as you want. A great example is the update method itself on the eloquent model. It returns integer when used otherwise. But if used as above with tap function, it returns the object it performed the update.</p>
-
-<ul>
-<li>The collection tap() function :</li>
-</ul>
-
-<p>The tap function for collection can be used in collection function chaining. I think of it similar to javascript debug breakpoints. You pin it to print something at a point of time in your javascript and then move ahead after removing the breakpoint.</p>
-
-<p>For example consider following example :</p>
-
-<pre><code class="php"><br />$customers = collect([
-    ['name' =&gt; 'mihir',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
-    ['name' =&gt; 'george', 'is_active' =&gt; true,  'category' =&gt; 'silver'],
-    ['name' =&gt; 'nathen', 'is_active' =&gt; false, 'category' =&gt; 'platinum'],
-    ['name' =&gt; 'steve',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
-    ['name' =&gt; 'shawn',  'is_active' =&gt; false, 'category' =&gt; 'gold']
-]);
-
-$activeGoldCustomers = collect($customers)
-    -&gt;where('is_active', true)
-    -&gt;tap(function ($activeCustomers) {
-        $this-&gt;sendActiveCustomerEmail($activeCustomers);
-    })
-    -&gt;where('category', 'gold')
-    -&gt;tap(function ($goldCustomers) {
-        $this-&gt;sendOfferCode('100%Discount');
-    });
-</code></pre>
-
-<p>In above example, we are just returning the customers who are currently active and fall under category gold. However, using the tap function we can perform certain actions on the go as we filter those. When we filtered for <code>is_active = true</code>, we sent activation email. Then when we added another filter for <code>category = gold</code>, we sent offer code just for active customer from gold category.</p>
-
-<p>You can also find this handy in dumping data for debugging during the developement cycle.</p>
-
-<p>The fundamental concept of <code>tap()</code> is just use the value and perform actions but NEVER CHANGE the value. If you think then what can change the value? <code>pipe()</code> is the answer.</p>
-
-<h3 id="the-pipe-function-%3A">The pipe() function :</h3>
-
-<p>Pipe function is just applicable for collections. For example consider following example :</p>
-
-<pre><code class="php"><br />$customers = collect([
-    ['name' =&gt; 'mihir',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
-    ['name' =&gt; 'george', 'is_active' =&gt; true,  'category' =&gt; 'silver'],
-    ['name' =&gt; 'nathen', 'is_active' =&gt; false, 'category' =&gt; 'platinum'],
-    ['name' =&gt; 'steve',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
-    ['name' =&gt; 'shawn',  'is_active' =&gt; false, 'category' =&gt; 'gold']
-]);
-
-$counts = collect($customers)
- -&gt;pipe(function($customers) {
-    return [
-        'active_count'      =&gt; $customers-&gt;where('is_active', true)-&gt;count(),
-        'gold_count'        =&gt; $customers-&gt;where('category', 'gold')-&gt;count(),
-        'silver_count'      =&gt; $customers-&gt;where('category', 'silver')-&gt;count(),
-        'platinum_count'    =&gt; $customers-&gt;where('category', 'platinum')-&gt;count()
-    ];
-});
-</code></pre>
-
-<p>Above will basicaly return <code>[3, 3, 1, 1]</code>, but it is very clean and less code is always better.</p>
-
-<p>Please note that the <code>pipe()</code> helper method is different than the <code>laravel pipelines</code>. However, if you read about pipelines, its is kind of similar conceptually to generic tap function where you can pass an object through multiple classes to perform set of task and then return the result value once all the tasks have been finished. A <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">handy article</a> for the same is <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">here</a> if you want a quick read.</p>
-
-<p>Even if these methods are very handy, sometimes if you chain it to much it loses the element fo readability. I will suggest it is preferable to follow what the domain logic wants and group the similar processes together to tap or pipe.</p>
 ]]></content>
         </entry>
     </feed>

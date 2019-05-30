@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Tech.Semicolon]]></title>
+    <link href="https://techsemicolon.github.io/blog/tags/custom.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-05-30T12:15:06+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Everything you need to know about laravel required validations]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/"/>
+            <updated>2019-05-30T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/</id>
+            <content type="html"><![CDATA[<p>One of the strong part of the laravel core is the set of <code>validations</code> which validate your application's incoming data. One of the most common validation rule which is used in applications is <code>required</code>. We will see how can we make use of different types of required rules as well as build custom required rules conditionally.</p>
+
+<ul>
+<li>Required rule :</li>
+</ul>
+
+<p>As per the laravel's documentation. when we use <code>required</code> rule, the field under validation must be present and also it should be non-empty. Empty includes null value, empty string, empty array and uploaded file with no path.</p>
+
+<p>In below request both <code>first_name</code> and <code>last_name</code> should be present and non-empty.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'first_name' =&gt; 'required|unique:posts|max:255',
+    'last_name' =&gt; 'required',
+]);
+</code></pre>
+
+<ul>
+<li>Required rule based on other/supporting field(s) :</li>
+</ul>
+
+<p>Many times when designing complex and nested forms, we need to have required validation <code>only if</code> an other incoming data field is present. Now there are multiple cases in this :</p>
+
+<ol>
+<li>When you want <code>just single supporting field to be present</code>, then  you can use <code>required_with</code> like below :</li>
+</ol>
+
+<p>In below request the <code>city</code>, <code>state</code>, <code>zipcode</code> and <code>country</code> will be required if <code>address_line</code> is present in the incoming data.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'address_line' =&gt; 'sometimes|boolean',
+    'city' =&gt; 'required_with:address_line',
+    'state' =&gt; 'required_with:address_line',
+    'zipcode' =&gt; 'required_with:address_line',
+    'country' =&gt; 'required_with:address_line'
+]);
+</code></pre>
+
+<ol start="2">
+<li>When you want <code>any one of the supporting set of fields just to be present</code>, then  you can use <code>required_with</code> and pass multiple fields like below :</li>
+</ol>
+
+<p>In below request the we want to set validation rule for the <code>notify_new_updates</code> field. We can not notify if we do not have either of user phone number, email or fax. So the validation  <code>required_with:phone,email,fax</code> signifies that <code>notify_new_updates</code> will be required if one of the field phone, email or fax is present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'name' =&gt; 'required|string',
+    'phone' =&gt; 'sometimes|string',
+    'email' =&gt; 'sometimes|email',
+    'fax' =&gt; 'sometimes|string',
+    'notify_new_updates' =&gt; 'boolean|required_with:phone,email,fax'
+]);
+</code></pre>
+
+<ol start="3">
+<li>When you want <code>all of the supporting set of fields to be present</code>, then you can use <code>required_with_all</code> and pass multiple fields like below :</li>
+</ol>
+
+<p>In below request the validation <code>required_with_all:phone,email,fax</code> signifies that <code>notify_new_updates</code> will be required if all the field phone, email and fax are present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'name' =&gt; 'required|string',
+    'phone' =&gt; 'sometimes|string',
+    'email' =&gt; 'sometimes|email',
+    'fax' =&gt; 'sometimes|string',
+    'notify_new_updates' =&gt; 'boolean|required_with_all:phone,email,fax'
+]);
+</code></pre>
+
+<ol start="4">
+<li>When you want <code>any one of the supporting set of fields NOT to be present</code>, then  you can use <code>required_without</code> and pass one or more fields like below :</li>
+</ol>
+
+<p>In below request the <code>use_billing_as_shipping</code> will be required when <code>shipping_address</code> is NOT present.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'billing_address' =&gt; 'required|string',
+    'shipping_address' =&gt; 'sometimes|string',
+    'use_billing_as_shipping' =&gt; 'boolean|required_without:shipping_address'
+]);
+</code></pre>
+
+<p>Similarly you can use <code>required_without_all</code> where it will need <code>sll of the supporting set of fields NOT to be present</code>.</p>
+
+<ol start="5">
+<li>When you want the other field not only to be present but also it should have a very specific value, then you can use <code>required_if</code> like below</li>
+</ol>
+
+<p>In below request the <code>admin_notification_email</code> will be required if and only if the <code>is_admin</code> field is present having value of <code>1</code>.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'is_admin' =&gt; 'required|boolean',
+    'admin_notification_email' =&gt; 'required_if:is_admin,1|email',
+]);
+</code></pre>
+
+<ol start="6">
+<li>When you want the other field not only to be present but it should have a very specific value, then you can use <code>required_if</code> like below</li>
+</ol>
+
+<p>In below request the <code>displayname</code> will be required unless the <code>nickname</code> field is empty.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'nickname' =&gt; 'sometimes|string',
+    'displayname' =&gt; 'required_unless:nickname,',
+]);
+</code></pre>
+
+<ul>
+<li>Custom and complex required if validation rules :</li>
+</ul>
+
+<p>We sometimes need to have complex set of conditional rule for required if. With laravel it's much easier than you could have imagined.</p>
+
+<p>Laravel's <code>Rule</code> facade has <code>Rule::requiredIf()</code> method which we can use for this purpose. The beautify of this method is, it takes a boolean value or a closure which return a boolean value. This gives us lot of flexibility to have complex logic for required if rule.</p>
+
+<ol>
+<li>requiredIf() with simple boolean :</li>
+</ol>
+
+<p>Below example will make <code>employee_id</code> field required only if current user is an employee and the employee's company is still active.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'employee_id' =&gt; Rule::requiredIf($request-&gt;user()-&gt;is_employee &amp;&amp; $request-&gt;user()-&gt;employee-&gt;company-&gt;is_active)
+]);
+</code></pre>
+
+<ol start="2">
+<li>requiredIf() with closure :</li>
+</ol>
+
+<p>Below example will make <code>golden_discount_voucher</code> field required only if current user is a customer and has orders to fillfull criteria that the customer belongs to golden account category.</p>
+
+<pre><code class="php">$request-&gt;validate([
+    'golden_discount_voucher' =&gt; Rule::requiredIf(function() use($request){
+
+        return  $request-&gt;user()-&gt;is_customer &amp;&amp;
+                $request-&gt;user()-&gt;customer-&gt;orders-&gt;where('orders.grand_total', '&gt;', '1000')-&gt;count() &gt; 10;
+    })
+]);
+</code></pre>
+]]></content>
+        </entry>
+    </feed>
