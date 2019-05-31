@@ -3,7 +3,7 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/categories/tools.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-05-31T10:39:17+00:00</updated>
+    <updated>2019-05-31T10:43:51+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
@@ -14,6 +14,87 @@
             <content type="html"><![CDATA[<style type="text/css">
     .container {
         max-width : 90% !important;
+    }
+    textarea{
+        resize: none;
+        height: 800px;
+    }
+    .result-msg {
+        display: none;
+    }
+    .deleted  {background-color : LightPink;
+        text-decoration  : line-through}
+    .inserted {background-color : PaleGreen}
+    #difference {
+        white-space:pre-wrap;
+    }
+    #check-difference {
+            background: #4cc6b7;
+        border-radius: 0;
+        border: 0;
+        margin: 25px 0;
+        height: 50px;
+        font-size: 25px;
+    }
+    textarea:focus, textarea:active {
+        outline : 0;
+        border:none;
+    }
+    textarea {
+        border: none;
+        width :100%;
+        padding : 15px;
+        padding: 15px;
+        font-weight: 200;
+        font-size: 16px;
+        font-family: sans-serif;
+        color: #4e6370;
+    }
+    .code-container {
+        float:left;
+        width:50%;
+        border : 1px solid #627986;
+    }
+    .no-b-r {
+        border-right : none;
+    }
+    .code-title {
+        text-align: center;
+        height: 50px;
+        line-height: 50px;
+        border-bottom: 1px solid #ddd;
+    }
+    #switch {
+        background: #e9ece5;
+        border-radius: 0;
+        color: #4e6370;
+        margin: 20px auto;
+        width: 30%;
+        border: 1px solid #ccc;
+    }
+    #reset {
+        background: #e9ece5;
+        border-radius: 0;
+        color: #4e6370;
+        margin: 20px auto;
+        width: 30%;
+        border: 1px solid #ccc;
+    }
+    #difference {
+        white-space: pre-wrap;
+        background: #fff;
+        padding: 20px;
+        width: 100%;
+            font-weight: 200;
+        font-size: 16px;
+        font-family: sans-serif;
+        color: #000;
+        line-height: 20px;
+    }
+    .difference-container {
+        display:none;
+        width:100%;
+        border: 1px solid #4e6370;
     }
 </style>
 
