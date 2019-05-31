@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>Code diff checker tool online &mdash; Tech.Semicolon</title>
+        <meta charset="utf-8">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <meta name="robots" content="index, follow">
+
+        <!-- Meta Tags -->
+        <meta name="description" content="Find and compare text difference between two code files" />
+        <meta property="og:title" content="Code diff checker tool online" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://techsemicolon.github.io" />
+        <meta property="og:image" content="https://techsemicolon.github.io/images/logo.png" />
+        <meta property="og:description" content="Find and compare text difference between two code files" /> 
+        <meta property="og:site_name" content="Tech Semicolon" />
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300i,400,400i,600,600i,700,800|Yanone+Kaffeesatz:200,300,400,700" rel="stylesheet">
+        <link href="https://techsemicolon.github.io/components/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="https://techsemicolon.github.io/css/style.css" rel="stylesheet" type="text/css" />
+
+        <link rel="apple-touch-startup-image" href="https://techsemicolon.github.io/images/fav.png">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="shortcut icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+
+        <link rel="stylesheet" href="https://techsemicolon.github.io/components/highlightjs/styles/github.css" />
+        <link rel="alternate" type="application/atom+xml" href="https://techsemicolon.github.io/atom.xml" title="Tech.Semicolon activity feed" />
+                    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+            <script>
+            (adsbygoogle = window.adsbygoogle || []).push({
+                google_ad_client: "ca-pub-6453469589570319",
+                enable_page_level_ads: true
+            });
+            </script>
+                                            </head>
+    <body>
+        <div id="fb-root"></div>
+        <script>(function(d, s, id) {
+              var js, fjs = d.getElementsByTagName(s)[0];
+              if (d.getElementById(id)) return;
+              js = d.createElement(s); js.id = id;
+              js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2&appId=1919280101503437&autoLogAppEvents=1';
+              fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        </script>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-header">
+                <div class="container">
+                    <a class="navbar-brand" href="https://techsemicolon.github.io/">
+                        <img src="https://techsemicolon.github.io/images/logo.png" class="logo-img"/>
+                    </a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog">Posts Archive</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/categories">Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/tags">Tags</a></li>
+                            <li class="nav-item"><a target="_blank" class="nav-link" href="https://github.com/techsemicolon">GitHub</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/about">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <main role="main" class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                        <article>
+        <header>
+            <h2>Code diff checker tool online</h2>
+        </header>
+        <div class="row">
+            <div class="col-sm-10 col-md-10 col-xs-12">
+                <style type="text/css">
+    .container {
+        max-width : 90% !important;
+    }
+</style>
+
+<div class="alert alert-info result-msg">&nbsp;</div>
+
+<div class="row">
+    <button type="button" class="btn btn-primary btn-block" id="switch">< Switch ></button>
+    <button type="button" class="btn btn-primary btn-block" id="reset">Reset</button>
+</div>
+
+<div class="row">
+    <div class="code-container no-b-r">
+        <div class="code-title">Original Code</div>
+        <textarea spellcheck="false" id="left-code"></textarea>
+    </div>
+    <div class="code-container">
+        <div class="code-title">Changed Code</div>
+        <textarea spellcheck="false" id="right-code"></textarea>
+    </div>
+</div>
+
+<div class="row">
+    <button type="button" class="btn btn-primary btn-block" id="check-difference">Check Difference</button>
+</div>
+
+<div class="row">
+    <div class="difference-container">
+        <div class="code-title">Comparison Result</div>
+        <div class="col-xs-12" id="difference"></div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
+<script type="text/javascript">
+jQuery(document).ready(function($){
+    
+    $('#switch').click(function(){
+        var leftCode = $('#left-code').val();
+        var rightCode = $('#right-code').val();
+        $('#right-code').val(leftCode);
+        $('#left-code').val(rightCode);
+        $('#difference').html('');
+        $('.difference-container').hide();
+    });
+    $('#reset').click(function(){
+        $('#left-code').val('');
+        $('#right-code').val('');
+        $('#difference').html('');
+        $('.difference-container').hide();
+    });
+
+    $('#check-difference').click(function(){
+        var leftCode = clean($('#left-code').val());
+        var rightCode = clean($('#right-code').val());
+
+        if(leftCode == ''){
+            alert('Please add value on the left hand side of comparison areas!');
+            return;
+        }
+        if(rightCode == ''){
+            alert('Please add value on the right hand side of comparison areas!');
+            return;
+        }
+
+        compare(leftCode, rightCode);
+    });
+
+    function compare(leftCode, rightCode){
+
+        if(leftCode === rightCode){
+            setResult('It\'s a match! Both sides of comparison are identicle.');
+            return;
+        }
+
+        $('#difference').html(leftCode.diff(rightCode));
+        $('.difference-container').show();
+
+    }
+
+    function clean(code)
+    {
+        return code
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+    }
+
+    String.prototype.largestMatch = function largestMatch(otherString) {
+
+        if (otherString.length < this.length)
+            return otherString.largestMatch(this);
+
+        var matchingLength = otherString.length,
+            possibleMatch, index;
+
+        while (matchingLength) {
+            index = 0;
+            while (index + matchingLength <= otherString.length) {
+                possibleMatch = otherString.substr(index, matchingLength);
+                if (~this.indexOf(possibleMatch))
+                    return otherString.substr(index, matchingLength);
+                index++;
+            }
+            matchingLength--;
+        }
+        return '';
+    };
+
+    String.prototype.diff = function(newValue) {
+
+        var largestMatch = this.largestMatch(newValue),
+            preNew, postNew, preOld, postOld;
+
+        if (!largestMatch) {
+            return '<span class = "deleted">' + this + '</span><span class = "inserted">' + newValue + '</span>';
+        } else {
+            preNew = newValue.substr(0, newValue.indexOf(largestMatch));
+            preOld = this.substr(0, this.indexOf(largestMatch));
+            postNew = newValue.substr(preNew.length + largestMatch.length);
+            postOld = this.substr(preOld.length + largestMatch.length);
+            console.log({
+                old: this.toString(),
+                new: newValue,
+                preOld: preOld,
+                match: largestMatch,
+                postOld: postOld,
+                preNew: preNew,
+                match2: largestMatch,
+                postNew: postNew
+            });
+            return preOld.diff(preNew) + largestMatch + postOld.diff(postNew);
+        }
+    };
+
+    function setResult(msg){
+        $('.result-msg').text(msg).show();
+    }
+    function hideResult(msg){
+        $('.result-msg').text('').hide();
+    }
+});
+</script>
+
+            </div>
+                            <div class="col-sm-2 col-md-2 col-xs-12">
+                    <ins class="adsbygoogle"
+                        style="display:block"
+                        data-ad-client="ca-pub-6453469589570319"
+                        data-ad-slot="8792586132"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+                <div class="ad-gap">&nbsp;</div>
+                <ins class="adsbygoogle"
+                        style="display:block"
+                        data-ad-client="ca-pub-6453469589570319"
+                        data-ad-slot="8792586132"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                    <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                    <div class="ad-gap">&nbsp;</div>
+                    <ins class="adsbygoogle"
+                            style="display:block"
+                            data-ad-client="ca-pub-6453469589570319"
+                            data-ad-slot="8792586132"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
+                    <script>
+                            (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+                    </div>
+                    <ins class="adsbygoogle"
+                style="display:block"
+                data-ad-client="ca-pub-6453469589570319"
+                data-ad-slot="6593798201"
+                data-ad-format="auto"
+                data-full-width-responsive="true"></ins>
+            <script>
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        
+                <div class="cat-tags">
+            <span class="tags col-md-6">By : Mihir Bhende</span>
+                            <span class="categories col-md-6">
+                Categories : 
+                                <a href="https://techsemicolon.github.io/blog/categories/tools">tools</a>                                </span>
+                                        <span class="tags col-md-6">
+                Tags : 
+                                <a href="https://techsemicolon.github.io/blog/tags/code">code</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/diff">diff</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/checker">checker</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/online">online</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/free">free</a>                                </span>
+                    </div>
+
+        <div class="fb-comments" 
+            data-href="https://techsemicolon.github.io" 
+            data-numposts="5" width="100%">
+        </div>
+    </article>
+
+
+
+                </div>
+            </div>
+        </main>
+        <footer class="container">
+            <span>Tech.Semicolon | &copy; 2019 </span>
+        </footer>
+
+        <script src="https://techsemicolon.github.io/components/jquery/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="https://techsemicolon.github.io/components/bootstrap/js/bootstrap.min.js"></script>
+                
+                <script src="https://techsemicolon.github.io/components/highlightjs/highlight.pack.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+
+                    </body>
+</html>

@@ -3,9 +3,164 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/atom.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-05-30T12:15:06+00:00</updated>
+    <updated>2019-05-31T10:39:16+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Code diff checker tool online]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/05/31/code-diff-online/"/>
+            <updated>2019-05-31T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/05/31/code-diff-online/</id>
+            <content type="html"><![CDATA[<style type="text/css">
+    .container {
+        max-width : 90% !important;
+    }
+</style>
+
+<div class="alert alert-info result-msg">&nbsp;</div>
+
+<div class="row">
+    <button type="button" class="btn btn-primary btn-block" id="switch">< Switch ></button>
+    <button type="button" class="btn btn-primary btn-block" id="reset">Reset</button>
+</div>
+
+<div class="row">
+    <div class="code-container no-b-r">
+        <div class="code-title">Original Code</div>
+        <textarea spellcheck="false" id="left-code"></textarea>
+    </div>
+    <div class="code-container">
+        <div class="code-title">Changed Code</div>
+        <textarea spellcheck="false" id="right-code"></textarea>
+    </div>
+</div>
+
+<div class="row">
+    <button type="button" class="btn btn-primary btn-block" id="check-difference">Check Difference</button>
+</div>
+
+<div class="row">
+    <div class="difference-container">
+        <div class="code-title">Comparison Result</div>
+        <div class="col-xs-12" id="difference"></div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
+<script type="text/javascript">
+jQuery(document).ready(function($){
+    
+    $('#switch').click(function(){
+        var leftCode = $('#left-code').val();
+        var rightCode = $('#right-code').val();
+        $('#right-code').val(leftCode);
+        $('#left-code').val(rightCode);
+        $('#difference').html('');
+        $('.difference-container').hide();
+    });
+    $('#reset').click(function(){
+        $('#left-code').val('');
+        $('#right-code').val('');
+        $('#difference').html('');
+        $('.difference-container').hide();
+    });
+
+    $('#check-difference').click(function(){
+        var leftCode = clean($('#left-code').val());
+        var rightCode = clean($('#right-code').val());
+
+        if(leftCode == ''){
+            alert('Please add value on the left hand side of comparison areas!');
+            return;
+        }
+        if(rightCode == ''){
+            alert('Please add value on the right hand side of comparison areas!');
+            return;
+        }
+
+        compare(leftCode, rightCode);
+    });
+
+    function compare(leftCode, rightCode){
+
+        if(leftCode === rightCode){
+            setResult('It\'s a match! Both sides of comparison are identicle.');
+            return;
+        }
+
+        $('#difference').html(leftCode.diff(rightCode));
+        $('.difference-container').show();
+
+    }
+
+    function clean(code)
+    {
+        return code
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+    }
+
+    String.prototype.largestMatch = function largestMatch(otherString) {
+
+        if (otherString.length < this.length)
+            return otherString.largestMatch(this);
+
+        var matchingLength = otherString.length,
+            possibleMatch, index;
+
+        while (matchingLength) {
+            index = 0;
+            while (index + matchingLength <= otherString.length) {
+                possibleMatch = otherString.substr(index, matchingLength);
+                if (~this.indexOf(possibleMatch))
+                    return otherString.substr(index, matchingLength);
+                index++;
+            }
+            matchingLength--;
+        }
+        return '';
+    };
+
+    String.prototype.diff = function(newValue) {
+
+        var largestMatch = this.largestMatch(newValue),
+            preNew, postNew, preOld, postOld;
+
+        if (!largestMatch) {
+            return '<span class = "deleted">' + this + '</span><span class = "inserted">' + newValue + '</span>';
+        } else {
+            preNew = newValue.substr(0, newValue.indexOf(largestMatch));
+            preOld = this.substr(0, this.indexOf(largestMatch));
+            postNew = newValue.substr(preNew.length + largestMatch.length);
+            postOld = this.substr(preOld.length + largestMatch.length);
+            console.log({
+                old: this.toString(),
+                new: newValue,
+                preOld: preOld,
+                match: largestMatch,
+                postOld: postOld,
+                preNew: preNew,
+                match2: largestMatch,
+                postNew: postNew
+            });
+            return preOld.diff(preNew) + largestMatch + postOld.diff(postNew);
+        }
+    };
+
+    function setResult(msg){
+        $('.result-msg').text(msg).show();
+    }
+    function hideResult(msg){
+        $('.result-msg').text('').hide();
+    }
+});
+</script>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Everything you need to know about laravel required validations]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/"/>
@@ -908,270 +1063,6 @@ $order = new Order([], 12.22, $customer);
 <p>If not properly thought, duplicate validations can cause redundancies. For example in above case, if instance of <code>Item</code> class contains a valid price is a concern of <code>Item</code> class. If that validation is also present in <code>Order</code> class as well, it created redundancies.</p>
 
 <p>You can find more assertion options available here : <a href="https://github.com/webmozart/assert">https://github.com/webmozart/assert</a></p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Laravel make custom class using console command]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
-            <updated>2019-01-11T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
-            <content type="html"><![CDATA[<p>Laravel ships with built in console <code>make</code> commands to generate class files for controllers, models, migrations etc. For example creating a resourse controller, you can do :</p>
-
-<pre><code class="bash">php artisan make:controller CustomerController --resource
-</code></pre>
-
-<p>Depending in your project structure and design patterns, you might be using different classes like repositories, services etc. We can take advantage of console commands to save time and create it just like we created controller above.</p>
-
-<h3 id="file-generation-%3A">File generation :</h3>
-
-<p>We firstly create a template file which is like a blueprint of how thw new class file will look like. This file is called <code>stub</code> file.</p>
-
-<p>Then when command is run, we simply copy the stub to <code>class.php</code> and replace the dummyclass, dummynamespace etc with the new files class and namespace.</p>
-
-<p>Above steps are made much simpler by <code>GeneratorCommand</code> class.</p>
-
-<h3 id="the-generatorcommand-class-%3A">The GeneratorCommand class :</h3>
-
-<p>Laravel's make commands extend an abstract class <code>GeneratorCommand</code>. This class basically has all the methods which do making a directory, getting content of stub, replacing class &amp; namespace, saving the new file and so on.</p>
-
-<p>This is an abstract class which then extends the Illuminate <code>command</code> class.</p>
-
-<h3 id="example-%3A">Example :</h3>
-
-<p>Let's create a make command for generating <code>Repository</code> for a model.</p>
-
-<ul>
-<li>Create the stub :</li>
-</ul>
-
-<p>Create a directory called <code>stubs</code> in laravel project root. I really like non-php files outside the app folder, you can put the stubs in the location you prefer.</p>
-
-<p>Create a new file inside <code>stubs</code> directory called <code>Repository.stub</code>. We are eliminating the repository specific functions as the goal is to focus on creating class file. You can add your repository functions inside the stub or maybe create a base class and extend stubs class from it.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace DummyNamespace;
-
-use App\DummyModel;
-
-class DummyRepository
-{
-    protected $model;
-    /**
-       * Instantiate reporitory
-       * 
-       * @param DummyModel $model
-       */
-    public function __construct(DummyModel $model)
-    {
-        $this-&gt;model = $model;
-    }
-
-    // Your methods for repository
-}
-</code></pre>
-
-<p>The usual idea is whatever is to be replaced, we prefix it with <code>Dummy</code>.</p>
-
-<ul>
-<li>Creating command :</li>
-</ul>
-
-<p>Let's create command scaffolding from artisan :</p>
-
-<pre><code class="bash">php artisan make:command RepositoryMakeCommand
-</code></pre>
-
-<p>The make command classes are generally named in format <code>WhatToCreateMakeCommand</code>. If we had to create a service class, we could say <code>ServiceMakeCommand</code>.</p>
-
-<p>We need to edit the <code>RepositoryMakeCommand.php</code> file which will be generated inside <code>app/Console/Commands</code> folder.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace App\Console\Commands;
-
-use Illuminate\Console\GeneratorCommand;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Exception\InvalidArgumentException;
-
-class RepositoryMakeCommand extends GeneratorCommand
-{
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $name = 'make:repository';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a new model repository';
-
-    /**
-     * The type of class being generated.
-     *
-     * @var string
-     */
-    protected $type = 'Repository';
-
-    /**
-     * The name of class being generated.
-     *
-     * @var string
-     */
-    private $repositoryClass;
-
-    /**
-     * The name of class being generated.
-     *
-     * @var string
-     */
-    private $model;
-
-    /**
-     * Execute the console command.
-     *
-     * @return bool|null
-     */
-    public function fire(){
-
-        $this-&gt;setRepositoryClass();
-
-        $path = $this-&gt;getPath($this-&gt;repositoryClass);
-
-        if ($this-&gt;alreadyExists($this-&gt;getNameInput())) {
-            $this-&gt;error($this-&gt;type.' already exists!');
-
-            return false;
-        }
-
-        $this-&gt;makeDirectory($path);
-
-        $this-&gt;files-&gt;put($path, $this-&gt;buildClass($this-&gt;repositoryClass));
-
-        $this-&gt;info($this-&gt;type.' created successfully.');
-
-        $this-&gt;line("&lt;info&gt;Created Repository :&lt;/info&gt; $this-&gt;repositoryClass");
-    }
-
-    /**
-     * Set repository class name
-     *
-     * @return  void
-     */
-    private function setRepositoryClass()
-    {
-        $name = ucwords(strtolower($this-&gt;argument('name')));
-
-        $this-&gt;model = $name;
-
-        $modelClass = $this-&gt;parseName($name);
-
-        $this-&gt;repositoryClass = $modelClass . 'Repository';
-
-        return $this;
-    }
-
-    /**
-     * Replace the class name for the given stub.
-     *
-     * @param  string  $stub
-     * @param  string  $name
-     * @return string
-     */
-    protected function replaceClass($stub, $name)
-    {
-        if(!$this-&gt;argument('name')){
-            throw new InvalidArgumentException("Missing required argument model name");
-        }
-
-        $stub = parent::replaceClass($stub, $name);
-
-        return str_replace('DummyModel', $this-&gt;model, $stub);
-    }
-
-    /**
-     * 
-     * Get the stub file for the generator.
-     *
-     * @return string
-     */
-    protected function getStub()
-    {
-        return  base_path('stubs/Repository.stub');
-    }
-    /**
-     * Get the default namespace for the class.
-     *
-     * @param  string  $rootNamespace
-     * @return string
-     */
-    protected function getDefaultNamespace($rootNamespace)
-    {
-        return $rootNamespace . '\Repo';
-    }
-
-    /**
-     * Get the console command arguments.
-     *
-     * @return array
-     */
-    protected function getArguments()
-    {
-        return [
-            ['name', InputArgument::REQUIRED, 'The name of the model class.'],
-        ];
-    }
-}
-</code></pre>
-
-<ul>
-<li>Registering the command :</li>
-</ul>
-
-<p>Finally we need to register this command to make available in artisan console. We can do that by adding it inside <code>app/Console/Kernel.php</code>.</p>
-
-<p>Inside <code>protected $commands = []</code> array add the class path :</p>
-
-<pre><code class="php">\App\Console\Commands\RepositoryMakeCommand::class,
-</code></pre>
-
-<ul>
-<li>Using the command :</li>
-</ul>
-
-<pre><code class="bash">php artisan make:repository Customer
-</code></pre>
-
-<p>This will create a <code>CustomerRepository.php</code> inside <code>app/Repo</code> folder :</p>
-
-<pre><code class="php">&lt;?php
-
-namespace App\Repo;
-
-use App\Customer;
-
-class CustomerRepository
-{
-    protected $model;
-    /**
-       * Instantiate reporitory
-       * 
-       * @param Customer $model
-       */
-    public function __construct(Customer $model)
-    {
-        $this-&gt;model = $model;
-    }
-
-    // Your methods for repository
-}
-</code></pre>
-
-<p>You can extend this implementation as per your project structure needs. This indeed saves time in longer run and makes sure all generated classes have common blueprint structure.</p>
 ]]></content>
         </entry>
     </feed>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Tech.Semicolon]]></title>
+    <link href="https://techsemicolon.github.io/blog/tags/checker.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-05-31T10:39:17+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Code diff checker tool online]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/05/31/code-diff-online/"/>
+            <updated>2019-05-31T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/05/31/code-diff-online/</id>
+            <content type="html"><![CDATA[<style type="text/css">
+    .container {
+        max-width : 90% !important;
+    }
+</style>
+
+<div class="alert alert-info result-msg">&nbsp;</div>
+
+<div class="row">
+    <button type="button" class="btn btn-primary btn-block" id="switch">< Switch ></button>
+    <button type="button" class="btn btn-primary btn-block" id="reset">Reset</button>
+</div>
+
+<div class="row">
+    <div class="code-container no-b-r">
+        <div class="code-title">Original Code</div>
+        <textarea spellcheck="false" id="left-code"></textarea>
+    </div>
+    <div class="code-container">
+        <div class="code-title">Changed Code</div>
+        <textarea spellcheck="false" id="right-code"></textarea>
+    </div>
+</div>
+
+<div class="row">
+    <button type="button" class="btn btn-primary btn-block" id="check-difference">Check Difference</button>
+</div>
+
+<div class="row">
+    <div class="difference-container">
+        <div class="code-title">Comparison Result</div>
+        <div class="col-xs-12" id="difference"></div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+
+<script type="text/javascript">
+jQuery(document).ready(function($){
+    
+    $('#switch').click(function(){
+        var leftCode = $('#left-code').val();
+        var rightCode = $('#right-code').val();
+        $('#right-code').val(leftCode);
+        $('#left-code').val(rightCode);
+        $('#difference').html('');
+        $('.difference-container').hide();
+    });
+    $('#reset').click(function(){
+        $('#left-code').val('');
+        $('#right-code').val('');
+        $('#difference').html('');
+        $('.difference-container').hide();
+    });
+
+    $('#check-difference').click(function(){
+        var leftCode = clean($('#left-code').val());
+        var rightCode = clean($('#right-code').val());
+
+        if(leftCode == ''){
+            alert('Please add value on the left hand side of comparison areas!');
+            return;
+        }
+        if(rightCode == ''){
+            alert('Please add value on the right hand side of comparison areas!');
+            return;
+        }
+
+        compare(leftCode, rightCode);
+    });
+
+    function compare(leftCode, rightCode){
+
+        if(leftCode === rightCode){
+            setResult('It\'s a match! Both sides of comparison are identicle.');
+            return;
+        }
+
+        $('#difference').html(leftCode.diff(rightCode));
+        $('.difference-container').show();
+
+    }
+
+    function clean(code)
+    {
+        return code
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+    }
+
+    String.prototype.largestMatch = function largestMatch(otherString) {
+
+        if (otherString.length < this.length)
+            return otherString.largestMatch(this);
+
+        var matchingLength = otherString.length,
+            possibleMatch, index;
+
+        while (matchingLength) {
+            index = 0;
+            while (index + matchingLength <= otherString.length) {
+                possibleMatch = otherString.substr(index, matchingLength);
+                if (~this.indexOf(possibleMatch))
+                    return otherString.substr(index, matchingLength);
+                index++;
+            }
+            matchingLength--;
+        }
+        return '';
+    };
+
+    String.prototype.diff = function(newValue) {
+
+        var largestMatch = this.largestMatch(newValue),
+            preNew, postNew, preOld, postOld;
+
+        if (!largestMatch) {
+            return '<span class = "deleted">' + this + '</span><span class = "inserted">' + newValue + '</span>';
+        } else {
+            preNew = newValue.substr(0, newValue.indexOf(largestMatch));
+            preOld = this.substr(0, this.indexOf(largestMatch));
+            postNew = newValue.substr(preNew.length + largestMatch.length);
+            postOld = this.substr(preOld.length + largestMatch.length);
+            console.log({
+                old: this.toString(),
+                new: newValue,
+                preOld: preOld,
+                match: largestMatch,
+                postOld: postOld,
+                preNew: preNew,
+                match2: largestMatch,
+                postNew: postNew
+            });
+            return preOld.diff(preNew) + largestMatch + postOld.diff(postNew);
+        }
+    };
+
+    function setResult(msg){
+        $('.result-msg').text(msg).show();
+    }
+    function hideResult(msg){
+        $('.result-msg').text('').hide();
+    }
+});
+</script>
+]]></content>
+        </entry>
+    </feed>
