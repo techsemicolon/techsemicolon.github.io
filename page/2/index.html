@@ -83,12 +83,131 @@
         <main role="main" class="container">
             <div class="row">
                 <div class="col-sm-12">
-                        <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/">Laravel make custom class using console command</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>Laravel ships with built in console <code>make</code> commands to generate class files for controllers, models, migrations etc. For example creating a resourse controller, you can do :</p>
+                    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/">PHP argument validation using assert</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>When creating classes, we either pass arguments to the constructor function or have setter-getter functions to access class properties. These arguments may sometime have a specific format or requirements. For Example :</p>
+
+<pre><code class="php">/**
+ * $age integer
+ *
+ * @return  string
+ */
+function($age){
+    return "You are $age years old";
+}
+</code></pre>
+
+<p>Above function expects $age to be an integer. If any other type is passed, function will no work as expected.</p>
+
+<p>The example was very granular. When your core classes have functions which affect important domain logics of your project, argument validation becomes an  important part.</p>
+
+<p>PHP comes with default function(or more specifically a language construct for PHP version 7) called <a href="http://php.net/manual/en/function.assert.php"><code>assert</code></a>, which basically checks if provided assertion if false. If yes then you can handle the exceptions in callback. Even if this is useful, I will strongly suggest using composer plugin <a href="https://github.com/webmozart/assert">webmozart/assert</a> for this. It has very useful intuitive methods for the same.</p>
+
+<ul>
+<li>Example :</li>
+</ul>
+
+<p>Let's consider a function <code>placeOrder()</code> which takes array of <code>$items</code> having instances of <code>Item</code> class, a <code>$shippingPrice</code> and <code>$customer</code> having instance of <code>Customer</code> class.</p>
+
+<pre><code class="php">&lt;?php 
+
+use Webmozart\Assert\Assert;
+
+Class Order{
+
+    /**
+     * Array of Item instances
+     * @var array
+     */
+    private $items;
+
+    /**
+     * Shipping Price
+     * @var float
+     */
+    private $shippingPrice;
+
+    /**
+     * Customer Instance
+     * @var Customer
+     */
+    private $customer;
+
+    /**
+     * Instantiate Order class
+     * 
+     * @param $items
+     * @param $shippingPrice
+     * @param $customer
+     */
+    function __construct($items, $shippingPrice, $customer)
+    {
+        Assert::isArray($items, '$items must be an array. Got: %s');
+        Assert::allIsInstanceOf($items, '\Item', '$items must contain array of Item class instances. Got: %s');
+        Assert::numeric($shippingPrice, '$shippingPrice must be numeric. Got: %s');
+        Assert::isInstanceOf($customer, '\Customer', '$customer must be an instance of Customer class. Got: %s');
+
+        $this-&gt;shippingPrice    = $shippingPrice;
+        $this-&gt;customer         = $customer;
+        $this-&gt;items            = $items;
+    }
+
+    /**
+     * Places order
+     * 
+     * @return Order
+     */
+    public function placeOrder(){
+
+        // PlaceOrder
+    }
+}
+</code></pre>
+
+<p>Now, when we instantiate the order class :</p>
+
+<pre><code class="php">$customer = new Customer('John Doe');
+
+$order = new Order([], 12.22, $customer);
+</code></pre>
+
+<p>We are passing an invalid value for <code>$items</code> argument. It will throw <code>\InvalidArgumentException</code> with error message : <code>$items must contain array of Item class instances. Got: Array</code>.</p>
+
+<p>If you are using setter-getter functions instead of constructor parameters, you can have these assertions inside the setter functions. Above methodology is sometimes referred as defensive programming where we are making sure function will not break at the intial stages itself. The counter concept of defensive programming will be validating these arguments as and when they are actually used inside <code>placeOrder</code> function.</p>
+
+<p>Advantages :</p>
+
+<ol>
+<li>Prevents errors caused due to unexpected type of arguments passed</li>
+<li>Easier to debug</li>
+<li>Easier to create unit tests and catch asset exceptions</li>
+<li>Easier to write readable custom error messages</li>
+</ol>
+
+<p>Disadvantages :</p>
+
+<p>If not properly thought, duplicate validations can cause redundancies. For example in above case, if instance of <code>Item</code> class contains a valid price is a concern of <code>Item</code> class. If that validation is also present in <code>Order</code> class as well, it created redundancies.</p>
+
+<p>You can find more assertion options available here : <a href="https://github.com/webmozart/assert">https://github.com/webmozart/assert</a></p>
+
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/validation">validation</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/arguments">arguments</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/assert">assert</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/">Laravel make custom class using console command</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>Laravel ships with built in console <code>make</code> commands to generate class files for controllers, models, migrations etc. For example creating a resourse controller, you can do :</p>
 
 <pre><code class="bash">php artisan make:controller CustomerController --resource
 </code></pre>
@@ -346,19 +465,20 @@ class CustomerRepository
 
 <p>You can extend this implementation as per your project structure needs. This indeed saves time in longer run and makes sure all generated classes have common blueprint structure.</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/helpers">helpers</a>,                         <a href="https://techsemicolon.github.io/blog/tags/collections">collections</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/">Laravel improving readability with blade directives</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>Laravel's blade templating system comes with ability to define custom directives. These directives can be very handly to improve readability of the view files. Let's do a quick recap of directives :</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/helpers">helpers</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/collections">collections</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/">Laravel improving readability with blade directives</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>Laravel's blade templating system comes with ability to define custom directives. These directives can be very handly to improve readability of the view files. Let's do a quick recap of directives :</p>
 
 <h3 id="blade-directives-%3A">Blade directives :</h3>
 
@@ -592,19 +712,20 @@ class CustomerRepository
 
 <p>You can also extend this idea for input, select etc. I think once you set such directives in a project, your blade views become readble. Plus less code in a bladel file is always better.</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/blade">blade</a>,                         <a href="https://techsemicolon.github.io/blog/tags/directives">directives</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/">Laravel tap vs tap vs pipe</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/blade">blade</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/directives">directives</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/">Laravel tap vs tap vs pipe</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
 
 <h3 id="the-tap-function-%3A">The tap() function :</h3>
 
@@ -705,19 +826,20 @@ $counts = collect($customers)
 
 <p>Even if these methods are very handy, sometimes if you chain it to much it loses the element fo readability. I will suggest it is preferable to follow what the domain logic wants and group the similar processes together to tap or pipe.</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/helpers">helpers</a>,                         <a href="https://techsemicolon.github.io/blog/tags/collections">collections</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/">Laravel Module Pattern</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>Laravel has a folder structure which ties similar entities of MVC together e.g. controllers in one folder, views into another. There are few set-backs of this approach :</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/helpers">helpers</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/collections">collections</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/">Laravel Module Pattern</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>Laravel has a folder structure which ties similar entities of MVC together e.g. controllers in one folder, views into another. There are few set-backs of this approach :</p>
 
 <ul>
 <li>If your project scales exponentially having lot of module, each of these directories scale as well. It becomes difficult to maintain.</li>
@@ -1274,19 +1396,20 @@ class TicketServiceProvider extends BaseServiceProvider
 
 <p>Note : The structure and coding style are my personal opinions. There can be multiple ways to accomplish the same result. I feel just knowing the possibility that it can be done, opens new doors of imaginations based on personal comfort.</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/module">module</a>,                         <a href="https://techsemicolon.github.io/blog/tags/bundle">bundle</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/01/04/laravel-restricting-unfiltered-queries/">Laravel restricting unfiltered queries</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>Laravel eloquent is a very powerful ORM. I came across a situation for a project of mine long time ago. There was a table <code>api_logs</code> which basically logged all API requests and responses. Evidently the table grew exponentially. One of the developers created an analytics module in which he forgot to add a where clause. It queried millions of rows at a time on production. It was a silly mistake but server was overwhelmed and you can imagine the rest of story (I can tell you it is not that good).</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/module">module</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/bundle">bundle</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/01/04/laravel-restricting-unfiltered-queries/">Laravel restricting unfiltered queries</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>Laravel eloquent is a very powerful ORM. I came across a situation for a project of mine long time ago. There was a table <code>api_logs</code> which basically logged all API requests and responses. Evidently the table grew exponentially. One of the developers created an analytics module in which he forgot to add a where clause. It queried millions of rows at a time on production. It was a silly mistake but server was overwhelmed and you can imagine the rest of story (I can tell you it is not that good).</p>
 
 <p>I imagined if there was a way to just throw an error if any function queries all rows from a table like <code>api_logs</code>. Two advantages :</p>
 
@@ -1425,19 +1548,20 @@ class ApiLog extends Model
 
 <p>There might be better way of implementing the same, I did it this way considering the urgency of situation. It is still there in project since then and working perfectly.</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/01/04/laravel-restricting-unfiltered-queries/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/security">security</a>,                         <a href="https://techsemicolon.github.io/blog/tags/slowloading">slowloading</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/">MySQL tips for shell client</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>How many of you use terminal when operating mysql instead of a GUI client like sequel pro or mysql workbench? There is nothing bad in using either of it as it depends on your choice of comfort.</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/01/04/laravel-restricting-unfiltered-queries/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/security">security</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/slowloading">slowloading</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/">MySQL tips for shell client</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>How many of you use terminal when operating mysql instead of a GUI client like sequel pro or mysql workbench? There is nothing bad in using either of it as it depends on your choice of comfort.</p>
 
 <p>I like to use terminal for it. Here are few tips which you might find helpful. These are not relelated to how you use mysql database in general, these are specific to the option files and mysql terminal client.</p>
 
@@ -1526,14 +1650,14 @@ database=databasename
 
 <p>I use these on every local setup and it helps me very much in daily development activities. Hope you find it helpful.</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/mysql">mysql</a>,                         <a href="https://techsemicolon.github.io/blog/tags/shell">shell</a>,                         <a href="https://techsemicolon.github.io/blog/tags/client">client</a>,                         <a href="https://techsemicolon.github.io/blog/tags/sql">sql</a>                        </p>
-            </article>
-    <nav>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/mysql">mysql</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/shell">shell</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/client">client</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/sql">sql</a>                                </p>
+                    </article>
+        <nav>
         <a href="https://techsemicolon.github.io/.">Newer Posts</a><br />
         <br />
     </nav>

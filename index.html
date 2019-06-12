@@ -83,254 +83,256 @@
         <main role="main" class="container">
             <div class="row">
                 <div class="col-sm-12">
-                        <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/05/31/code-diff-online/">Code diff checker tool online</a></h2>
-        </header>
-        <div class="home-article-body">
-            <style type="text/css">
-    .container {
-        max-width : 90% !important;
-    }
-    textarea{
-        resize: none;
-        height: 800px;
-    }
-    .result-msg {
-        display: none;
-    }
-    .deleted  {background-color : LightPink;
-        text-decoration  : line-through}
-    .inserted {background-color : PaleGreen}
-    #difference {
-        white-space:pre-wrap;
-    }
-    #check-difference {
-            background: #4cc6b7;
-        border-radius: 0;
-        border: 0;
-        margin: 25px 0;
-        height: 50px;
-        font-size: 25px;
-    }
-    textarea:focus, textarea:active {
-        outline : 0;
-        border:none;
-    }
-    textarea {
-        border: none;
-        width :100%;
-        padding : 15px;
-        padding: 15px;
-        font-weight: 200;
-        font-size: 16px;
-        font-family: sans-serif;
-        color: #4e6370;
-    }
-    .code-container {
-        float:left;
-        width:50%;
-        border : 1px solid #627986;
-    }
-    .no-b-r {
-        border-right : none;
-    }
-    .code-title {
-        text-align: center;
-        height: 50px;
-        line-height: 50px;
-        border-bottom: 1px solid #ddd;
-    }
-    #switch {
-        background: #e9ece5;
-        border-radius: 0;
-        color: #4e6370;
-        margin: 20px auto;
-        width: 30%;
-        border: 1px solid #ccc;
-    }
-    #reset {
-        background: #e9ece5;
-        border-radius: 0;
-        color: #4e6370;
-        margin: 20px auto;
-        width: 30%;
-        border: 1px solid #ccc;
-    }
-    #difference {
-        white-space: pre-wrap;
-        background: #fff;
-        padding: 20px;
-        width: 100%;
-            font-weight: 200;
-        font-size: 16px;
-        font-family: sans-serif;
-        color: #000;
-        line-height: 20px;
-    }
-    .difference-container {
-        display:none;
-        width:100%;
-        border: 1px solid #4e6370;
-    }
-</style>
+                    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/06/10/aws-update-ami-systems-manager-automation/">AWS update AMI using systems manager automation</a></h2>
+            </header>
+            <div class="home-article-body">
+                <h4 id="overview-%3A">Overview :</h4>
 
-<div class="alert alert-info result-msg">&nbsp;</div>
+<p>Having am AMI(Amazon Machine Image) of the most stable production server is a very common practice. On top of that adding maintenance scripts, installing new softwares or patching hotfixes are some of the common actions we need to perform on AMI.</p>
 
-<div class="row">
-    <button type="button" class="btn btn-primary btn-block" id="switch">< Switch ></button>
-    <button type="button" class="btn btn-primary btn-block" id="reset">Reset</button>
-</div>
+<p>The general flow in simple terms is :</p>
 
-<div class="row">
-    <div class="code-container no-b-r">
-        <div class="code-title">Original Code</div>
-        <textarea spellcheck="false" id="left-code"></textarea>
-    </div>
-    <div class="code-container">
-        <div class="code-title">Changed Code</div>
-        <textarea spellcheck="false" id="right-code"></textarea>
-    </div>
-</div>
+<pre><code>- Take an existing AMI(Let's call it AMI-V1)
+- Launch an instance originating from the AMI-V1
+- SSH into the new instance
+- Run maintenance or installation commands
+- Create a new AMI(Let's call it AMI-V2)
+- Terminate the tempararily launched instance
+- Optionally if you have autoscaling group launch configurations, then update it's association with new AMI-V2
+</code></pre>
 
-<div class="row">
-    <button type="button" class="btn btn-primary btn-block" id="check-difference">Check Difference</button>
-</div>
+<p>If you do all above steps manually, there is nothing wrong in it. However, AWS has a service called <code>Systems Manager</code> which has a sub-service <code>automation</code>. It can help you to automate and also optionally schedule these AMI updates automatically. Trust me! If you know how to do it once, you will never go back to manual updates.</p>
 
-<div class="row">
-    <div class="difference-container">
-        <div class="code-title">Comparison Result</div>
-        <div class="col-xs-12" id="difference"></div>
-    </div>
-</div>
+<h4 id="how-it-works-%3A">How it works :</h4>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+<p>SSM's automation service has different types. Those are called <code>Executions</code>. When you add details on what and how to setup that execution, the entire thing is called <code>Execution Document</code>. Dont worry, it's not that important to remember these names as long as you know how to use it.</p>
 
-<script type="text/javascript">
-jQuery(document).ready(function($){
+<p>There are many different types of executions available in automation service. One which we are looking for is called <a href="https://eu-west-2.console.aws.amazon.com/systems-manager/documents/AWS-UpdateLinuxAmi/description?region=eu-west-2"><code>AWS-UpdateLinuxAmi</code></a>. This execution helps us to automate updates to AMI with Linux distribution packages and Amazon software.</p>
+
+<p>When you create the execution to automate the AMI updates, you can specify which AMI to update, specify the script of commands to run and specify the new AMI name. There are more steps to it which we will cover in <code>Implementation</code> section down below.</p>
+
+<h4 id="prerequisites-and-difficult-terms-explained-%3A">Prerequisites and difficult terms explained :</h4>
+
+<p>Before starting actual implementation, let's take a minute to understand few terms which are little tricky. I am very sure if any of you have dived into SSM automation for first time, you came across these and felt little overwhelmed.</p>
+
+<p>When you set up the <code>AWS-UpdateLinuxAmi</code> automation, the form in AWS console asks you to give certain <a href="https://eu-west-2.console.aws.amazon.com/systems-manager/documents/AWS-UpdateLinuxAmi/parameters?region=eu-west-2"><code>parameters</code></a>(details of the setup)</p>
+
+<p>The 2 parameters <code>IamInstanceProfileName</code> and <code>AutomationAssumeRole</code> are tricky to understand.</p>
+
+<ul>
+<li>IamInstanceProfileName :</li>
+</ul>
+
+<p>It's also referred as <code>ManagedInstanceProfile</code>. When AWS SSM runs the automation execution <code>AWS-UpdateLinuxAmi</code>, SSM needs to take certain actions in EC2 service. These are launching an instance from an existing source AMI, creating a new AMI from updated instance state and terminating the temparary instance etc.</p>
+
+<p>For this purpose you create a new <code>IAM Role</code> (Identity Access Manamegement Role). The <code>IamInstanceProfileName</code> is nothing but the name of this created <code>IAM Role</code>.</p>
+
+<ul>
+<li>AutomationServiceRole :</li>
+</ul>
+
+<p>When SSM runs the automation execution <code>AWS-UpdateLinuxAmi</code>, SSM needs to assume the IAM role which we created for <code>IamInstanceProfileName</code> above, pass it as allowed so that it can function with the respective policies it's attached with.</p>
+
+<p>For this purpose you create second a new <code>IAM Role</code> (Identity Access Manamegement Role). The <code>AutomationServiceRole</code> is nothing but the arn(Amazon Resource Name) of this created <code>IAM Role</code>.</p>
+
+<ul>
+<li>Trust Relationships :</li>
+</ul>
+
+<p>When you create both these roles mentioned above(We will dived in detail below), we need to update their <code>Trust Relationships</code>. With IAM roles, you can establish mutual trust relationships between your trusting account. In short, the trusting account owns the resource to be accessed and the trusted account contains the users who need access to the resource.</p>
+
+<h4 id="creating-required-iam-roles-%3A">Creating required IAM roles :</h4>
+
+<h5 id="step-1-%3A-create-iam-role-for-%2Aiaminstanceprofilename%2A-%3A">Step 1 : Create IAM Role for <em>IamInstanceProfileName</em> :</h5>
+
+<pre><code>- Login to AWS console and go to `IAM` service. 
+- Go to Roles listing and click on `Create Role`
+- Keep type selected as `AWS Service`
+- Below in `Choose the service that will use this role` section select `EC2`
+- Click on `Next : Permissions` button on bottom right
+- It will bring the page to attach permission policies
+- Select `AmazonEC2RoleforSSM` policy
+- Click on `Next : Tags` button on bottom right
+- Add tags if you want or skip to next step by clicking `Next : Review` button on bottom right
+- It will bring page to add role details
+- Add a `Role name` as `ManagedInstanceProfileForSSM`
+- Click on `Create Role`
+</code></pre>
+
+<h5 id="step-2-%3A-create-iam-role-for-%2Aautomationservicerole%2A-%3A">Step 2 : Create IAM Role for <em>AutomationServiceRole</em> :</h5>
+
+<pre><code>- Login to AWS console and go to `IAM` service. 
+- Go to Roles listing and click on `Create Role`
+- Keep type selected as `AWS Service`
+- Below in `Choose the service that will use this role` section select `EC2`
+- Click on `Next : Permissions` button on bottom right
+- It will bring the page to attach permission policies
+- Select `AmazonSSMAutomationRole` policy
+- Click on `Next : Tags` button on bottom right
+- Add tags if you want or skip to next step by clicking `Next : Review` button on bottom right
+- It will bring page to add role details
+- Add a `Role name` as `AutomationServiceRole`
+- Click on `Create Role`
+</code></pre>
+
+<h5 id="step-3-%3A-get-the-arn-string-of-%2Amanagedinstanceprofileforssm%2A-%3A">Step 3 : Get the arn string of <em>ManagedInstanceProfileForSSM</em> :</h5>
+
+<p>We need to associate the first cerated IAM role <code>IamInstanceProfileName</code> to pass in this role.</p>
+
+<pre><code>- Go to Roles listing and select `ManagedInstanceProfileForSSM`
+- It will show the details of this role
+- Copy the `arn` of this role 
+- The arn will be in a format `arn:aws:iam::{IAM_USER_ID}:role/ManagedInstanceProfileForSSM`
+- Keep this arn string somewhere as we will need it in next steps
+</code></pre>
+
+<h5 id="step-4-%3A-create-policy-to-pass-the-above-arn-into-second-role-%3A">Step 4 : Create policy to pass the above arn into second role :</h5>
+
+<pre><code>- Login to AWS console and go to `IAM` service. 
+- Go to `Policies` listing and click on `Create Ppolicy`
+- It will show you visual editor and JSON tabs
+- Click on `JSON` tab and paste following policy json
+</code></pre>
+
+<pre><code class="json">{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "iam:PassRole",
+            "Resource": "arn:aws:iam::{IAM_USER_ID}:role/ManagedInstanceProfileForSSM"
+        }
+    ]
+}
+</code></pre>
+
+<pre><code>- Make sure you replace the resource arn in this policy json with the one you copied just few steps back
+- Click on `Review Policy` button on bottom right 
+- Give policy name as `PassPolicyForIamInstanceProfileRole` and create the policy
+</code></pre>
+
+<h5 id="step-5-%3A-attach-policy-to-pass-the-above-arn-into-second-role-%3A">Step 5 : Attach policy to pass the above arn into second role :</h5>
+
+<pre><code>- Login to AWS console and go to `IAM` service.
+- Go to Roles listing and select `AutomationServiceRole`
+- Click on `Attach Policies` and attach `PassPolicyForIamInstanceProfileRole` policy
+</code></pre>
+
+<h5 id="step-5-%3A-update-trust-relationships-%3A">Step 5 : Update trust relationships :</h5>
+
+<pre><code>- Login to AWS console and go to `IAM` service.
+- Go to Roles listing and select `ManagedInstanceProfileForSSM`
+- Go go `Trust Relationships` tab and click on `Edit trust relationship`
+- Add following json and click on `Update trust relationship` in bottom right
+</code></pre>
+
+<pre><code class="json">{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+        "Effect": "Allow",
+        "Principal": {
+            "Service": [
+            "ec2.amazonaws.com",
+            "ssm.amazonaws.com"
+            ]
+        },
+        "Action": "sts:AssumeRole"
+        }
+    ]
+}
+</code></pre>
+
+<p>Hush!! Now the confusing part is DONE! We have few lats simple steps to complete.</p>
+
+<h4 id="creating-script-of-commands-to-run-%3A">Creating script of commands to run :</h4>
+
+<p>We need to create a script of commands which will run on the instance. This script needs to be stored on web and we just pass url of this script while configuring the automation execution.</p>
+
+<p>For this, we will simply create an s3 bucket and store file in there instead.</p>
+
+<pre><code>- Login to AWS console and go to `S3` service.
+- Click on `Create Bucket`
+- Give bucket a name and click on `Create`
+- Create a script file on your local machine with name `ssm-automation.sh` and add below contents in it
+</code></pre>
+
+<pre><code class="bash">#!/bin/bash
+
+# This script installs latex on the instance
+# Feel free to change this as per your needs
+sudo apt-get update
+sudo apt-get install texlive-latex-base -y --allow-unauthenticated
+</code></pre>
+
+<pre><code>- Now upload this script file from your local machine to the new s3 bucket
+- Once upload is completed, click on the file and click on `Make Public` so that it's publically accessible
+- Copy its public url and save it somewhere as we will need it in next step
+</code></pre>
+
+<h4 id="the-moment-you-have-been-waiting-for-%3A">The moment you have been waiting for :</h4>
+
+<p>Now its time to set up the final automation execution.</p>
+
+<pre><code>- Login to AWS console and go to `Systems Manager` service.
+- Click on `Automation`
+- Click on `Execute Automation`
+- Choose document page select `AWS-UpdateLinuxAmi`
+</code></pre>
+
+<p><img src="/images/aws-ssm-iam/select.png" alt="alt text" /></p>
+
+<pre><code>- Click on `Next` on bottom right
+- Add `SourceAmiId` as the AMI you want to update
+- Add `IamInstanceProfileName` with value `ManagedInstanceProfileForSSM`
+- In `AutomationAssumeRole` select `AutomationServiceRole`
+- Update `TargetAmiName` with one you want
+- Select instance type based on memory and space you need for your command executions
+- Keep `SubnetId` blank if you do not want to launch the temparary instance in a specific VPC subnet
+- Keep `PreUpdateScript` to `none`
+- Update `PostUpdateScript` with public s3 script url
+- Keep `IncludePackages` and `ExcludePackages` to `none`
+- And finally... Click on `Execute`
+</code></pre>
+
+<p><img src="/images/aws-ssm-iam/setup.png" alt="alt text1" /></p>
+
+<p>You will see progress of the automation with each step and it's details.</p>
+
+<p><img src="/images/aws-ssm-iam/execution.png" alt="alt text" /></p>
+
+<h4 id="some-suggestions-on-best-practices-%3A">Some suggestions on best practices :</h4>
+
+<ol>
+<li>If you have AWS instances setup in a custom VPC to comply with security regulations, make sure you select the VPC subnet ID so that the temparary instance will launch in that VPC. If not specified it launches instance in Default VPC</li>
+<li>The script of commands you put in s3 should not contain any sensitive information. Instead, store it in AWS System manager parameter store. You need to make sure your EC2 instance profile has policy to access the parameter store.</li>
+<li>Know what your commands do to guess how much memory and space and set the instance type accordingly while configuration automation execution.</li>
+<li>Once you are comfortable with above basic setup, go ahead and study the execution document json. You can do lot of customization and actions like what happens if a step fails etc.</li>
+</ol>
+
+<h4 id="why-so-much-pain-%3A">Why so much pain :</h4>
+
+<p>You might be thinking why go through so much pain of setup when manually you can do it in 15-20 minutes? Don't worry as it's a one time setup time. Next time all you need to do it update the AMI script in s3 and run the execution. Grab your coffee and relax when AWS creates a new update AMI version for you!</p>
+
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/06/10/aws-update-ami-systems-manager-automation/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/aws">aws</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/ssm">ssm</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/systems">systems</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/manager">manager</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/ami">ami</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/automation">automation</a>                                </p>
+                    </article>
     
-    $('#switch').click(function(){
-        var leftCode = $('#left-code').val();
-        var rightCode = $('#right-code').val();
-        $('#right-code').val(leftCode);
-        $('#left-code').val(rightCode);
-        $('#difference').html('');
-        $('.difference-container').hide();
-    });
-    $('#reset').click(function(){
-        $('#left-code').val('');
-        $('#right-code').val('');
-        $('#difference').html('');
-        $('.difference-container').hide();
-    });
-
-    $('#check-difference').click(function(){
-        var leftCode = clean($('#left-code').val());
-        var rightCode = clean($('#right-code').val());
-
-        if(leftCode == ''){
-            alert('Please add value on the left hand side of comparison areas!');
-            return;
-        }
-        if(rightCode == ''){
-            alert('Please add value on the right hand side of comparison areas!');
-            return;
-        }
-
-        compare(leftCode, rightCode);
-    });
-
-    function compare(leftCode, rightCode){
-
-        if(leftCode === rightCode){
-            setResult('It\'s a match! Both sides of comparison are identicle.');
-            return;
-        }
-
-        $('#difference').html(leftCode.diff(rightCode));
-        $('.difference-container').show();
-
-    }
-
-    function clean(code)
-    {
-        return code
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
-    }
-
-    String.prototype.largestMatch = function largestMatch(otherString) {
-
-        if (otherString.length < this.length)
-            return otherString.largestMatch(this);
-
-        var matchingLength = otherString.length,
-            possibleMatch, index;
-
-        while (matchingLength) {
-            index = 0;
-            while (index + matchingLength <= otherString.length) {
-                possibleMatch = otherString.substr(index, matchingLength);
-                if (~this.indexOf(possibleMatch))
-                    return otherString.substr(index, matchingLength);
-                index++;
-            }
-            matchingLength--;
-        }
-        return '';
-    };
-
-    String.prototype.diff = function(newValue) {
-
-        var largestMatch = this.largestMatch(newValue),
-            preNew, postNew, preOld, postOld;
-
-        if (!largestMatch) {
-            return '<span class = "deleted">' + this + '</span><span class = "inserted">' + newValue + '</span>';
-        } else {
-            preNew = newValue.substr(0, newValue.indexOf(largestMatch));
-            preOld = this.substr(0, this.indexOf(largestMatch));
-            postNew = newValue.substr(preNew.length + largestMatch.length);
-            postOld = this.substr(preOld.length + largestMatch.length);
-            console.log({
-                old: this.toString(),
-                new: newValue,
-                preOld: preOld,
-                match: largestMatch,
-                postOld: postOld,
-                preNew: preNew,
-                match2: largestMatch,
-                postNew: postNew
-            });
-            return preOld.diff(preNew) + largestMatch + postOld.diff(postNew);
-        }
-    };
-
-    function setResult(msg){
-        $('.result-msg').text(msg).show();
-    }
-    function hideResult(msg){
-        $('.result-msg').text('').hide();
-    }
-});
-</script>
-
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/05/31/code-diff-online/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/code">code</a>,                         <a href="https://techsemicolon.github.io/blog/tags/diff">diff</a>,                         <a href="https://techsemicolon.github.io/blog/tags/checker">checker</a>,                         <a href="https://techsemicolon.github.io/blog/tags/online">online</a>,                         <a href="https://techsemicolon.github.io/blog/tags/free">free</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/">Everything you need to know about laravel required validations</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>One of the strong part of the laravel core is the set of <code>validations</code> which validate your application's incoming data. One of the most common validation rule which is used in applications is <code>required</code>. We will see how can we make use of different types of required rules as well as build custom required rules conditionally.</p>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/">Everything you need to know about laravel required validations</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>One of the strong part of the laravel core is the set of <code>validations</code> which validate your application's incoming data. One of the most common validation rule which is used in applications is <code>required</code>. We will see how can we make use of different types of required rules as well as build custom required rules conditionally.</p>
 
 <ul>
 <li>Required rule :</li>
@@ -470,19 +472,20 @@ jQuery(document).ready(function($){
 ]);
 </code></pre>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/validation">validation</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required">required</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_if">required_if</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_unless">required_unless</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_with">required_with</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_with_all">required_with_all</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_without">required_without</a>,                         <a href="https://techsemicolon.github.io/blog/tags/required_without_all">required_without_all</a>,                         <a href="https://techsemicolon.github.io/blog/tags/custom">custom</a>,                         <a href="https://techsemicolon.github.io/blog/tags/if">if</a>,                         <a href="https://techsemicolon.github.io/blog/tags/with">with</a>,                         <a href="https://techsemicolon.github.io/blog/tags/unless">unless</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/">Composer stuck at Something&#039;s changed looking at all rules again</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>While upgrading one of my laravel application from version 5.3 to 5.4, I came across a weird situation which was coming from composer dependency management. The situation was that when running composer install it was getting stuck at  <code>Something's changed looking at all rules again(1)</code> and composer was showing counter of attempts in brackets which was increasing from 1 to 900+. It took arund 2+ hours composer update was stuck in this situation and attempts counter was increasing, even when the system where application was hosted had pretty good configurations.</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/validation">validation</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required">required</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_if">required_if</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_unless">required_unless</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_with">required_with</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_with_all">required_with_all</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_without">required_without</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/required_without_all">required_without_all</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/custom">custom</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/if">if</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/with">with</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/unless">unless</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/">Composer stuck at Something&#039;s changed looking at all rules again</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>While upgrading one of my laravel application from version 5.3 to 5.4, I came across a weird situation which was coming from composer dependency management. The situation was that when running composer install it was getting stuck at  <code>Something's changed looking at all rules again(1)</code> and composer was showing counter of attempts in brackets which was increasing from 1 to 900+. It took arund 2+ hours composer update was stuck in this situation and attempts counter was increasing, even when the system where application was hosted had pretty good configurations.</p>
 
 <ul>
 <li>How do I get this information :</li>
@@ -556,19 +559,20 @@ jQuery(document).ready(function($){
 require.webmozart/assert : exact version constraints (1.2) should be avoided if the package follows semantic versioning
 </code></pre>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/composer">composer</a>,                         <a href="https://techsemicolon.github.io/blog/tags/hangs">hangs</a>,                         <a href="https://techsemicolon.github.io/blog/tags/stuck">stuck</a>,                         <a href="https://techsemicolon.github.io/blog/tags/Something">Something</a>,                         <a href="https://techsemicolon.github.io/blog/tags/changed">changed</a>,                         <a href="https://techsemicolon.github.io/blog/tags/rules">rules</a>,                         <a href="https://techsemicolon.github.io/blog/tags/package">package</a>,                         <a href="https://techsemicolon.github.io/blog/tags/dependency">dependency</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/">Laravel content-length header issue with gzip compression</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>As an optimization process from server side responses, we use gzip compression which compresses the response before sending it to the client. Compressing responses as a result significantly reduces the size of data being transmitted.</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/composer">composer</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/hangs">hangs</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/stuck">stuck</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/Something">Something</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/changed">changed</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/rules">rules</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/package">package</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/dependency">dependency</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/">Laravel content-length header issue with gzip compression</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>As an optimization process from server side responses, we use gzip compression which compresses the response before sending it to the client. Compressing responses as a result significantly reduces the size of data being transmitted.</p>
 
 <p>As you can imagine any type of compression requires certain amount of memory and processing power. Considering the gzip compression happens at runtime, it consumes considerable processing resources. Which is why it is important to configure the compression for the responses which really need it.</p>
 
@@ -654,19 +658,20 @@ class ContentLegthMiddleware
 
 <p>The gzip compression as another directive called <code>gzip_comp_level</code> which receives values from <code>1</code> to <code>9</code>, where compression increases from 1 to 9. This is another vital directive. If you have comression level, it is going to consume more resources for compressing the response. For most servers value of 2 or 3 is enough as difference between compression from level to level is not significant.</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/content">content</a>,                         <a href="https://techsemicolon.github.io/blog/tags/length">length</a>,                         <a href="https://techsemicolon.github.io/blog/tags/header">header</a>,                         <a href="https://techsemicolon.github.io/blog/tags/compression">compression</a>,                         <a href="https://techsemicolon.github.io/blog/tags/gzip">gzip</a>,                         <a href="https://techsemicolon.github.io/blog/tags/nginx">nginx</a>,                         <a href="https://techsemicolon.github.io/blog/tags/middleware">middleware</a>,                         <a href="https://techsemicolon.github.io/blog/tags/memory">memory</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/">AWS Load Balancer stickiness and load distribution</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>AWS load balancing is an interesting cloud service which automatically distributes incoming application traffic across multiple available target servers, such as Amazon EC2 instances, containers, IP addresses, and Lambda functions. It helps the infrastructure to have high availability, automatic scaling and as a result makes application more fault tolerant.</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/content">content</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/length">length</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/header">header</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/compression">compression</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/gzip">gzip</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/nginx">nginx</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/middleware">middleware</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/memory">memory</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/">AWS Load Balancer stickiness and load distribution</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>AWS load balancing is an interesting cloud service which automatically distributes incoming application traffic across multiple available target servers, such as Amazon EC2 instances, containers, IP addresses, and Lambda functions. It helps the infrastructure to have high availability, automatic scaling and as a result makes application more fault tolerant.</p>
 
 <ul>
 <li>Quick question :</li>
@@ -733,19 +738,20 @@ AT 10AM there are 95 user and the CPUUtilization is greater than 75% threashold,
 
 <p>Test and find the best settings as per your application when setting up auto-scaling policies. Because, if your server is not ready quickly when the application needs it for serving increased traffic, it's going to affect your application performance specially during peak hours.</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/aws">aws</a>,                         <a href="https://techsemicolon.github.io/blog/tags/loadbalancer">loadbalancer</a>,                         <a href="https://techsemicolon.github.io/blog/tags/load">load</a>,                         <a href="https://techsemicolon.github.io/blog/tags/balancer">balancer</a>,                         <a href="https://techsemicolon.github.io/blog/tags/stickiness">stickiness</a>,                         <a href="https://techsemicolon.github.io/blog/tags/sticky">sticky</a>,                         <a href="https://techsemicolon.github.io/blog/tags/session">session</a>,                         <a href="https://techsemicolon.github.io/blog/tags/cpu">cpu</a>,                         <a href="https://techsemicolon.github.io/blog/tags/distribution">distribution</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/">Laravel use secure SSL connection while using AWS RDS</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>Amazon Relational Database Service Amazon RDS is a cloud based web service that makes things easier to set up, operate, and scale a relational databases on the cloud. It has become one of the popular choices when setting up laravel database infrastructure.</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/aws">aws</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/loadbalancer">loadbalancer</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/load">load</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/balancer">balancer</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/stickiness">stickiness</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/sticky">sticky</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/session">session</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/cpu">cpu</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/distribution">distribution</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/">Laravel use secure SSL connection while using AWS RDS</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>Amazon Relational Database Service Amazon RDS is a cloud based web service that makes things easier to set up, operate, and scale a relational databases on the cloud. It has become one of the popular choices when setting up laravel database infrastructure.</p>
 
 <ul>
 <li>Quick question :</li>
@@ -850,19 +856,20 @@ AT 10AM there are 95 user and the CPUUtilization is greater than 75% threashold,
 
 <p>Once you follow above 3 steps, you should be good to go. Cross check by running <code>DB::select("SHOW STATUS LIKE '%Ssl%'")</code> in tinker as we did earlier in this article. You should see ciphers and ssl version mentioned in the connection.</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/aws">aws</a>,                         <a href="https://techsemicolon.github.io/blog/tags/rds">rds</a>,                         <a href="https://techsemicolon.github.io/blog/tags/ssl">ssl</a>,                         <a href="https://techsemicolon.github.io/blog/tags/encryption">encryption</a>,                         <a href="https://techsemicolon.github.io/blog/tags/transit">transit</a>,                         <a href="https://techsemicolon.github.io/blog/tags/secure">secure</a>,                         <a href="https://techsemicolon.github.io/blog/tags/connection">connection</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/">Laravel finally has higher level orWhere for query scopes</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>Laravel's excellent querybuilder and Eloquent ORM is handy as ever. But with newer version of laravel, it's much more simpler. 5.8 is here already and this feature has not been talked as much because it seems a minor feature release. Let's dive in with an example :</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/aws">aws</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/rds">rds</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/ssl">ssl</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/encryption">encryption</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/transit">transit</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/secure">secure</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/connection">connection</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/">Laravel finally has higher level orWhere for query scopes</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>Laravel's excellent querybuilder and Eloquent ORM is handy as ever. But with newer version of laravel, it's much more simpler. 5.8 is here already and this feature has not been talked as much because it seems a minor feature release. Let's dive in with an example :</p>
 
 <pre><code class="php">&lt;?php
 
@@ -941,19 +948,20 @@ class User extends Authenticatable
 
 <p>And that's it. It's a very small change but makes the code much more simpler to implement and read. Sometimes you might get lost in the closures when the query is large. Features like this makes it much more comfortable to implement.</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/orWhere">orWhere</a>,                         <a href="https://techsemicolon.github.io/blog/tags/where">where</a>,                         <a href="https://techsemicolon.github.io/blog/tags/eloquent">eloquent</a>,                         <a href="https://techsemicolon.github.io/blog/tags/querybuilder">querybuilder</a>,                         <a href="https://techsemicolon.github.io/blog/tags/5.8">5.8</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/">Laravel has one through</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>Laravel 5.8 is now released and one thing from the release notes many people might be waiting for is the <code>hasOneThrough</code> relationship. Laravel ealier had <code>hasManyThrough</code>, but with the addition of <code>hasOneThrough</code> it's more flexible. Let's dive into an example :</p>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/orWhere">orWhere</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/where">where</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/eloquent">eloquent</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/querybuilder">querybuilder</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/5.8">5.8</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/">Laravel has one through</a></h2>
+            </header>
+            <div class="home-article-body">
+                <p>Laravel 5.8 is now released and one thing from the release notes many people might be waiting for is the <code>hasOneThrough</code> relationship. Laravel ealier had <code>hasManyThrough</code>, but with the addition of <code>hasOneThrough</code> it's more flexible. Let's dive into an example :</p>
 
 <p>Consider we have <code>User</code> Model, <code>Reviewer</code> Model and <code>Activity</code> Model with structure :</p>
 
@@ -1024,19 +1032,20 @@ class Reviewer extends Model
 $activity = $reviewer-&gt;activity;
 </code></pre>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/eloquent">eloquent</a>,                         <a href="https://techsemicolon.github.io/blog/tags/hasonethrough">hasonethrough</a>,                         <a href="https://techsemicolon.github.io/blog/tags/relationships">relationships</a>,                         <a href="https://techsemicolon.github.io/blog/tags/5.8">5.8</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/">Laravel liming chunk collection</a></h2>
-        </header>
-        <div class="home-article-body">
-            <ul>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/eloquent">eloquent</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/hasonethrough">hasonethrough</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/relationships">relationships</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/5.8">5.8</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/">Laravel liming chunk collection</a></h2>
+            </header>
+            <div class="home-article-body">
+                <ul>
 <li>Little Intro about <code>chunk</code> :</li>
 </ul>
 
@@ -1159,131 +1168,14 @@ User::where('id', '&lt;', $maxId)-&gt;chunkById($recodsPerBatch, function($user)
 
 <p>This will then chunk the 100 results, with 2 batches of 50 records in each batch. Cool, isn't it!</p>
 
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/chunk">chunk</a>,                         <a href="https://techsemicolon.github.io/blog/tags/limit">limit</a>,                         <a href="https://techsemicolon.github.io/blog/tags/eloquent">eloquent</a>                        </p>
-            </article>
-    <article class="home-article">
-        <header>
-            <h2><a href="https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/">PHP argument validation using assert</a></h2>
-        </header>
-        <div class="home-article-body">
-            <p>When creating classes, we either pass arguments to the constructor function or have setter-getter functions to access class properties. These arguments may sometime have a specific format or requirements. For Example :</p>
-
-<pre><code class="php">/**
- * $age integer
- *
- * @return  string
- */
-function($age){
-    return "You are $age years old";
-}
-</code></pre>
-
-<p>Above function expects $age to be an integer. If any other type is passed, function will no work as expected.</p>
-
-<p>The example was very granular. When your core classes have functions which affect important domain logics of your project, argument validation becomes an  important part.</p>
-
-<p>PHP comes with default function(or more specifically a language construct for PHP version 7) called <a href="http://php.net/manual/en/function.assert.php"><code>assert</code></a>, which basically checks if provided assertion if false. If yes then you can handle the exceptions in callback. Even if this is useful, I will strongly suggest using composer plugin <a href="https://github.com/webmozart/assert">webmozart/assert</a> for this. It has very useful intuitive methods for the same.</p>
-
-<ul>
-<li>Example :</li>
-</ul>
-
-<p>Let's consider a function <code>placeOrder()</code> which takes array of <code>$items</code> having instances of <code>Item</code> class, a <code>$shippingPrice</code> and <code>$customer</code> having instance of <code>Customer</code> class.</p>
-
-<pre><code class="php">&lt;?php 
-
-use Webmozart\Assert\Assert;
-
-Class Order{
-
-    /**
-     * Array of Item instances
-     * @var array
-     */
-    private $items;
-
-    /**
-     * Shipping Price
-     * @var float
-     */
-    private $shippingPrice;
-
-    /**
-     * Customer Instance
-     * @var Customer
-     */
-    private $customer;
-
-    /**
-     * Instantiate Order class
-     * 
-     * @param $items
-     * @param $shippingPrice
-     * @param $customer
-     */
-    function __construct($items, $shippingPrice, $customer)
-    {
-        Assert::isArray($items, '$items must be an array. Got: %s');
-        Assert::allIsInstanceOf($items, '\Item', '$items must contain array of Item class instances. Got: %s');
-        Assert::numeric($shippingPrice, '$shippingPrice must be numeric. Got: %s');
-        Assert::isInstanceOf($customer, '\Customer', '$customer must be an instance of Customer class. Got: %s');
-
-        $this-&gt;shippingPrice    = $shippingPrice;
-        $this-&gt;customer         = $customer;
-        $this-&gt;items            = $items;
-    }
-
-    /**
-     * Places order
-     * 
-     * @return Order
-     */
-    public function placeOrder(){
-
-        // PlaceOrder
-    }
-}
-</code></pre>
-
-<p>Now, when we instantiate the order class :</p>
-
-<pre><code class="php">$customer = new Customer('John Doe');
-
-$order = new Order([], 12.22, $customer);
-</code></pre>
-
-<p>We are passing an invalid value for <code>$items</code> argument. It will throw <code>\InvalidArgumentException</code> with error message : <code>$items must contain array of Item class instances. Got: Array</code>.</p>
-
-<p>If you are using setter-getter functions instead of constructor parameters, you can have these assertions inside the setter functions. Above methodology is sometimes referred as defensive programming where we are making sure function will not break at the intial stages itself. The counter concept of defensive programming will be validating these arguments as and when they are actually used inside <code>placeOrder</code> function.</p>
-
-<p>Advantages :</p>
-
-<ol>
-<li>Prevents errors caused due to unexpected type of arguments passed</li>
-<li>Easier to debug</li>
-<li>Easier to create unit tests and catch asset exceptions</li>
-<li>Easier to write readable custom error messages</li>
-</ol>
-
-<p>Disadvantages :</p>
-
-<p>If not properly thought, duplicate validations can cause redundancies. For example in above case, if instance of <code>Item</code> class contains a valid price is a concern of <code>Item</code> class. If that validation is also present in <code>Order</code> class as well, it created redundancies.</p>
-
-<p>You can find more assertion options available here : <a href="https://github.com/webmozart/assert">https://github.com/webmozart/assert</a></p>
-
-        </div>
-        <p>.....</p>
-        <a href="https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/">Read full article</a>
-                    <p class="tags">
-            Tags:
-                        <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                         <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                         <a href="https://techsemicolon.github.io/blog/tags/validation">validation</a>,                         <a href="https://techsemicolon.github.io/blog/tags/arguments">arguments</a>,                         <a href="https://techsemicolon.github.io/blog/tags/assert">assert</a>                        </p>
-            </article>
-    <nav>
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/chunk">chunk</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/limit">limit</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/eloquent">eloquent</a>                                </p>
+                    </article>
+        <nav>
         <br />
         <a href="https://techsemicolon.github.io/page/2">Older Posts</a><br />
     </nav>

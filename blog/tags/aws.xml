@@ -3,9 +3,244 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/tags/aws.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-05-31T10:43:51+00:00</updated>
+    <updated>2019-06-12T13:26:45+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[AWS update AMI using systems manager automation]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/06/10/aws-update-ami-systems-manager-automation/"/>
+            <updated>2019-06-10T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/06/10/aws-update-ami-systems-manager-automation/</id>
+            <content type="html"><![CDATA[<h4 id="overview-%3A">Overview :</h4>
+
+<p>Having am AMI(Amazon Machine Image) of the most stable production server is a very common practice. On top of that adding maintenance scripts, installing new softwares or patching hotfixes are some of the common actions we need to perform on AMI.</p>
+
+<p>The general flow in simple terms is :</p>
+
+<pre><code>- Take an existing AMI(Let's call it AMI-V1)
+- Launch an instance originating from the AMI-V1
+- SSH into the new instance
+- Run maintenance or installation commands
+- Create a new AMI(Let's call it AMI-V2)
+- Terminate the tempararily launched instance
+- Optionally if you have autoscaling group launch configurations, then update it's association with new AMI-V2
+</code></pre>
+
+<p>If you do all above steps manually, there is nothing wrong in it. However, AWS has a service called <code>Systems Manager</code> which has a sub-service <code>automation</code>. It can help you to automate and also optionally schedule these AMI updates automatically. Trust me! If you know how to do it once, you will never go back to manual updates.</p>
+
+<h4 id="how-it-works-%3A">How it works :</h4>
+
+<p>SSM's automation service has different types. Those are called <code>Executions</code>. When you add details on what and how to setup that execution, the entire thing is called <code>Execution Document</code>. Dont worry, it's not that important to remember these names as long as you know how to use it.</p>
+
+<p>There are many different types of executions available in automation service. One which we are looking for is called <a href="https://eu-west-2.console.aws.amazon.com/systems-manager/documents/AWS-UpdateLinuxAmi/description?region=eu-west-2"><code>AWS-UpdateLinuxAmi</code></a>. This execution helps us to automate updates to AMI with Linux distribution packages and Amazon software.</p>
+
+<p>When you create the execution to automate the AMI updates, you can specify which AMI to update, specify the script of commands to run and specify the new AMI name. There are more steps to it which we will cover in <code>Implementation</code> section down below.</p>
+
+<h4 id="prerequisites-and-difficult-terms-explained-%3A">Prerequisites and difficult terms explained :</h4>
+
+<p>Before starting actual implementation, let's take a minute to understand few terms which are little tricky. I am very sure if any of you have dived into SSM automation for first time, you came across these and felt little overwhelmed.</p>
+
+<p>When you set up the <code>AWS-UpdateLinuxAmi</code> automation, the form in AWS console asks you to give certain <a href="https://eu-west-2.console.aws.amazon.com/systems-manager/documents/AWS-UpdateLinuxAmi/parameters?region=eu-west-2"><code>parameters</code></a>(details of the setup)</p>
+
+<p>The 2 parameters <code>IamInstanceProfileName</code> and <code>AutomationAssumeRole</code> are tricky to understand.</p>
+
+<ul>
+<li>IamInstanceProfileName :</li>
+</ul>
+
+<p>It's also referred as <code>ManagedInstanceProfile</code>. When AWS SSM runs the automation execution <code>AWS-UpdateLinuxAmi</code>, SSM needs to take certain actions in EC2 service. These are launching an instance from an existing source AMI, creating a new AMI from updated instance state and terminating the temparary instance etc.</p>
+
+<p>For this purpose you create a new <code>IAM Role</code> (Identity Access Manamegement Role). The <code>IamInstanceProfileName</code> is nothing but the name of this created <code>IAM Role</code>.</p>
+
+<ul>
+<li>AutomationServiceRole :</li>
+</ul>
+
+<p>When SSM runs the automation execution <code>AWS-UpdateLinuxAmi</code>, SSM needs to assume the IAM role which we created for <code>IamInstanceProfileName</code> above, pass it as allowed so that it can function with the respective policies it's attached with.</p>
+
+<p>For this purpose you create second a new <code>IAM Role</code> (Identity Access Manamegement Role). The <code>AutomationServiceRole</code> is nothing but the arn(Amazon Resource Name) of this created <code>IAM Role</code>.</p>
+
+<ul>
+<li>Trust Relationships :</li>
+</ul>
+
+<p>When you create both these roles mentioned above(We will dived in detail below), we need to update their <code>Trust Relationships</code>. With IAM roles, you can establish mutual trust relationships between your trusting account. In short, the trusting account owns the resource to be accessed and the trusted account contains the users who need access to the resource.</p>
+
+<h4 id="creating-required-iam-roles-%3A">Creating required IAM roles :</h4>
+
+<h5 id="step-1-%3A-create-iam-role-for-%2Aiaminstanceprofilename%2A-%3A">Step 1 : Create IAM Role for <em>IamInstanceProfileName</em> :</h5>
+
+<pre><code>- Login to AWS console and go to `IAM` service. 
+- Go to Roles listing and click on `Create Role`
+- Keep type selected as `AWS Service`
+- Below in `Choose the service that will use this role` section select `EC2`
+- Click on `Next : Permissions` button on bottom right
+- It will bring the page to attach permission policies
+- Select `AmazonEC2RoleforSSM` policy
+- Click on `Next : Tags` button on bottom right
+- Add tags if you want or skip to next step by clicking `Next : Review` button on bottom right
+- It will bring page to add role details
+- Add a `Role name` as `ManagedInstanceProfileForSSM`
+- Click on `Create Role`
+</code></pre>
+
+<h5 id="step-2-%3A-create-iam-role-for-%2Aautomationservicerole%2A-%3A">Step 2 : Create IAM Role for <em>AutomationServiceRole</em> :</h5>
+
+<pre><code>- Login to AWS console and go to `IAM` service. 
+- Go to Roles listing and click on `Create Role`
+- Keep type selected as `AWS Service`
+- Below in `Choose the service that will use this role` section select `EC2`
+- Click on `Next : Permissions` button on bottom right
+- It will bring the page to attach permission policies
+- Select `AmazonSSMAutomationRole` policy
+- Click on `Next : Tags` button on bottom right
+- Add tags if you want or skip to next step by clicking `Next : Review` button on bottom right
+- It will bring page to add role details
+- Add a `Role name` as `AutomationServiceRole`
+- Click on `Create Role`
+</code></pre>
+
+<h5 id="step-3-%3A-get-the-arn-string-of-%2Amanagedinstanceprofileforssm%2A-%3A">Step 3 : Get the arn string of <em>ManagedInstanceProfileForSSM</em> :</h5>
+
+<p>We need to associate the first cerated IAM role <code>IamInstanceProfileName</code> to pass in this role.</p>
+
+<pre><code>- Go to Roles listing and select `ManagedInstanceProfileForSSM`
+- It will show the details of this role
+- Copy the `arn` of this role 
+- The arn will be in a format `arn:aws:iam::{IAM_USER_ID}:role/ManagedInstanceProfileForSSM`
+- Keep this arn string somewhere as we will need it in next steps
+</code></pre>
+
+<h5 id="step-4-%3A-create-policy-to-pass-the-above-arn-into-second-role-%3A">Step 4 : Create policy to pass the above arn into second role :</h5>
+
+<pre><code>- Login to AWS console and go to `IAM` service. 
+- Go to `Policies` listing and click on `Create Ppolicy`
+- It will show you visual editor and JSON tabs
+- Click on `JSON` tab and paste following policy json
+</code></pre>
+
+<pre><code class="json">{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "iam:PassRole",
+            "Resource": "arn:aws:iam::{IAM_USER_ID}:role/ManagedInstanceProfileForSSM"
+        }
+    ]
+}
+</code></pre>
+
+<pre><code>- Make sure you replace the resource arn in this policy json with the one you copied just few steps back
+- Click on `Review Policy` button on bottom right 
+- Give policy name as `PassPolicyForIamInstanceProfileRole` and create the policy
+</code></pre>
+
+<h5 id="step-5-%3A-attach-policy-to-pass-the-above-arn-into-second-role-%3A">Step 5 : Attach policy to pass the above arn into second role :</h5>
+
+<pre><code>- Login to AWS console and go to `IAM` service.
+- Go to Roles listing and select `AutomationServiceRole`
+- Click on `Attach Policies` and attach `PassPolicyForIamInstanceProfileRole` policy
+</code></pre>
+
+<h5 id="step-5-%3A-update-trust-relationships-%3A">Step 5 : Update trust relationships :</h5>
+
+<pre><code>- Login to AWS console and go to `IAM` service.
+- Go to Roles listing and select `ManagedInstanceProfileForSSM`
+- Go go `Trust Relationships` tab and click on `Edit trust relationship`
+- Add following json and click on `Update trust relationship` in bottom right
+</code></pre>
+
+<pre><code class="json">{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+        "Effect": "Allow",
+        "Principal": {
+            "Service": [
+            "ec2.amazonaws.com",
+            "ssm.amazonaws.com"
+            ]
+        },
+        "Action": "sts:AssumeRole"
+        }
+    ]
+}
+</code></pre>
+
+<p>Hush!! Now the confusing part is DONE! We have few lats simple steps to complete.</p>
+
+<h4 id="creating-script-of-commands-to-run-%3A">Creating script of commands to run :</h4>
+
+<p>We need to create a script of commands which will run on the instance. This script needs to be stored on web and we just pass url of this script while configuring the automation execution.</p>
+
+<p>For this, we will simply create an s3 bucket and store file in there instead.</p>
+
+<pre><code>- Login to AWS console and go to `S3` service.
+- Click on `Create Bucket`
+- Give bucket a name and click on `Create`
+- Create a script file on your local machine with name `ssm-automation.sh` and add below contents in it
+</code></pre>
+
+<pre><code class="bash">#!/bin/bash
+
+# This script installs latex on the instance
+# Feel free to change this as per your needs
+sudo apt-get update
+sudo apt-get install texlive-latex-base -y --allow-unauthenticated
+</code></pre>
+
+<pre><code>- Now upload this script file from your local machine to the new s3 bucket
+- Once upload is completed, click on the file and click on `Make Public` so that it's publically accessible
+- Copy its public url and save it somewhere as we will need it in next step
+</code></pre>
+
+<h4 id="the-moment-you-have-been-waiting-for-%3A">The moment you have been waiting for :</h4>
+
+<p>Now its time to set up the final automation execution.</p>
+
+<pre><code>- Login to AWS console and go to `Systems Manager` service.
+- Click on `Automation`
+- Click on `Execute Automation`
+- Choose document page select `AWS-UpdateLinuxAmi`
+</code></pre>
+
+<p><img src="/images/aws-ssm-iam/select.png" alt="alt text" /></p>
+
+<pre><code>- Click on `Next` on bottom right
+- Add `SourceAmiId` as the AMI you want to update
+- Add `IamInstanceProfileName` with value `ManagedInstanceProfileForSSM`
+- In `AutomationAssumeRole` select `AutomationServiceRole`
+- Update `TargetAmiName` with one you want
+- Select instance type based on memory and space you need for your command executions
+- Keep `SubnetId` blank if you do not want to launch the temparary instance in a specific VPC subnet
+- Keep `PreUpdateScript` to `none`
+- Update `PostUpdateScript` with public s3 script url
+- Keep `IncludePackages` and `ExcludePackages` to `none`
+- And finally... Click on `Execute`
+</code></pre>
+
+<p><img src="/images/aws-ssm-iam/setup.png" alt="alt text1" /></p>
+
+<p>You will see progress of the automation with each step and it's details.</p>
+
+<p><img src="/images/aws-ssm-iam/execution.png" alt="alt text" /></p>
+
+<h4 id="some-suggestions-on-best-practices-%3A">Some suggestions on best practices :</h4>
+
+<ol>
+<li>If you have AWS instances setup in a custom VPC to comply with security regulations, make sure you select the VPC subnet ID so that the temparary instance will launch in that VPC. If not specified it launches instance in Default VPC</li>
+<li>The script of commands you put in s3 should not contain any sensitive information. Instead, store it in AWS System manager parameter store. You need to make sure your EC2 instance profile has policy to access the parameter store.</li>
+<li>Know what your commands do to guess how much memory and space and set the instance type accordingly while configuration automation execution.</li>
+<li>Once you are comfortable with above basic setup, go ahead and study the execution document json. You can do lot of customization and actions like what happens if a step fails etc.</li>
+</ol>
+
+<h4 id="why-so-much-pain-%3A">Why so much pain :</h4>
+
+<p>You might be thinking why go through so much pain of setup when manually you can do it in 15-20 minutes? Don't worry as it's a one time setup time. Next time all you need to do it update the AMI script in s3 and run the execution. Grab your coffee and relax when AWS creates a new update AMI version for you!</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[AWS Load Balancer stickiness and load distribution]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/"/>
