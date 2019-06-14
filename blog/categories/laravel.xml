@@ -3,9 +3,227 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/categories/laravel.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-12T13:26:45+00:00</updated>
+    <updated>2019-06-14T11:02:52+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Laravel APP_KEY rotation policy for app security]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/"/>
+            <updated>2019-06-14T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/</id>
+            <content type="html"><![CDATA[<p>If you have an existing laravel app running or you do fresh laravel installation, you will notice in your app's <code>.env</code> file (in case of new installations it's in <code>.env.example</code> file), there is a key called <code>APP_KEY</code>. It is a  32 characters long string. This is the laravel application key.</p>
+
+<p>Laravel has an artisan command <code>php artisan key:generate</code> which generates a new <code>APP_KEY</code> for you. If you have installed Laravel via Composer or the Laravel installer, this key will be set for you automatically by the <code>key:generate</code> command.</p>
+
+<h4 id="why-your-app-key-is-important%3F">Why your app key is important?</h4>
+
+<p>The <code>APP_KEY</code> is used to keep your user sessions and other encrypted data secure! If the application key is not set, your user sessions and other encrypted data will not be secure. Believe it or not it is a big security risk.</p>
+
+<p>To give you more specific context, earlier laravel had a security issue :</p>
+
+<p><code>If your application's encryption key is in the hands of a malicious party, that party could craft cookie values using the encryption key and exploit vulnerabilities inherent to PHP object serialization / unserialization, such as calling arbitrary class methods within your application.</code></p>
+
+<p>Do not worry, laravel later released a security update which disabled all serialization and unserialization of cookie values using <code>APP_KEY</code>. All Laravel cookies are encrypted and signed, cookie values can be considered safe from client tampering. <a href="https://laravel.com/docs/5.6/upgrade#upgrade-5.6.30"><code>clich here</code></a> to see details about this security update.</p>
+
+<p>Before Update :</p>
+
+<p>If used to serialize all values during encryption.</p>
+
+<pre><code class="php">$encryptedValue = \openssl_encrypt(serialize($value), $this-&gt;cipher, $this-&gt;key, 0, $iv);
+</code></pre>
+
+<p>After Update :</p>
+
+<p>It will serialize only if you pass second parameter as <code>true</code> while calling encrypt function.</p>
+
+<pre><code class="php">$encryptedValue = \openssl_encrypt(
+    $serialize ? serialize($value) : $value,
+    $this-&gt;cipher, $this-&gt;key, 0, $iv
+);
+</code></pre>
+
+<p>Okay, to sum it up, <code>APP_KEY</code> is important and any backdoor associated with it which leads to compromising app security should be closed.</p>
+
+<h4 id="passwords-and-app_key-%3A">Passwords and APP_KEY :</h4>
+
+<p>When we consider parts of the app which have encryption, first thing comes to mind is the user passwords. Let's take a minute to differentiate both :</p>
+
+<ul>
+<li>Encryption :</li>
+</ul>
+
+<p>Encryption is when you have a data which you want to safeguard. So you take original data, encrypt it using key and ciphers so it turns into gibrish string. This gribrish string has no meaning and hence it can not be interpreter directly toits original data meaning. When you need, you can decrypt this encrypted value to retrive it in original state.</p>
+
+<p>Laravel has <code>Crypt</code> facade which helps us implement encryption and decryption.</p>
+
+<p>In this case, the <code>key</code> and <code>ciphers</code> are important because those are used in decryption. And should NOT be explosed.</p>
+
+<ul>
+<li>Hashing :</li>
+</ul>
+
+<p>Hashing in simple terms is one way encryption. Once you encrypt you can NOT decrypt it in original state. You can verify if the hash matches a plain value to check if its the original value or not. But that's all you can do. It is way more secure in terms of sensitive information like user passwords.</p>
+
+<p>Laravel has <code>Hash</code> facade which helps us implement one way hashing encryption.</p>
+
+<p>Now, one of the main thing you should understand : APP_KEY is <code>NOT</code> used in Hashing and it is used in encryption. So your passwords security is NOT dependent on the APP_KEY. Whereas any data of your app which you have encrypted <code>do have</code> dependency on APP_KEY.</p>
+
+<h4 id="affects-of-changing-app_key-%3A">Affects of changing APP_KEY :</h4>
+
+<p>Before we dive into how to change APP_KEY, it is important to know what will happen if we change it. When APP_KEY is changed in an existing app :</p>
+
+<ul>
+<li>Existing user sessions will be invalidated. Hence, all your currently active logged in users will be logged out.</li>
+<li>Any data in your app which you have encrypted using <code>Crypt</code> facade or <code>encrypt()</code> helper function will no longer be decrypted as the encryption uses APP_KEY.</li>
+<li>Any user passwords will NOT be affected so no need to worry about that.</li>
+<li>If you have more than one app servers running, all should be replaced with the same APP_KEY.</li>
+</ul>
+
+<h4 id="let%27s-handle-the-headache-first-%3A">Let's handle the headache first :</h4>
+
+<p>As seen above, you can imagine most headache in changing APP_KEY is handling the data which is encrypted using old app key. For that you need to first decrypt the data using old APP_KEY and then re-encrypt using new APP_KEY. Damn!</p>
+
+<p>Don't worry! Here is a simple helper function you can use :</p>
+
+<pre><code class="php">/**
+ * Function to re-encrypt when APP_KEY is rotated/changed
+ * 
+ * @param string $oldAppKey
+ * @param mixed $value
+ */
+function reEncrypt($oldAppKey, $value)
+{
+    // Get cipher of encryption
+    $cipher = config('app.cipher');
+    // Get newly generated app_key
+    $newAppKey = config('app.key');
+
+    // Verify old app Key
+    if (Str::startsWith($oldAppKey, 'base64:')) {
+        $oldAppKey = base64_decode(substr($oldAppKey, 7));
+    }
+    // Verify new app Key
+    if (Str::startsWith($newAppKey, 'base64:')) {
+        $newAppKey = base64_decode(substr($newAppKey, 7));
+    }
+
+    // Initialize encryptor instance for old app key
+    $oldEncryptor = new Illuminate\Encryption\Encrypter((string)$oldAppKey, $cipher);
+
+    // Initialize encryptor instance for new app key
+    $newEncryptor = new Illuminate\Encryption\Encrypter((string)$newAppKey, $cipher);
+
+    // Decrypt the value and re-encrypt
+    return $newEncryptor-&gt;encrypt($oldEncryptor-&gt;decrypt($value));
+}
+</code></pre>
+
+<p>Let's imagine we have a column called <code>bank_account_number</code> in <code>users</code> table which is stored as encrypted string. I have another column called <code>old_bank_account_number</code> in the <code>users</code> table to store old value as a backup before we save newly re-encrypted value. We can create a command <code>php artisan encryption:rotate</code> :</p>
+
+<pre><code class="php">&lt;?php
+
+namespace App\Console\Commands;
+
+use App\User;
+use Illuminate\Console\Command;
+use Illuminate\Encryption\Encrypter;
+
+class EncryptionRotateCommand extends Command
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'encryption:rotate {--oldappkey= : Old app key}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Re-encrypt when APP_KEY is rotated';
+
+    /**
+     * Create a new command instance.
+     *
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * Function to re-encrypt when APP_KEY is rotated/changed
+     * 
+     * @param string $oldAppKey
+     * @param mixed $value
+     */
+    public function handle()
+    {
+        // Get the old app key
+        $oldAppKey = $this-&gt;option('oldappkey');
+
+        // Get cipher of encryption
+        $cipher = config('app.cipher');
+        // Get newly generated app_key
+        $newAppKey = config('app.key');
+
+        // Verify old app Key
+        if (Str::startsWith($oldAppKey, 'base64:')) {
+            $oldAppKey = base64_decode(substr($oldAppKey, 7));
+        }
+        // Verify new app Key
+        if (Str::startsWith($newAppKey, 'base64:')) {
+            $newAppKey = base64_decode(substr($newAppKey, 7));
+        }
+
+        // Initialize encryptor instance for old app key
+        $oldEncryptor = new Encrypter((string)$oldAppKey, $cipher);
+
+        // Initialize encryptor instance for new app key
+        $newEncryptor = new Encrypter((string)$newAppKey, $cipher);
+
+        User::all()-&gt;each(function($user) use($oldEncryptor, newEncryptor){
+
+            // Stored value in a backup column
+            $user-&gt;old_bank_account_number  = $user-&gt;bank_account_number;
+
+            // Decrypt the value and re-encrypt
+            $user-&gt;bank_account_number  = $newEncryptor-&gt;encrypt($oldEncryptor-&gt;decrypt($user-&gt;bank_account_number));
+            $user-&gt;save();
+
+        });
+
+        $this-&gt;info('Encryption completed with newly rotated key');
+    }
+}
+</code></pre>
+
+<h3 id="update-%3A">Update :</h3>
+
+<p>I have pushed a new package which helps to simplify above implementation. <a href="https://github.com/techsemicolon/laravel-app-key-rotation"><code>click here</code></a> to view the Laravel package.</p>
+
+<h4 id="rotating-the-key-%3A">Rotating the key :</h4>
+
+<p>Finally, lets rotate the key.</p>
+
+<pre><code>- Run `php artisan down` on all instances so that no user can interact until this is done
+- Go to terminal on one of the instance and open your `.env` file. 
+- Copy the APP_KEY value which is the old(existing) app key
+- Run `php artisan key:generate` which will generate a new APP_KEY
+- Run the helper command as we created above to re-encrypt the values `php artisan encryption:rotate --oldappkey=your_old_app_key_value`
+- Replace the APP_KEY key on all remaining instances
+- Run `php artisan config:clear` on all instances
+- Run `php artisan cache:clear` on all instances
+- Run `php artisan view:clear` on all instances
+- Run `php artisan view:clear` on all instances
+- Run `php artisan up` on all instances
+</code></pre>
+
+<p>And.. It's done! You can do this based on key rotation frequency you are comfortable in. I would recommend at-least once in 3 months.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Everything you need to know about laravel required validations]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/"/>
@@ -1099,246 +1317,6 @@ class CustomerRepository
 </code></pre>
 
 <p>You can extend this implementation as per your project structure needs. This indeed saves time in longer run and makes sure all generated classes have common blueprint structure.</p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Laravel improving readability with blade directives]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/"/>
-            <updated>2019-01-10T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/</id>
-            <content type="html"><![CDATA[<p>Laravel's blade templating system comes with ability to define custom directives. These directives can be very handly to improve readability of the view files. Let's do a quick recap of directives :</p>
-
-<h3 id="blade-directives-%3A">Blade directives :</h3>
-
-<ul>
-<li>Generic directive :</li>
-</ul>
-
-<p>These directive take an argument and simply return the actions done in callback.</p>
-
-<pre><code class="php">Blade::directive('caps', function ($expression) {
-    return "&lt;?php echo ucwords($expression); ?&gt;";
-});
-</code></pre>
-
-<p>You can use above in blade templates directly :</p>
-
-<p></p>
-
-<pre><code class="php">&lt;div&gt;{{ @cap('john smith') }}&lt;/div&gt;
-</code></pre>
-
-<p></p>
-
-<p>It is little tricky to handle the <code>$expresssion</code> in the callback, as if you pass an array or multiple string arguments, those are passed as single string expressions. You can see that shortly in action in usage ideas section.</p>
-
-<ul>
-<li>Conditional directive :</li>
-</ul>
-
-<p>These directives take an argument and use it inside callback to return value. Now the callback's return value is then casted as boolean to consider if statements inside it will be showed or now. It is just like <code>@if ... @endif</code> directive, but more intuitive.</p>
-
-<pre><code class="php">Blade::if('isadmin', function ($user) {
-    return $user-&gt;role == 'admin';
-});
-</code></pre>
-
-<p>You can use above in blade templates directly :</p>
-
-<p></p>
-
-<pre><code class="php">@isadmin($user)
-    &lt;div&gt;
-        &lt;a href="{{ route('users.all') }}"&gt;See all users&lt;/a&gt;
-    &lt;/div&gt;
-@endisadmin
-</code></pre>
-
-<p></p>
-
-<p>Above is similar to this if done in usual without the conditional directive :</p>
-
-<p></p>
-
-<pre><code class="php">@if($user-&gt;role == 'admin')
-    &lt;div&gt;
-        &lt;a href="{{ route('users.all') }}"&gt;See all users&lt;/a&gt;
-    &lt;/div&gt;
-@endif
-</code></pre>
-
-<p></p>
-
-<h3 id="some-usage-ideas-%3A">Some usage ideas :</h3>
-
-<p>These directive give a great advantage to simplify your blade views and make them more readable. See few examples below :</p>
-
-<ol>
-<li>Conditional role checks :</li>
-</ol>
-
-<pre><code class="php">Blade::if('role', function ($role) {
-
-    // Not logged in
-    if(!auth()-&gt;check()){
-        return false;
-    }
-
-    // Multiple roles passed in argument
-    if(is_array($role)){
-        return in_array(auth()-&gt;user()-&gt;role, $role);
-    }
-
-    // Single role passed in argument
-    return auth()-&gt;user()-&gt;role == $role;
-});
-</code></pre>
-
-<p>This makes the role conditional checks in blade much easier :</p>
-
-<p></p>
-
-<pre><code class="php">@role('admin')
-   &lt;!-- something only an admin can see--&gt;
-@elserole(['customer', 'seller'])
-   &lt;!-- something only a customer or a seller an see--&gt;
-@endrole
-</code></pre>
-
-<p></p>
-
-<ol start="2">
-<li>Rendering form errors :</li>
-</ol>
-
-<pre><code class="php">Blade::directive('validation', function ($expression) {
-
-    // $expression is a string expression and 
-    // hence will be a string maintaing start and end quotes
-    // Trimming the quotes
-    $expression = str_replace(['(', ')'], '', $expression);
-    $fieldName  = trim(trim($expression, '"'), '\'');
-
-    $errors = \Session::get('errors', new \Illuminate\Support\MessageBag);
-
-    if($errors-&gt;has($fieldName)){
-        return '&lt;span role="alert"&gt;&lt;strong&gt;' . $errors-&gt;first($fieldName) . '&lt;/strong&gt;&lt;/span&gt;';
-    }
-
-    return;
-});
-</code></pre>
-
-<p>This makes the the validation errors from server end much easier in forms :</p>
-
-<p></p>
-
-<pre><code>&lt;form role="form" method="POST" action="{{ route('some.url') }}"&gt;
-    @csrf
-    &lt;div class="form-group"&gt;
-        &lt;label&gt;First Name *&lt;/label&gt;
-        &lt;input class="form-control" placeholder="Enter your first name" name="first_name"&gt;
-        @validation("first_name")
-    &lt;/div&gt;
-    &lt;div class="form-group"&gt;
-        &lt;label&gt;Last Name *&lt;/label&gt;
-        &lt;input class="form-control" placeholder="Enter your last name" name="last_name"&gt;
-        @validation("last_name")
-    &lt;/div&gt;
-    &lt;button type="submit" class="btn btn-primary"&gt;Submit Ticket&lt;/button&gt;
-&lt;/form&gt;
-</code></pre>
-
-<p></p>
-
-<ol start="3">
-<li>Dumping values in views fo debugging :</li>
-</ol>
-
-<pre><code class="php">Blade::directive('dd', function ($expression) {
-
-    // $expression is a string expression and 
-    // It can not be directly passed in dd($expression)
-    // We can use with() helper which basically encapsulate the syntax
-    // to render it properly in blade files
-    return "&lt;?php dd(with({$expression})); ?&gt;";
-});
-</code></pre>
-
-<p>Please note that above will not work for multiple arguments, can dd one argumenet only. Above can be then used :</p>
-
-<p></p>
-
-<pre><code class="php">@dd([1,2,3,4]);
-</code></pre>
-
-<p></p>
-
-<ol start="4">
-<li>Assigning values to variables in a view :</li>
-</ol>
-
-<p>Now this might be a very less possible requirement but if you want to assign a variable in a view, generally you do something like :</p>
-
-<p></p>
-
-<pre><code class="php">@php 
-    $name = "John Doe";
-@endphp
-</code></pre>
-
-<p></p>
-
-<p>However, we can do this using blade directive :</p>
-
-<pre><code class="php">Blade::directive('assign', function ($expression) {
-
-    // The $expression passed in closure is a string in format '($name), value'
-    // Hence we first remove the paranthesis and explode by comma
-    list($name, $value) = explode(', ', str_replace(['(', ')'], '', $expression));
-    return "&lt;?php {$name} = {$value}; ?&gt;";
-});
-</code></pre>
-
-<p>And then simply use it as (Below example is very very simple but you can use as per your preference) :</p>
-
-<p></p>
-
-<pre><code class="php">@assign($name, 'John Doe')
-
-&lt;div&gt; {{ $name }} &lt;/div&gt;
-</code></pre>
-
-<p></p>
-
-<ol start="5">
-<li>Frequent HTML elements :</li>
-</ol>
-
-<p>If you are using 3rd party HTML libraries like glyphicon or font-awesome, you need to use those in lot of places. You can use blade directive like :</p>
-
-<pre><code class="php">Blade::directive('icon', function ($expression) {
-
-    // The $expression passed in closure is a string in format '($name), value'
-    // Hence we first remove the paranthesis and explode by comma
-    $classes = str_replace(['(', ')'], '', $expression);
-    $classes = str_replace(['"', '\''], '', $expression);
-    $classes = str_replace(',', ' ', $classes);
-
-    return '&lt;i class="fa ' . $classes . '" aria-hidden="false"&gt;&lt;/i&gt;';
-});
-</code></pre>
-
-<p>Then it is as easy as it can get to use :</p>
-
-<p></p>
-
-<pre><code class="php">&lt;label&gt; @icon('fa-user', 'fa-2x') User Name &lt;/label&gt;
-</code></pre>
-
-<p></p>
-
-<p>You can also extend this idea for input, select etc. I think once you set such directives in a project, your blade views become readble. Plus less code in a bladel file is always better.</p>
 ]]></content>
         </entry>
     </feed>

@@ -86,6 +86,142 @@
                     
             <article class="home-article">
             <header>
+                <h2><a href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/">Laravel liming chunk collection</a></h2>
+            </header>
+            <div class="home-article-body">
+                <ul>
+<li>Little Intro about <code>chunk</code> :</li>
+</ul>
+
+<p>Laravel comes up with an excellent Eloquent ORM. There are lot of cool things in Eloquent, one of which is <code>chunk</code> method.</p>
+
+<p>Usually when you need to process large data, lets say you want to update <code>users</code> table and assign a coupon code based on 3rd party APIs.</p>
+
+<p>What you can do is :</p>
+
+<pre><code class="php">User::get()-&gt;each(function($user){
+
+    $coupon = API::getCouponCode($user-&gt;email);
+    $user-&gt;coupon = $coupon;
+    $user-&gt;save();
+});
+</code></pre>
+
+<p>Doing this is good but if you have thousands of users, loading them all up at once to do the coupon saving process. That's going to take consume a hige memory at a time and maybe the server will be exusted because so much data is stored in memory for processing at a time.</p>
+
+<p>The <code>chunk</code> method helps these kind of implementations. Chunking records means taking a batch of records by a limit, process those, take the next batch processing those and so on... The idea is you are taking a subset of data to process at a time instead of entire data loaded into memory.</p>
+
+<p>The chunk method will retrieve a "chunk" of Eloquent models, feeding them to a given Closure for processing. Using the chunk method will conserve memory when working with large result sets.</p>
+
+<p>Lets do the same but with chunk this time :</p>
+
+<pre><code class="php">$recodsPerBatch = 50;
+
+User::chunk($recodsPerBatch, function($user){
+
+    $coupon = API::getCouponCode($user-&gt;email);
+    $user-&gt;coupon = $coupon;
+    $user-&gt;save();
+});
+</code></pre>
+
+<p>Now, as you can probably guess this will take 50 user records at a time to process, once  those are completed it will take next 50 untill all records are procesed by chunk closure.</p>
+
+<ul>
+<li>The main problem <code>Limit</code> with <code>Chunk</code> :</li>
+</ul>
+
+<p>Let's apply limit to the above example :</p>
+
+<pre><code class="php">$recodsPerBatch = 50;
+
+User::limit(100)-&gt;chunk($recodsPerBatch, function($user){
+
+    $coupon = API::getCouponCode($user-&gt;email);
+    $user-&gt;coupon = $coupon;
+    $user-&gt;save();
+});
+</code></pre>
+
+<p>If you would think laravel will chunk 50 records in 2 batches are we are limiting the total records to 100, oops not really.</p>
+
+<p>Laravel will do series of queries like below to chunk the records :</p>
+
+<pre><code class="sql">select * from `users` limit 50 offset 0
+select * from `users` limit 50 offset 50
+select * from `users` limit 50 offset 100
+...
+</code></pre>
+
+<p>The chunk method <code>ignores</code> any previous eloquent method which applies limit. It can be <code>limit</code> and <code>offset</code> OR <code>take</code> and <code>skip</code>...</p>
+
+<p>This becomes a problem for which lot of people had raised an issue on laravel's github repo. But Laravel's core dev team mentioned this is the expected behaviour and rightfully so.. Chunk itself is using limit to convert entire collection in batches.</p>
+
+<ul>
+<li>And.... Here it is.. The Solution you were waiting for :</li>
+</ul>
+
+<p>Laravel has a chunk variation called <code>chunkById</code>. Let's use the first example and implement <code>chunkById</code> now :</p>
+
+<pre><code class="php">$recodsPerBatch = 50;
+
+User::chunkById($recodsPerBatch, function($user){
+
+    $coupon = API::getCouponCode($user-&gt;email);
+    $user-&gt;coupon = $coupon;
+    $user-&gt;save();
+});
+</code></pre>
+
+<p>The main and only fundamental difference between <code>chunk</code> and <code>chunkById</code> is how it structures the query.</p>
+
+<pre><code class="sql">select * from `users` where `id` &gt; 0 order by `id` asc limit 50
+select * from `users` where `id` &gt; 0 and `id` &gt; 50 order by `id` asc limit 50
+select * from `users` where `id` &gt; 0 and `id` &gt; 50 and `id` &gt; 100 order by `id` asc limit 50
+select * from `users` where `id` &gt; 0 and `id` &gt; 50 and `id` &gt; 100 and `id` &gt; 150 order by `id` asc limit 50
+...
+</code></pre>
+
+<p>If you observer in the queries done by <code>chunkById</code> :</p>
+
+<ol>
+<li>It's adding an order by clause to the id column (By the way you can specify the column as 3rd argument to chunkById method if itis not id)</li>
+<li>It adds <code>where id &gt; x</code> each time it processes the next batch</li>
+<li>There is no <code>offset</code> used and <code>id</code> column is used conceptually as an offset.</li>
+</ol>
+
+<p>This gives you an advantage that you can add your offset in the query using <code>id</code> column as a limit just like <code>chunkById</code> is doing internallu.</p>
+
+<p>Let's limit the chunk in our example with 100 records to chunk :</p>
+
+<pre><code class="php">$recodsPerBatch = 50;
+
+$limit = 100;
+
+$maxId = User::orderBy('id', 'asc')-&gt;offset($limit)-&gt;limit(1)-&gt;select('id')-&gt;first()-&gt;id;
+
+User::where('id', '&lt;', $maxId)-&gt;chunkById($recodsPerBatch, function($user){
+
+    $coupon = API::getCouponCode($user-&gt;email);
+    $user-&gt;coupon = $coupon;
+    $user-&gt;save();
+});
+</code></pre>
+
+<p>What we did was, even if we can not use limit directly, we got an id which falls just above the limit we want. Used that to add a where clause of <code>where('id', '&lt;', $maxId)</code>.</p>
+
+<p>This will then chunk the 100 results, with 2 batches of 50 records in each batch. Cool, isn't it!</p>
+
+            </div>
+            <p>.....</p>
+            <a href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/">Read full article</a>
+                            <p class="tags">
+                Tags:
+                                <a href="https://techsemicolon.github.io/blog/tags/laravel">laravel</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/php">php</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/chunk">chunk</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/limit">limit</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/eloquent">eloquent</a>                                </p>
+                    </article>
+    
+            <article class="home-article">
+            <header>
                 <h2><a href="https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/">PHP argument validation using assert</a></h2>
             </header>
             <div class="home-article-body">
