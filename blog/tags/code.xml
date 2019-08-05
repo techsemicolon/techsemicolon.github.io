@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="http://localhost:8000//blog/tags/code.xml" rel="self"/>
-    <link href="http://localhost:8000//"/>
-    <updated>2019-08-05T09:17:07+00:00</updated>
-    <id>http://localhost:8000//</id>
+    <link href="https://techsemicolon.github.io/blog/tags/code.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-08-05T09:18:50+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Code diff checker tool online]]></title>
-            <link href="http://localhost:8000//blog/2019/05/31/code-diff-online/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/05/31/code-diff-online/"/>
             <updated>2019-05-31T00:00:00+00:00</updated>
-            <id>http://localhost:8000//blog/2019/05/31/code-diff-online/</id>
+            <id>https://techsemicolon.github.io/blog/2019/05/31/code-diff-online/</id>
             <content type="html"><![CDATA[<style type="text/css">
     .container {
         max-width : 90% !important;

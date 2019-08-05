@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="http://localhost:8000//blog/tags/hangs.xml" rel="self"/>
-    <link href="http://localhost:8000//"/>
-    <updated>2019-08-05T09:17:07+00:00</updated>
-    <id>http://localhost:8000//</id>
+    <link href="https://techsemicolon.github.io/blog/tags/hangs.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-08-05T09:18:50+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Composer stuck at Something&#039;s changed looking at all rules again]]></title>
-            <link href="http://localhost:8000//blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/"/>
             <updated>2019-05-20T00:00:00+00:00</updated>
-            <id>http://localhost:8000//blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/</id>
+            <id>https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/</id>
             <content type="html"><![CDATA[<p>While upgrading one of my laravel application from version 5.3 to 5.4, I came across a weird situation which was coming from composer dependency management. The situation was that when running composer install it was getting stuck at  <code>Something's changed looking at all rules again(1)</code> and composer was showing counter of attempts in brackets which was increasing from 1 to 900+. It took arund 2+ hours composer update was stuck in this situation and attempts counter was increasing, even when the system where application was hosted had pretty good configurations.</p>
 
 <ul>

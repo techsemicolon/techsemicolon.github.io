@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="http://localhost:8000//blog/tags/nginx.xml" rel="self"/>
-    <link href="http://localhost:8000//"/>
-    <updated>2019-08-05T09:17:07+00:00</updated>
-    <id>http://localhost:8000//</id>
+    <link href="https://techsemicolon.github.io/blog/tags/nginx.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-08-05T09:18:50+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel content-length header issue with gzip compression]]></title>
-            <link href="http://localhost:8000//blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/"/>
             <updated>2019-04-23T00:00:00+00:00</updated>
-            <id>http://localhost:8000//blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/</id>
+            <id>https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/</id>
             <content type="html"><![CDATA[<p>As an optimization process from server side responses, we use gzip compression which compresses the response before sending it to the client. Compressing responses as a result significantly reduces the size of data being transmitted.</p>
 
 <p>As you can imagine any type of compression requires certain amount of memory and processing power. Considering the gzip compression happens at runtime, it consumes considerable processing resources. Which is why it is important to configure the compression for the responses which really need it.</p>

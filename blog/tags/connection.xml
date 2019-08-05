@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="http://localhost:8000//blog/tags/connection.xml" rel="self"/>
-    <link href="http://localhost:8000//"/>
-    <updated>2019-08-05T09:17:07+00:00</updated>
-    <id>http://localhost:8000//</id>
+    <link href="https://techsemicolon.github.io/blog/tags/connection.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-08-05T09:18:50+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel use secure SSL connection while using AWS RDS]]></title>
-            <link href="http://localhost:8000//blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/"/>
             <updated>2019-04-10T00:00:00+00:00</updated>
-            <id>http://localhost:8000//blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/</id>
+            <id>https://techsemicolon.github.io/blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/</id>
             <content type="html"><![CDATA[<p>Amazon Relational Database Service Amazon RDS is a cloud based web service that makes things easier to set up, operate, and scale a relational databases on the cloud. It has become one of the popular choices when setting up laravel database infrastructure.</p>
 
 <ul>

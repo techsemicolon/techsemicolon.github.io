@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="http://localhost:8000//blog/tags/directives.xml" rel="self"/>
-    <link href="http://localhost:8000//"/>
-    <updated>2019-08-05T09:17:07+00:00</updated>
-    <id>http://localhost:8000//</id>
+    <link href="https://techsemicolon.github.io/blog/tags/directives.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-08-05T09:18:50+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel improving readability with blade directives]]></title>
-            <link href="http://localhost:8000//blog/2019/01/10/laravel-improving-readility-with-blade-directives/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/"/>
             <updated>2019-01-10T00:00:00+00:00</updated>
-            <id>http://localhost:8000//blog/2019/01/10/laravel-improving-readility-with-blade-directives/</id>
+            <id>https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/</id>
             <content type="html"><![CDATA[<p>Laravel's blade templating system comes with ability to define custom directives. These directives can be very handly to improve readability of the view files. Let's do a quick recap of directives :</p>
 
 <h3 id="blade-directives-%3A">Blade directives :</h3>

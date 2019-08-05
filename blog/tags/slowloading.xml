@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="http://localhost:8000//blog/tags/slowloading.xml" rel="self"/>
-    <link href="http://localhost:8000//"/>
-    <updated>2019-08-05T09:17:07+00:00</updated>
-    <id>http://localhost:8000//</id>
+    <link href="https://techsemicolon.github.io/blog/tags/slowloading.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-08-05T09:18:50+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel restricting unfiltered queries]]></title>
-            <link href="http://localhost:8000//blog/2019/01/04/laravel-restricting-unfiltered-queries/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/01/04/laravel-restricting-unfiltered-queries/"/>
             <updated>2019-01-04T00:00:00+00:00</updated>
-            <id>http://localhost:8000//blog/2019/01/04/laravel-restricting-unfiltered-queries/</id>
+            <id>https://techsemicolon.github.io/blog/2019/01/04/laravel-restricting-unfiltered-queries/</id>
             <content type="html"><![CDATA[<p>Laravel eloquent is a very powerful ORM. I came across a situation for a project of mine long time ago. There was a table <code>api_logs</code> which basically logged all API requests and responses. Evidently the table grew exponentially. One of the developers created an analytics module in which he forgot to add a where clause. It queried millions of rows at a time on production. It was a silly mistake but server was overwhelmed and you can imagine the rest of story (I can tell you it is not that good).</p>
 
 <p>I imagined if there was a way to just throw an error if any function queries all rows from a table like <code>api_logs</code>. Two advantages :</p>

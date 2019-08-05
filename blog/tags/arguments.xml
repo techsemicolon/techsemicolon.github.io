@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="http://localhost:8000//blog/tags/arguments.xml" rel="self"/>
-    <link href="http://localhost:8000//"/>
-    <updated>2019-08-05T09:17:07+00:00</updated>
-    <id>http://localhost:8000//</id>
+    <link href="https://techsemicolon.github.io/blog/tags/arguments.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-08-05T09:18:50+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[PHP argument validation using assert]]></title>
-            <link href="http://localhost:8000//blog/2019/01/12/php-argument-validation-using-assert/"/>
+            <link href="https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/"/>
             <updated>2019-01-12T00:00:00+00:00</updated>
-            <id>http://localhost:8000//blog/2019/01/12/php-argument-validation-using-assert/</id>
+            <id>https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/</id>
             <content type="html"><![CDATA[<p>When creating classes, we either pass arguments to the constructor function or have setter-getter functions to access class properties. These arguments may sometime have a specific format or requirements. For Example :</p>
 
 <pre><code class="php">/**
