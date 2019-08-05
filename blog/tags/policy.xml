@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/policy.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/policy.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel APP_KEY rotation policy for app security]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/"/>
+            <link href="http://localhost:8000//blog/2019/06/14/laravel-app-key-rotation-policy-for-security/"/>
             <updated>2019-06-14T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/</id>
+            <id>http://localhost:8000//blog/2019/06/14/laravel-app-key-rotation-policy-for-security/</id>
             <content type="html"><![CDATA[<p>If you have an existing laravel app running or you do fresh laravel installation, you will notice in your app's <code>.env</code> file (in case of new installations it's in <code>.env.example</code> file), there is a key called <code>APP_KEY</code>. It is a  32 characters long string. This is the laravel application key.</p>
 
 <p>Laravel has an artisan command <code>php artisan key:generate</code> which generates a new <code>APP_KEY</code> for you. If you have installed Laravel via Composer or the Laravel installer, this key will be set for you automatically by the <code>key:generate</code> command.</p>

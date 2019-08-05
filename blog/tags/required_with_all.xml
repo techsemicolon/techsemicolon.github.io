@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/required_with_all.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/required_with_all.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Everything you need to know about laravel required validations]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/"/>
+            <link href="http://localhost:8000//blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/"/>
             <updated>2019-05-30T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/</id>
+            <id>http://localhost:8000//blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/</id>
             <content type="html"><![CDATA[<p>One of the strong part of the laravel core is the set of <code>validations</code> which validate your application's incoming data. One of the most common validation rule which is used in applications is <code>required</code>. We will see how can we make use of different types of required rules as well as build custom required rules conditionally.</p>
 
 <ul>

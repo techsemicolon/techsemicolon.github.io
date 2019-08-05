@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/chunk.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/chunk.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel liming chunk collection]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/"/>
+            <link href="http://localhost:8000//blog/2019/02/12/laravel-limiting-chunk-collection/"/>
             <updated>2019-02-12T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/</id>
+            <id>http://localhost:8000//blog/2019/02/12/laravel-limiting-chunk-collection/</id>
             <content type="html"><![CDATA[<ul>
 <li>Little Intro about <code>chunk</code> :</li>
 </ul>

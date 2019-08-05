@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/laravel.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/laravel.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel APP_KEY rotation policy for app security]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/"/>
+            <link href="http://localhost:8000//blog/2019/06/14/laravel-app-key-rotation-policy-for-security/"/>
             <updated>2019-06-14T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/</id>
+            <id>http://localhost:8000//blog/2019/06/14/laravel-app-key-rotation-policy-for-security/</id>
             <content type="html"><![CDATA[<p>If you have an existing laravel app running or you do fresh laravel installation, you will notice in your app's <code>.env</code> file (in case of new installations it's in <code>.env.example</code> file), there is a key called <code>APP_KEY</code>. It is a  32 characters long string. This is the laravel application key.</p>
 
 <p>Laravel has an artisan command <code>php artisan key:generate</code> which generates a new <code>APP_KEY</code> for you. If you have installed Laravel via Composer or the Laravel installer, this key will be set for you automatically by the <code>key:generate</code> command.</p>
@@ -226,9 +226,9 @@ class EncryptionRotateCommand extends Command
         </entry>
             <entry>
             <title type="html"><![CDATA[Everything you need to know about laravel required validations]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/"/>
+            <link href="http://localhost:8000//blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/"/>
             <updated>2019-05-30T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/</id>
+            <id>http://localhost:8000//blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/</id>
             <content type="html"><![CDATA[<p>One of the strong part of the laravel core is the set of <code>validations</code> which validate your application's incoming data. One of the most common validation rule which is used in applications is <code>required</code>. We will see how can we make use of different types of required rules as well as build custom required rules conditionally.</p>
 
 <ul>
@@ -372,9 +372,9 @@ class EncryptionRotateCommand extends Command
         </entry>
             <entry>
             <title type="html"><![CDATA[Composer stuck at Something&#039;s changed looking at all rules again]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/"/>
+            <link href="http://localhost:8000//blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/"/>
             <updated>2019-05-20T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/</id>
+            <id>http://localhost:8000//blog/2019/05/20/composer-stuck--at-something-changed-looking-at-all-rules-error/</id>
             <content type="html"><![CDATA[<p>While upgrading one of my laravel application from version 5.3 to 5.4, I came across a weird situation which was coming from composer dependency management. The situation was that when running composer install it was getting stuck at  <code>Something's changed looking at all rules again(1)</code> and composer was showing counter of attempts in brackets which was increasing from 1 to 900+. It took arund 2+ hours composer update was stuck in this situation and attempts counter was increasing, even when the system where application was hosted had pretty good configurations.</p>
 
 <ul>
@@ -452,9 +452,9 @@ require.webmozart/assert : exact version constraints (1.2) should be avoided if 
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel content-length header issue with gzip compression]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/"/>
+            <link href="http://localhost:8000//blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/"/>
             <updated>2019-04-23T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/</id>
+            <id>http://localhost:8000//blog/2019/04/23/laravel-content-length-issue-with-gzip-nginx-compression/</id>
             <content type="html"><![CDATA[<p>As an optimization process from server side responses, we use gzip compression which compresses the response before sending it to the client. Compressing responses as a result significantly reduces the size of data being transmitted.</p>
 
 <p>As you can imagine any type of compression requires certain amount of memory and processing power. Considering the gzip compression happens at runtime, it consumes considerable processing resources. Which is why it is important to configure the compression for the responses which really need it.</p>
@@ -544,9 +544,9 @@ class ContentLegthMiddleware
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel use secure SSL connection while using AWS RDS]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/"/>
+            <link href="http://localhost:8000//blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/"/>
             <updated>2019-04-10T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/</id>
+            <id>http://localhost:8000//blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/</id>
             <content type="html"><![CDATA[<p>Amazon Relational Database Service Amazon RDS is a cloud based web service that makes things easier to set up, operate, and scale a relational databases on the cloud. It has become one of the popular choices when setting up laravel database infrastructure.</p>
 
 <ul>
@@ -655,9 +655,9 @@ class ContentLegthMiddleware
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel finally has higher level orWhere for query scopes]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/"/>
+            <link href="http://localhost:8000//blog/2019/03/17/laravel-finally-has-higher-level-or-where/"/>
             <updated>2019-03-17T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/</id>
+            <id>http://localhost:8000//blog/2019/03/17/laravel-finally-has-higher-level-or-where/</id>
             <content type="html"><![CDATA[<p>Laravel's excellent querybuilder and Eloquent ORM is handy as ever. But with newer version of laravel, it's much more simpler. 5.8 is here already and this feature has not been talked as much because it seems a minor feature release. Let's dive in with an example :</p>
 
 <pre><code class="php">&lt;?php
@@ -740,9 +740,9 @@ class User extends Authenticatable
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel has one through]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/"/>
+            <link href="http://localhost:8000//blog/2019/03/13/laravel-has-one-through/"/>
             <updated>2019-03-13T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/</id>
+            <id>http://localhost:8000//blog/2019/03/13/laravel-has-one-through/</id>
             <content type="html"><![CDATA[<p>Laravel 5.8 is now released and one thing from the release notes many people might be waiting for is the <code>hasOneThrough</code> relationship. Laravel ealier had <code>hasManyThrough</code>, but with the addition of <code>hasOneThrough</code> it's more flexible. Let's dive into an example :</p>
 
 <p>Consider we have <code>User</code> Model, <code>Reviewer</code> Model and <code>Activity</code> Model with structure :</p>
@@ -817,9 +817,9 @@ $activity = $reviewer-&gt;activity;
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel liming chunk collection]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/"/>
+            <link href="http://localhost:8000//blog/2019/02/12/laravel-limiting-chunk-collection/"/>
             <updated>2019-02-12T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/</id>
+            <id>http://localhost:8000//blog/2019/02/12/laravel-limiting-chunk-collection/</id>
             <content type="html"><![CDATA[<ul>
 <li>Little Intro about <code>chunk</code> :</li>
 </ul>
@@ -946,9 +946,9 @@ User::where('id', '&lt;', $maxId)-&gt;chunkById($recodsPerBatch, function($user)
         </entry>
             <entry>
             <title type="html"><![CDATA[PHP argument validation using assert]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/"/>
+            <link href="http://localhost:8000//blog/2019/01/12/php-argument-validation-using-assert/"/>
             <updated>2019-01-12T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/</id>
+            <id>http://localhost:8000//blog/2019/01/12/php-argument-validation-using-assert/</id>
             <content type="html"><![CDATA[<p>When creating classes, we either pass arguments to the constructor function or have setter-getter functions to access class properties. These arguments may sometime have a specific format or requirements. For Example :</p>
 
 <pre><code class="php">/**
@@ -1057,9 +1057,9 @@ $order = new Order([], 12.22, $customer);
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel make custom class using console command]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
+            <link href="http://localhost:8000//blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
             <updated>2019-01-11T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
+            <id>http://localhost:8000//blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
             <content type="html"><![CDATA[<p>Laravel ships with built in console <code>make</code> commands to generate class files for controllers, models, migrations etc. For example creating a resourse controller, you can do :</p>
 
 <pre><code class="bash">php artisan make:controller CustomerController --resource

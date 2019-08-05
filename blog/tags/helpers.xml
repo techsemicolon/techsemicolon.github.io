@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/helpers.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/helpers.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel make custom class using console command]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
+            <link href="http://localhost:8000//blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
             <updated>2019-01-11T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
+            <id>http://localhost:8000//blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
             <content type="html"><![CDATA[<p>Laravel ships with built in console <code>make</code> commands to generate class files for controllers, models, migrations etc. For example creating a resourse controller, you can do :</p>
 
 <pre><code class="bash">php artisan make:controller CustomerController --resource
@@ -272,9 +272,9 @@ class CustomerRepository
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel tap vs tap vs pipe]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
+            <link href="http://localhost:8000//blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
             <updated>2019-01-08T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
+            <id>http://localhost:8000//blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
             <content type="html"><![CDATA[<p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
 
 <h3 id="the-tap-function-%3A">The tap() function :</h3>

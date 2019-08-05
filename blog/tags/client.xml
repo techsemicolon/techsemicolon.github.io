@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/client.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/client.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[MySQL tips for shell client]]></title>
-            <link href="https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/"/>
+            <link href="http://localhost:8000//blog/2018/12/25/mysql-tips-for-local-shell-client/"/>
             <updated>2018-12-25T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2018/12/25/mysql-tips-for-local-shell-client/</id>
+            <id>http://localhost:8000//blog/2018/12/25/mysql-tips-for-local-shell-client/</id>
             <content type="html"><![CDATA[<p>How many of you use terminal when operating mysql instead of a GUI client like sequel pro or mysql workbench? There is nothing bad in using either of it as it depends on your choice of comfort.</p>
 
 <p>I like to use terminal for it. Here are few tips which you might find helpful. These are not relelated to how you use mysql database in general, these are specific to the option files and mysql terminal client.</p>

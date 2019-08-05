@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/manager.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/manager.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[AWS update AMI using systems manager automation]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/06/10/aws-update-ami-systems-manager-automation/"/>
+            <link href="http://localhost:8000//blog/2019/06/10/aws-update-ami-systems-manager-automation/"/>
             <updated>2019-06-10T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/06/10/aws-update-ami-systems-manager-automation/</id>
+            <id>http://localhost:8000//blog/2019/06/10/aws-update-ami-systems-manager-automation/</id>
             <content type="html"><![CDATA[<h4 id="overview-%3A">Overview :</h4>
 
 <p>Having am AMI(Amazon Machine Image) of the most stable production server is a very common practice. On top of that adding maintenance scripts, installing new softwares or patching hotfixes are some of the common actions we need to perform on AMI.</p>

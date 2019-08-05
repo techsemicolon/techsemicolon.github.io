@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/hasonethrough.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/hasonethrough.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel has one through]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/"/>
+            <link href="http://localhost:8000//blog/2019/03/13/laravel-has-one-through/"/>
             <updated>2019-03-13T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/</id>
+            <id>http://localhost:8000//blog/2019/03/13/laravel-has-one-through/</id>
             <content type="html"><![CDATA[<p>Laravel 5.8 is now released and one thing from the release notes many people might be waiting for is the <code>hasOneThrough</code> relationship. Laravel ealier had <code>hasManyThrough</code>, but with the addition of <code>hasOneThrough</code> it's more flexible. Let's dive into an example :</p>
 
 <p>Consider we have <code>User</code> Model, <code>Reviewer</code> Model and <code>Activity</code> Model with structure :</p>

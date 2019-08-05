@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/querybuilder.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/querybuilder.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel finally has higher level orWhere for query scopes]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/"/>
+            <link href="http://localhost:8000//blog/2019/03/17/laravel-finally-has-higher-level-or-where/"/>
             <updated>2019-03-17T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/</id>
+            <id>http://localhost:8000//blog/2019/03/17/laravel-finally-has-higher-level-or-where/</id>
             <content type="html"><![CDATA[<p>Laravel's excellent querybuilder and Eloquent ORM is handy as ever. But with newer version of laravel, it's much more simpler. 5.8 is here already and this feature has not been talked as much because it seems a minor feature release. Let's dive in with an example :</p>
 
 <pre><code class="php">&lt;?php

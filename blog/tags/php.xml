@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/php.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/php.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[Laravel APP_KEY rotation policy for app security]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/"/>
+            <link href="http://localhost:8000//blog/2019/06/14/laravel-app-key-rotation-policy-for-security/"/>
             <updated>2019-06-14T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/</id>
+            <id>http://localhost:8000//blog/2019/06/14/laravel-app-key-rotation-policy-for-security/</id>
             <content type="html"><![CDATA[<p>If you have an existing laravel app running or you do fresh laravel installation, you will notice in your app's <code>.env</code> file (in case of new installations it's in <code>.env.example</code> file), there is a key called <code>APP_KEY</code>. It is a  32 characters long string. This is the laravel application key.</p>
 
 <p>Laravel has an artisan command <code>php artisan key:generate</code> which generates a new <code>APP_KEY</code> for you. If you have installed Laravel via Composer or the Laravel installer, this key will be set for you automatically by the <code>key:generate</code> command.</p>
@@ -226,9 +226,9 @@ class EncryptionRotateCommand extends Command
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel use secure SSL connection while using AWS RDS]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/"/>
+            <link href="http://localhost:8000//blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/"/>
             <updated>2019-04-10T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/</id>
+            <id>http://localhost:8000//blog/2019/04/10/laravel-rds-ssl-encryption-in-transit/</id>
             <content type="html"><![CDATA[<p>Amazon Relational Database Service Amazon RDS is a cloud based web service that makes things easier to set up, operate, and scale a relational databases on the cloud. It has become one of the popular choices when setting up laravel database infrastructure.</p>
 
 <ul>
@@ -337,9 +337,9 @@ class EncryptionRotateCommand extends Command
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel finally has higher level orWhere for query scopes]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/"/>
+            <link href="http://localhost:8000//blog/2019/03/17/laravel-finally-has-higher-level-or-where/"/>
             <updated>2019-03-17T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/03/17/laravel-finally-has-higher-level-or-where/</id>
+            <id>http://localhost:8000//blog/2019/03/17/laravel-finally-has-higher-level-or-where/</id>
             <content type="html"><![CDATA[<p>Laravel's excellent querybuilder and Eloquent ORM is handy as ever. But with newer version of laravel, it's much more simpler. 5.8 is here already and this feature has not been talked as much because it seems a minor feature release. Let's dive in with an example :</p>
 
 <pre><code class="php">&lt;?php
@@ -422,9 +422,9 @@ class User extends Authenticatable
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel has one through]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/"/>
+            <link href="http://localhost:8000//blog/2019/03/13/laravel-has-one-through/"/>
             <updated>2019-03-13T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/03/13/laravel-has-one-through/</id>
+            <id>http://localhost:8000//blog/2019/03/13/laravel-has-one-through/</id>
             <content type="html"><![CDATA[<p>Laravel 5.8 is now released and one thing from the release notes many people might be waiting for is the <code>hasOneThrough</code> relationship. Laravel ealier had <code>hasManyThrough</code>, but with the addition of <code>hasOneThrough</code> it's more flexible. Let's dive into an example :</p>
 
 <p>Consider we have <code>User</code> Model, <code>Reviewer</code> Model and <code>Activity</code> Model with structure :</p>
@@ -499,9 +499,9 @@ $activity = $reviewer-&gt;activity;
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel liming chunk collection]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/"/>
+            <link href="http://localhost:8000//blog/2019/02/12/laravel-limiting-chunk-collection/"/>
             <updated>2019-02-12T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/02/12/laravel-limiting-chunk-collection/</id>
+            <id>http://localhost:8000//blog/2019/02/12/laravel-limiting-chunk-collection/</id>
             <content type="html"><![CDATA[<ul>
 <li>Little Intro about <code>chunk</code> :</li>
 </ul>
@@ -628,9 +628,9 @@ User::where('id', '&lt;', $maxId)-&gt;chunkById($recodsPerBatch, function($user)
         </entry>
             <entry>
             <title type="html"><![CDATA[PHP argument validation using assert]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/"/>
+            <link href="http://localhost:8000//blog/2019/01/12/php-argument-validation-using-assert/"/>
             <updated>2019-01-12T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/12/php-argument-validation-using-assert/</id>
+            <id>http://localhost:8000//blog/2019/01/12/php-argument-validation-using-assert/</id>
             <content type="html"><![CDATA[<p>When creating classes, we either pass arguments to the constructor function or have setter-getter functions to access class properties. These arguments may sometime have a specific format or requirements. For Example :</p>
 
 <pre><code class="php">/**
@@ -739,9 +739,9 @@ $order = new Order([], 12.22, $customer);
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel make custom class using console command]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
+            <link href="http://localhost:8000//blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
             <updated>2019-01-11T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
+            <id>http://localhost:8000//blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
             <content type="html"><![CDATA[<p>Laravel ships with built in console <code>make</code> commands to generate class files for controllers, models, migrations etc. For example creating a resourse controller, you can do :</p>
 
 <pre><code class="bash">php artisan make:controller CustomerController --resource
@@ -1003,9 +1003,9 @@ class CustomerRepository
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel improving readability with blade directives]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/"/>
+            <link href="http://localhost:8000//blog/2019/01/10/laravel-improving-readility-with-blade-directives/"/>
             <updated>2019-01-10T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/10/laravel-improving-readility-with-blade-directives/</id>
+            <id>http://localhost:8000//blog/2019/01/10/laravel-improving-readility-with-blade-directives/</id>
             <content type="html"><![CDATA[<p>Laravel's blade templating system comes with ability to define custom directives. These directives can be very handly to improve readability of the view files. Let's do a quick recap of directives :</p>
 
 <h3 id="blade-directives-%3A">Blade directives :</h3>
@@ -1243,9 +1243,9 @@ class CustomerRepository
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel tap vs tap vs pipe]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
+            <link href="http://localhost:8000//blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
             <updated>2019-01-08T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
+            <id>http://localhost:8000//blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
             <content type="html"><![CDATA[<p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
 
 <h3 id="the-tap-function-%3A">The tap() function :</h3>
@@ -1350,9 +1350,9 @@ $counts = collect($customers)
         </entry>
             <entry>
             <title type="html"><![CDATA[Laravel Module Pattern]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/"/>
+            <link href="http://localhost:8000//blog/2019/01/06/laravel-module-pattern/"/>
             <updated>2019-01-06T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/</id>
+            <id>http://localhost:8000//blog/2019/01/06/laravel-module-pattern/</id>
             <content type="html"><![CDATA[<p>Laravel has a folder structure which ties similar entities of MVC together e.g. controllers in one folder, views into another. There are few set-backs of this approach :</p>
 
 <ul>

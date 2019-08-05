@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <title><![CDATA[Tech.Semicolon]]></title>
-    <link href="https://techsemicolon.github.io/blog/tags/balancer.xml" rel="self"/>
-    <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-06-14T11:02:52+00:00</updated>
-    <id>https://techsemicolon.github.io/</id>
+    <link href="http://localhost:8000//blog/tags/balancer.xml" rel="self"/>
+    <link href="http://localhost:8000//"/>
+    <updated>2019-08-05T09:17:07+00:00</updated>
+    <id>http://localhost:8000//</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
             <title type="html"><![CDATA[AWS Load Balancer stickiness and load distribution]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/"/>
+            <link href="http://localhost:8000//blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/"/>
             <updated>2019-04-19T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/</id>
+            <id>http://localhost:8000//blog/2019/04/19/aws-load-balancer-stickiness-load-distribution/</id>
             <content type="html"><![CDATA[<p>AWS load balancing is an interesting cloud service which automatically distributes incoming application traffic across multiple available target servers, such as Amazon EC2 instances, containers, IP addresses, and Lambda functions. It helps the infrastructure to have high availability, automatic scaling and as a result makes application more fault tolerant.</p>
 
 <ul>
