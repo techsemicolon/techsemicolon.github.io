@@ -3,9 +3,255 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/categories/php.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-08-05T09:18:50+00:00</updated>
+    <updated>2019-09-07T08:47:43+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Ansible AWS rolling AMI update with zero downtime]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/07/01/ansible-aws-rolling-ami-update-with-zero-downtime/"/>
+            <updated>2019-07-01T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/07/01/ansible-aws-rolling-ami-update-with-zero-downtime/</id>
+            <content type="html"><![CDATA[<p>If you have website hosted on AWS with an Auto Scaling enabled, doing AMI rolling updates manually is a pain. But ansible makes it so much easy for you. Let's understand how you can save time and efforts for AMI rolling updates with zero downtime.</p>
+
+<h3 id="what-is-a-rolling-ami-update-%3A">What is a rolling AMI update :</h3>
+
+<p>When you have Auto Scaling enabled, AWS will scale up and down your setup by increasing or decreasing number of instances automatically based on server load and your auto scaling policies. AWS uses an instance template called <code>Launch Configuration</code> using which it understands what AMI to use when spinning up new instances automatically to scale up.</p>
+
+<p>Now, lets assume that you have 4 instances currently in-service associated with your auto scaing with their AMI version as <code>V1</code>. Now you need to release a new AMI version <code>V2</code>. What you will ideally do is : 
+- Create a new launch configuration which points to new AMI version V2. To do it manually you will basicaly <code>copy</code> your existing launch configuration and update AMI id.
+- Edit your Auto Scaling group and associate it with newly created launch configuration.
+- By just doing above steps will not update the existing in-service instances. You will terminate the existing in-service instances one by one. Once an instance inside auto-scaling in-service listeners is terminated, auto scaling group will launch a new one to keep minimum number of instances in-service as per the auto scaling policy. 
+- This new instance will now be from AMI version V2</p>
+
+<p>This is a rolling update, which most of the times is done manually. It takes approx 10-15 minutes to do it manually. Let's understand how you can do it under 2-3 minutes with ansible with 2-3 minutes rollback with just one configuration change.</p>
+
+<h3 id="prerequisites-%3A">Prerequisites :</h3>
+
+<p>You will need following before you start working on ansible playbook and it's tasks :</p>
+
+<ul>
+<li>You will need <code>ansible 2.8.x</code> and <code>boto3</code> installed on the system. Preferred way to install these is using <code>pip</code> installer.</li>
+<li>You will need an AWS CLI user with access key and secret access key. I always prefer doing this in a non-production region first so that if you mess up anything, there is minimum worry. Let's say your production AWS region is <code>us-west-1</code> then you woul setup a clone in <code>us-west-2</code> and then test ansible playbook in there. You can use below IAM policy for the CLI user</li>
+</ul>
+
+<pre><code class="json">{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:*",
+                "rds:*",
+                "lambda:*",
+                "autoscaling:*",
+                "iam:PassRole",
+                "elasticloadbalancing:*"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestedRegion": "us-west-2"
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+
+<h3 id="setup-%3A">Setup :</h3>
+
+<p>We will have following structure :</p>
+
+<pre><code>ReleaseAMIUpdates/
+├── config.yml
+├── env.yml
+├── playbook.yml
+└── startup.sh
+</code></pre>
+
+<ul>
+<li>config.yml :</li>
+</ul>
+
+<p>This file will have the configuration variables which rarely change.</p>
+
+<pre><code class="yml">project_lunch_config_name: Production Launch configuration
+project_autoscaling_group_name: Prod Auto Scaling Group
+project_vpc_id: vpc-12345678
+project_ec2_iam_role: ec2-iam-role-name
+project_instance_type: t2.micro
+project_instance_volume_in_gb: 30
+project_instance_security_group: ec2-security-group-name
+</code></pre>
+
+<ul>
+<li>env.yml :</li>
+</ul>
+
+<p>This file will have the configurations which are sensitive and may change in each rolling update.</p>
+
+<pre><code class="yml">project_region: us-west-1
+project_aws_access_key: your_aws_access_key
+project_aws_secret_key: your_aws_secret_key
+project_golden_ami_id: ami-version-id
+project_ami_version: V2
+project_target_group_arn: arn:aws:elasticloadbalancing:us-west-2:123456789:targetgroup/Your-TargetGroup/233vc4441187369
+</code></pre>
+
+<ul>
+<li>startup.sh :</li>
+</ul>
+
+<p>This file will have any user-data boostrap commands you need to run as soon as new instance is spun up.</p>
+
+<pre><code class="bash">#!/bin/bash
+
+# Add your commands here
+# These will run as root
+# Which means ~ refers to /root
+</code></pre>
+
+<p>Now you have above yml files set up, these files will act as environment variable files. We will refer the configurations specified above as variables in our playbook.</p>
+
+<ul>
+<li>playbook.yml :</li>
+</ul>
+
+<p>This file will contain all palybook tasks.
+</p>
+
+<pre><code class="yaml"># create a launch configuration using an AMI image and instance type as a basis
+- name: Launch new AMI Release
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ./env.yml
+    - ./config.yml
+
+  tasks:
+
+  #  Get VPC subnet details as it will be needed later while setting up autoscaling group
+  - name: Get VPC Subnet Details
+    ec2_vpc_subnet_facts:
+      aws_access_key: "{{ project_aws_access_key }}"
+      aws_secret_key: "{{ project_aws_secret_key }}"
+      region: "{{ project_region }}"
+      filters:
+        vpc-id: "{{ project_vpc_id }}"
+        "tag:Availability": "Private"
+    # Save the result json in variable subnet_facts
+    register: subnet_facts
+
+  # From the previously registered variable subnet_facts
+  # Get filter subnet which are in avaible state
+  # Use jinja to parse json and get list of ids
+  # This list will be used directly while setting up autoscaling group
+  - name: Get VPC Subnet ids which are available
+    set_fact:
+      vpc_subnet_ids: "{{ subnet_facts.subnets|selectattr('state', 'equalto', 'available')|map(attribute='id')|list }}"
+
+  # Create new launch configuration as existing one can not be edited
+  # This launch configuration will contain the new AMI
+  - name: Configure new launch configuration
+    ec2_lc:
+      aws_access_key: "{{ project_aws_access_key }}"
+      aws_secret_key: "{{ project_aws_secret_key }}"
+      region: "{{ project_region }}"
+      name: "{{ project_lunch_config_name }}"
+      # This image Id will be the new golden AMI after release is complete
+      image_id: "{{ project_golden_ami_id }}"
+      instance_profile_name: "{{ project_ec2_iam_role }}"
+      vpc_id: "{{ project_vpc_id }}"
+      security_groups: ["{{ project_instance_security_group }}"]
+      instance_type: "{{ project_instance_type }}"
+      # All commands specified in below ./startup.sh will run as soon as instance is launched
+      user_data_path: ./startup.sh
+      volumes:
+      - device_name: /dev/sda1
+        volume_size: "{{ project_instance_volume_in_gb }}"
+        volume_type: gp2
+        iops: 3000
+        delete_on_termination: true
+        encrypted: true
+
+  # Update autoscaling group and associate new launch configuration
+  # As there is no AMI just to update an existing autoscaling group
+  # We specify all options and ansible will match the name to update
+  - name: Update Auto Scalling Group with new launch configuration
+    ec2_asg:
+      aws_access_key: "{{ project_aws_access_key }}"
+      aws_secret_key: "{{ project_aws_secret_key }}"
+      name: "{{ project_autoscaling_group_name }}"
+      region: "{{ project_region }}"
+      launch_config_name: "{{ project_lunch_config_name }}"
+      default_cooldown: 180
+      health_check_period: 300
+      health_check_type: ELB
+      target_group_arns: ["{{ project_target_group_arn }}"]
+      desired_capacity: 4
+      min_size: 4
+      max_size: 6
+      vpc_zone_identifier: "{{ vpc_subnet_ids }}"
+      # Below settings will replace all existing instances in this autoscaling group
+      # With instances of new AMI release
+      # The replacing will happen in batches with 2 instances replaced at at time
+      replace_all_instances: true
+      replace_batch_size: 2
+      # We will wait untill all newly replaced instances are healthy and in service
+      # Max wait time will be 10 minutes after which ansible will time out
+      # In case of timeout the activity will keep happening on AWS
+      # Just that the terminal will not wait for the output and exit with code 0
+      wait_for_instances: true
+      wait_timeout: 600
+      # Below tabs will be present on all production instances launched with new AMI
+      tags:
+      - Environment: Production
+        Name : "Production instances | {{ project_ami_version }}"
+        Project: Your Project Name
+        Vesion : "{{ project_ami_version }}"
+</code></pre>
+
+<p>
+Lets walk through each task in above <code>playbook.yml</code> first before we run it :</p>
+
+<ol>
+<li><p>Get VPC Subnet Details : The instances will be launched in a VPC. We will need the subnet ids from the VPC we will need instances to be present in. In here I have used a tag <code>Availability:Private</code> to only get private instances as in my setup, instances are not publically accessible from a public subnet.</p></li>
+<li><p>Get VPC Subnet ids which are available : The 1st task will give us entire json details of VPC subnets. This task will filter and get only ids using jinja parsing of the json result.</p></li>
+<li><p>Configure new launch configuration : We will create a new launch configuration. I have been very descriptive in the options used in this task to make sure it's easy to refer next time.</p></li>
+<li><p>Update Auto Scalling Group with new launch configuration : This will associate the new launch configuration to an existing auto scaling group. Make sure your auto scaling group name matches to the one present already so that it's updated properly. The <code>replace_all_instances: true</code> makes sure we are rolling the new AMIs instantly. This task will wait for the instances to spin up and be <code>in-service</code> state. This is sepcified by <code>wait_for_instances</code> and <code>wait_timeout</code> options in this task.</p></li>
+</ol>
+
+<h3 id="running-the-playbook-%3A">Running the playbook :</h3>
+
+<p>First step is to make sure you have correct variables set in the <code>env.yml</code> and <code>config.yml</code>. When you do it for the second time, you will just need to change <code>project_golden_ami_id</code> and <code>project_ami_version</code> variables.</p>
+
+<p>Before running it directly, it's always safe to run it using <code>--check</code> mode as a dryrun, with -vv to have more verbose output :</p>
+
+<pre><code class="bash">ansible-playbook playbook.yml -vv --check
+</code></pre>
+
+<p>Deploying the new AMI :</p>
+
+<pre><code class="bash">ansible-playbook playbook.yml -vv
+</code></pre>
+
+<h3 id="rolling-back-the-update-%3A">Rolling back the update :</h3>
+
+<p>If your AMI which was newly released had issues, you can easily roll it back by specifying old stable values in <code>project_golden_ami_id</code> and <code>project_ami_version</code> variables. Then you just need to deploy the playbook.</p>
+
+<h3 id="why-to-invest-time-in-ansible-%3A">Why to invest time in ansible :</h3>
+
+<p>As your AWS setup grows, the manual activities which were simple at first become start becoming an overhead. Plus, there is always a risk of errors when manual operations are concerned. Using an automation tool like ansible lets you do the same actions with 70-80% less time than you would need to do it manually. Also ansible playbooks become a reference documentation if you need to explain anyone from your team how AMI updates are performed.</p>
+
+<h3 id="tracking-ansible-playbooks-in-git-repo-%3A">Tracking ansible playbooks in git repo :</h3>
+
+<p>If you want to track these ansible playbooks in git, make sure you do not track the main <code>env.yml</code> file which has AWS CLI crednetials. That is why we have 2 separate files <code>env.yml</code> and <code>config.yml</code>.</p>
+
+<h3 id="improvements-%3A">Improvements :</h3>
+
+<p>If you would like, you can update the AWS CLI user IAM policy to add more granuler permissions which is always preferable.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Laravel APP_KEY rotation policy for app security]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/"/>
@@ -1053,270 +1299,6 @@ $order = new Order([], 12.22, $customer);
 <p>If not properly thought, duplicate validations can cause redundancies. For example in above case, if instance of <code>Item</code> class contains a valid price is a concern of <code>Item</code> class. If that validation is also present in <code>Order</code> class as well, it created redundancies.</p>
 
 <p>You can find more assertion options available here : <a href="https://github.com/webmozart/assert">https://github.com/webmozart/assert</a></p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Laravel make custom class using console command]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
-            <updated>2019-01-11T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
-            <content type="html"><![CDATA[<p>Laravel ships with built in console <code>make</code> commands to generate class files for controllers, models, migrations etc. For example creating a resourse controller, you can do :</p>
-
-<pre><code class="bash">php artisan make:controller CustomerController --resource
-</code></pre>
-
-<p>Depending in your project structure and design patterns, you might be using different classes like repositories, services etc. We can take advantage of console commands to save time and create it just like we created controller above.</p>
-
-<h3 id="file-generation-%3A">File generation :</h3>
-
-<p>We firstly create a template file which is like a blueprint of how thw new class file will look like. This file is called <code>stub</code> file.</p>
-
-<p>Then when command is run, we simply copy the stub to <code>class.php</code> and replace the dummyclass, dummynamespace etc with the new files class and namespace.</p>
-
-<p>Above steps are made much simpler by <code>GeneratorCommand</code> class.</p>
-
-<h3 id="the-generatorcommand-class-%3A">The GeneratorCommand class :</h3>
-
-<p>Laravel's make commands extend an abstract class <code>GeneratorCommand</code>. This class basically has all the methods which do making a directory, getting content of stub, replacing class &amp; namespace, saving the new file and so on.</p>
-
-<p>This is an abstract class which then extends the Illuminate <code>command</code> class.</p>
-
-<h3 id="example-%3A">Example :</h3>
-
-<p>Let's create a make command for generating <code>Repository</code> for a model.</p>
-
-<ul>
-<li>Create the stub :</li>
-</ul>
-
-<p>Create a directory called <code>stubs</code> in laravel project root. I really like non-php files outside the app folder, you can put the stubs in the location you prefer.</p>
-
-<p>Create a new file inside <code>stubs</code> directory called <code>Repository.stub</code>. We are eliminating the repository specific functions as the goal is to focus on creating class file. You can add your repository functions inside the stub or maybe create a base class and extend stubs class from it.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace DummyNamespace;
-
-use App\DummyModel;
-
-class DummyRepository
-{
-    protected $model;
-    /**
-       * Instantiate reporitory
-       * 
-       * @param DummyModel $model
-       */
-    public function __construct(DummyModel $model)
-    {
-        $this-&gt;model = $model;
-    }
-
-    // Your methods for repository
-}
-</code></pre>
-
-<p>The usual idea is whatever is to be replaced, we prefix it with <code>Dummy</code>.</p>
-
-<ul>
-<li>Creating command :</li>
-</ul>
-
-<p>Let's create command scaffolding from artisan :</p>
-
-<pre><code class="bash">php artisan make:command RepositoryMakeCommand
-</code></pre>
-
-<p>The make command classes are generally named in format <code>WhatToCreateMakeCommand</code>. If we had to create a service class, we could say <code>ServiceMakeCommand</code>.</p>
-
-<p>We need to edit the <code>RepositoryMakeCommand.php</code> file which will be generated inside <code>app/Console/Commands</code> folder.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace App\Console\Commands;
-
-use Illuminate\Console\GeneratorCommand;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Exception\InvalidArgumentException;
-
-class RepositoryMakeCommand extends GeneratorCommand
-{
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $name = 'make:repository';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a new model repository';
-
-    /**
-     * The type of class being generated.
-     *
-     * @var string
-     */
-    protected $type = 'Repository';
-
-    /**
-     * The name of class being generated.
-     *
-     * @var string
-     */
-    private $repositoryClass;
-
-    /**
-     * The name of class being generated.
-     *
-     * @var string
-     */
-    private $model;
-
-    /**
-     * Execute the console command.
-     *
-     * @return bool|null
-     */
-    public function fire(){
-
-        $this-&gt;setRepositoryClass();
-
-        $path = $this-&gt;getPath($this-&gt;repositoryClass);
-
-        if ($this-&gt;alreadyExists($this-&gt;getNameInput())) {
-            $this-&gt;error($this-&gt;type.' already exists!');
-
-            return false;
-        }
-
-        $this-&gt;makeDirectory($path);
-
-        $this-&gt;files-&gt;put($path, $this-&gt;buildClass($this-&gt;repositoryClass));
-
-        $this-&gt;info($this-&gt;type.' created successfully.');
-
-        $this-&gt;line("&lt;info&gt;Created Repository :&lt;/info&gt; $this-&gt;repositoryClass");
-    }
-
-    /**
-     * Set repository class name
-     *
-     * @return  void
-     */
-    private function setRepositoryClass()
-    {
-        $name = ucwords(strtolower($this-&gt;argument('name')));
-
-        $this-&gt;model = $name;
-
-        $modelClass = $this-&gt;parseName($name);
-
-        $this-&gt;repositoryClass = $modelClass . 'Repository';
-
-        return $this;
-    }
-
-    /**
-     * Replace the class name for the given stub.
-     *
-     * @param  string  $stub
-     * @param  string  $name
-     * @return string
-     */
-    protected function replaceClass($stub, $name)
-    {
-        if(!$this-&gt;argument('name')){
-            throw new InvalidArgumentException("Missing required argument model name");
-        }
-
-        $stub = parent::replaceClass($stub, $name);
-
-        return str_replace('DummyModel', $this-&gt;model, $stub);
-    }
-
-    /**
-     * 
-     * Get the stub file for the generator.
-     *
-     * @return string
-     */
-    protected function getStub()
-    {
-        return  base_path('stubs/Repository.stub');
-    }
-    /**
-     * Get the default namespace for the class.
-     *
-     * @param  string  $rootNamespace
-     * @return string
-     */
-    protected function getDefaultNamespace($rootNamespace)
-    {
-        return $rootNamespace . '\Repo';
-    }
-
-    /**
-     * Get the console command arguments.
-     *
-     * @return array
-     */
-    protected function getArguments()
-    {
-        return [
-            ['name', InputArgument::REQUIRED, 'The name of the model class.'],
-        ];
-    }
-}
-</code></pre>
-
-<ul>
-<li>Registering the command :</li>
-</ul>
-
-<p>Finally we need to register this command to make available in artisan console. We can do that by adding it inside <code>app/Console/Kernel.php</code>.</p>
-
-<p>Inside <code>protected $commands = []</code> array add the class path :</p>
-
-<pre><code class="php">\App\Console\Commands\RepositoryMakeCommand::class,
-</code></pre>
-
-<ul>
-<li>Using the command :</li>
-</ul>
-
-<pre><code class="bash">php artisan make:repository Customer
-</code></pre>
-
-<p>This will create a <code>CustomerRepository.php</code> inside <code>app/Repo</code> folder :</p>
-
-<pre><code class="php">&lt;?php
-
-namespace App\Repo;
-
-use App\Customer;
-
-class CustomerRepository
-{
-    protected $model;
-    /**
-       * Instantiate reporitory
-       * 
-       * @param Customer $model
-       */
-    public function __construct(Customer $model)
-    {
-        $this-&gt;model = $model;
-    }
-
-    // Your methods for repository
-}
-</code></pre>
-
-<p>You can extend this implementation as per your project structure needs. This indeed saves time in longer run and makes sure all generated classes have common blueprint structure.</p>
 ]]></content>
         </entry>
     </feed>
