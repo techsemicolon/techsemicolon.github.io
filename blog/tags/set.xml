@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title><![CDATA[Tech.Semicolon]]></title>
+    <link href="https://techsemicolon.github.io/blog/tags/set.xml" rel="self"/>
+    <link href="https://techsemicolon.github.io/"/>
+    <updated>2019-09-09T06:53:17+00:00</updated>
+    <id>https://techsemicolon.github.io/</id>
+        <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Ansible everything you need to know about set_facts]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/07/07/ansible-everything-you-need-to-know-about-set-facts/"/>
+            <updated>2019-07-07T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/07/07/ansible-everything-you-need-to-know-about-set-facts/</id>
+            <content type="html"><![CDATA[]]></content>
+        </entry>
+    </feed>

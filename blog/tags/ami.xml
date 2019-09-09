@@ -3,7 +3,7 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/tags/ami.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-09-07T08:47:43+00:00</updated>
+    <updated>2019-09-09T06:53:17+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
@@ -17,11 +17,14 @@
 
 <p>When you have Auto Scaling enabled, AWS will scale up and down your setup by increasing or decreasing number of instances automatically based on server load and your auto scaling policies. AWS uses an instance template called <code>Launch Configuration</code> using which it understands what AMI to use when spinning up new instances automatically to scale up.</p>
 
-<p>Now, lets assume that you have 4 instances currently in-service associated with your auto scaing with their AMI version as <code>V1</code>. Now you need to release a new AMI version <code>V2</code>. What you will ideally do is : 
-- Create a new launch configuration which points to new AMI version V2. To do it manually you will basicaly <code>copy</code> your existing launch configuration and update AMI id.
-- Edit your Auto Scaling group and associate it with newly created launch configuration.
-- By just doing above steps will not update the existing in-service instances. You will terminate the existing in-service instances one by one. Once an instance inside auto-scaling in-service listeners is terminated, auto scaling group will launch a new one to keep minimum number of instances in-service as per the auto scaling policy. 
-- This new instance will now be from AMI version V2</p>
+<p>Now, lets assume that you have 4 instances currently in-service associated with your auto scaing with their AMI version as <code>V1</code>. Now you need to release a new AMI version <code>V2</code>. What you will ideally do is :</p>
+
+<ul>
+<li>Create a new launch configuration which points to new AMI version V2. To do it manually you will basicaly <code>copy</code> your existing launch configuration and update AMI id.</li>
+<li>Edit your Auto Scaling group and associate it with newly created launch configuration.</li>
+<li>By just doing above steps will not update the existing in-service instances. You will terminate the existing in-service instances one by one. Once an instance inside auto-scaling in-service listeners is terminated, auto scaling group will launch a new one to keep minimum number of instances in-service as per the auto scaling policy.</li>
+<li>This new instance will now be from AMI version V2</li>
+</ul>
 
 <p>This is a rolling update, which most of the times is done manually. It takes approx 10-15 minutes to do it manually. Let's understand how you can do it under 2-3 minutes with ansible with 2-3 minutes rollback with just one configuration change.</p>
 
