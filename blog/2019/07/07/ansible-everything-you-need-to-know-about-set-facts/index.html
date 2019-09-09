@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>Ansible everything you need to know about set_facts &mdash; Tech.Semicolon</title>
+        <meta charset="utf-8">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <meta name="robots" content="index, follow">
+
+        <!-- Meta Tags -->
+        <meta name="description" content="Know what is ansible set_facts and how you can effectively use it in your ansible playbook tasks" />
+        <meta property="og:title" content="Ansible everything you need to know about set_facts" />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content="https://techsemicolon.github.io" />
+        <meta property="og:image" content="https://techsemicolon.github.io/images/logo.png" />
+        <meta property="og:description" content="Know what is ansible set_facts and how you can effectively use it in your ansible playbook tasks" /> 
+        <meta property="og:site_name" content="Tech Semicolon" />
+    
+        <link href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i,900,900i&display=swap" rel="stylesheet">
+        <link href="https://techsemicolon.github.io/components/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="https://techsemicolon.github.io/css/style.css" rel="stylesheet" type="text/css" />
+
+        <link rel="apple-touch-startup-image" href="https://techsemicolon.github.io/images/fav.png">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="shortcut icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="shortcut icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="128x128" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="196x196" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="512x512" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="1024x1024" href="https://techsemicolon.github.io/images/fav.png">
+        <link rel="apple-touch-icon" sizes="2048x2048" href="https://techsemicolon.github.io/images/fav.png">
+
+        <link rel="stylesheet" href="https://techsemicolon.github.io/components/highlightjs/styles/github.css" />
+        <link rel="alternate" type="application/atom+xml" href="https://techsemicolon.github.io/atom.xml" title="Tech.Semicolon activity feed" />
+                    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+            <script>
+            (adsbygoogle = window.adsbygoogle || []).push({
+                google_ad_client: "ca-pub-6453469589570319",
+                enable_page_level_ads: true
+            });
+            </script>
+                                            </head>
+    <body>
+        <div id="fb-root"></div>
+        <script>(function(d, s, id) {
+              var js, fjs = d.getElementsByTagName(s)[0];
+              if (d.getElementById(id)) return;
+              js = d.createElement(s); js.id = id;
+              js.src = 'https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v3.2&appId=1919280101503437&autoLogAppEvents=1';
+              fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        </script>
+        <header>
+            <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-header">
+                <div class="container">
+                    <a class="navbar-brand" href="https://techsemicolon.github.io/">
+                        <img src="https://techsemicolon.github.io/images/logo.png" class="logo-img"/>
+                    </a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarCollapse">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog">Posts Archive</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/categories">Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/blog/tags">Tags</a></li>
+                            <li class="nav-item"><a target="_blank" class="nav-link" href="https://github.com/techsemicolon">GitHub</a></li>
+                            <li class="nav-item"><a class="nav-link" href="https://techsemicolon.github.io/about">About</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <main role="main" class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                        <article>
+        <header>
+            <h2>Ansible everything you need to know about set_facts</h2>
+        </header>
+        <div class="row">
+            <div class="col-sm-10 col-md-10 col-xs-12">
+                <p>If you have seen lot of ansible playbook examples, <code>set_facts</code> module is very common in most of them. Let us dive little deeper to know what is it and how it may help you to write dynamic playbooks.</p>
+
+<h3 id="the-jargon-%60set_facts%60--%3A">The jargon <code>set_facts</code>  :</h3>
+
+<p>If you just read <code>set_facts</code> in an ansible playbook, it is really hard to interpret what it really means. You may think like it is setting some kind of facts but what facts? I had the same doubt and I was little overwhelmed by the terminology in here. But, to understand in generic terms :</p>
+
+<p><code>set_facts</code> module sets variables once you know their values and optionally deciding if you need their values to be set or not.</p>
+
+<p>You may set simple variables in ansible using <code>vars</code>, <code>vars_file</code> or <code>include_vars</code> modules, however you know their values beforehand. In case of <code>set_facts</code>, you set variables <code>on the fly</code> depending on certain task results. These variables will be available to be used in the subsequent plays during an ansible playbook execution.</p>
+
+<h3 id="let%27s-see-a-real-life-use-case-%3A">Let's see a real life use case :</h3>
+
+<p>Before diving into an actual playbook and overal syntax, let's first take a real life use case, which will help us connect the dots.</p>
+
+<p>Use case : We need to spin up an instance on AWS and then add it into an existing AWS Target Group.</p>
+
+<p>Known Variables : We will have some known variables like the instance AMI id and the instance type.</p>
+
+<p>Unkwnon Variables : To add an instance to target group, we need the instance id. However, until that instance is spun up, we will not have the instance id. This will be set on the fly once instance is spun up.</p>
+
+<p>In this case, we will use known variables to spin up an instance. Once that task is done, we will get an instance id from AWS. Thats a <code>fact</code> which we have come across from that task. We will set it to a variable using <code>set_facts</code> module and then it can be used later to add instance into an existing AWS Target Group.</p>
+
+<h3 id="register-and-set_facts-go-hand-in-hand-%3A">Register and set_facts go hand in hand :</h3>
+
+<p>Until you have receieved a factual information or to be specific, a task result, you do not have facts to set using <code>set_facts</code> module. This is why I always feel <code>register</code> module and <code>set_facts</code> module go hand in hand.</p>
+
+<p>Please note that, there are lots of other ways to get factual information from a task and <code>register</code> is not the only way. But it is one of the most common ways you would get facts. Some other modules to get factual information can be <code>ansible_facts</code> to get package information (package_facts) from a host. The possibilities are much more.</p>
+
+<h3 id="set_facts-is-host-specific-%3A">set_facts is host specific :</h3>
+
+<p>A very important thing to note that when you set a fact using <code>set_facts</code> module, it is specific to the host within which task is currently running. As documentation says : <code>Variables are set on a host-by-host basis just like facts discovered by the setup module.</code> If your playbook has multiple hosts then you can not share a fact set using <code>set_facts</code> from one host to another.</p>
+
+<h3 id="diving-into-an-example-%3A">Diving into an example :</h3>
+
+<p>Let's take the use case we discussed earlier and make a simple playbook for it. We will have following structure :</p>
+
+<pre><code>ReleaseAMIUpdates/
+├── config.yml
+├── env.yml
+├── playbook.yml
+└── setup.sh
+</code></pre>
+
+<p>Please note that you may have more detailed structure based on your preferences. This article is about exploring <code>set_facts</code>, so we will focus more on its implementation.</p>
+
+<ul>
+<li>config.yml :</li>
+</ul>
+
+<p>This file will have the configuration variables which rarely change.</p>
+
+<pre><code class="yml">vpc_id: vpc-12345678
+ec2_iam_role: ec2-iam-role-name
+instance_type: t2.micro
+instance_volume_in_gb: 30
+instance_security_group: ec2-security-group-name
+ami_id: ami-12345678
+instance_key_name: ansible-instance.pem
+</code></pre>
+
+<ul>
+<li>env.yml :</li>
+</ul>
+
+<p>This file will have the configurations which are sensitive and may change .</p>
+
+<pre><code class="yml">region: us-west-1
+aws_access_key: your_aws_access_key
+aws_secret_key: your_aws_secret_key
+target_group: Test Ansible Target Group
+</code></pre>
+
+<ul>
+<li>setup.sh :</li>
+</ul>
+
+<p>This file will have any user-data boostrap commands you need to run as soon as new instance is spun up. We will use this to install nginx so that we can server web traffic with a simple web page.</p>
+
+<pre><code class="bash">#!/bin/bash
+
+# Update Package Lists
+apt-get update
+
+# Install add-apt-repository dependencies
+apt-get install software-properties-common -y
+apt-get install python-software-properties -y
+
+# Update Package Lists
+apt-get update -y
+
+# Install nginx 
+apt-get -y install nginx
+</code></pre>
+
+<p>Now you have above yml files set up, these files will act as environment variable files. We will refer the configurations specified above as variables in our playbook.</p>
+
+<ul>
+<li>playbook.yml :</li>
+</ul>
+
+<p>This file will contain all palybook tasks.
+</p>
+
+<pre><code class="yaml"># create a launch configuration using an AMI image and instance type as a basis
+- name: Launch new AMI Release
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ./env.yml
+    - ./config.yml
+
+  tasks:
+
+  #  Get VPC public subnet details as it will be needed later while launching the sandbox instance
+  - name: Get VPC Subnet Details
+    ec2_vpc_subnet_facts:
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+      region: "{{ region }}"
+      filters:
+        vpc-id: "{{ vpc_id }}"
+        "tag:Availability": "Public"
+    # Save the result json in variable subnet_facts_public
+    register: subnet_facts_public
+
+  - name: Get VPC Subnet ids which are available and public
+    set_fact:
+      vpc_subnet_id_public: "{{ subnet_facts_public.subnets|selectattr('state', 'equalto', 'available')|map(attribute='id')|list|random }}"
+
+  # Launch instance with required settings
+  - name: Launch new instance
+    ec2:
+      key_name: "{{ instance_key_name }}"
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+      region: "{{ region }}"
+      image: "{{ ami_id }}"
+      instance_profile_name: "{{ ec2_iam_role }}"
+      vpc_subnet_id: "{{ vpc_subnet_id_public }}"
+      instance_type: "{{ instance_type }}"
+      group: "{{ instance_security_group }}"
+      assign_public_ip: False
+      # All commands specified in below will run as soon as instance is launched
+      user_data: "{{ lookup('file', 'setup.sh') }}"
+      wait: True
+      wait_timeout: 500
+      volumes: 
+        - device_name: /dev/sda1
+          volume_size: "{{ instance_volume_in_gb }}"
+          volume_type: gp2
+          encrypted: True
+          delete_on_termination: True
+      instance_tags:
+        Name: Ansible-Test-Instance
+    register: ec2
+
+  # Get instance id from registered facts in ec2
+  - name: Get instance id from registered facts in ec2
+    set_fact:
+      new_instance_id: "{{ ec2.instance_ids[0] }}"
+
+  # Add newly created instance into target group
+  - name: Add newly created instance into target group
+    elb_target_group:
+      name: "{{ target_group }}"
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+      region: "{{ region }}"
+      target_type: instance
+      health_check_interval: 30
+      health_check_path: /health
+      health_check_protocol: http
+      health_check_timeout: 15
+      healthy_threshold_count: 2
+      unhealthy_threshold_count: 2
+      protocol: http
+      port: 80
+      vpc_id: "{{ _vpc_id }}"
+      successful_response_codes: "200"
+      targets:
+        - Id: "{{ new_instance_id }}"
+          Port: 80
+      state: present
+
+</code></pre>
+
+<p>
+Lets walk through each task in above <code>playbook.yml</code> first before we run it :</p>
+
+<ol>
+<li>We already know our vpc id. But to spin up an instance, we will need to get subnet id. We will use ansible module <code>ec2_vpc_subnet_facts</code> to get the public subnets. We will register that result into <code>subnet_facts_public</code> variable.</li>
+<li>We will use <code>subnet_facts_public</code> variable to parse its content and get a public subnet which is available chosen randomly from set of available public subnets from the results. The type of parsing used is called <code>jinja</code> which comes within ansible. Once we have that fact, we will set it using <code>set_facts</code> into <code>vpc_subnet_id_public</code> variable on the fly.</li>
+<li>We will launch new instance and then get its information. We will register that into <code>ec2</code> variable.</li>
+<li>We will use <code>ec2</code> variable to parse its content and get the instance id of newly spun up instance. Once we have that fact, we will set it using <code>set_facts</code> into <code>new_instance_id</code> variable on the fly.</li>
+<li>Finally we will update our target group and add this instance into its targets.</li>
+</ol>
+
+<h3 id="conditionally-set-facts-%3A">Conditionally set facts :</h3>
+
+<p>You might need to set a fact using <code>set_facts</code> module when another variable or result registered contains some dependent value. In such case you can use <code>when</code> conditional.</p>
+
+<p>Example :</p>
+
+<p></p>
+
+<pre><code class="yaml">- name: Get VPC Subnet ids which are available and public
+    set_fact:
+      vpc_subnet_id_public: "{{ subnet_facts_public.subnets|selectattr('state', 'equalto', 'available')|map(attribute='id')|list|random }}"
+    when: region == "us-west-2" 
+</code></pre>
+
+<p></p>
+
+<h3 id="caching-a-set-fact-%3A">Caching a set fact :</h3>
+
+<p>You can cache a fact set from <code>set_facts</code> module so that when you execute your playbook next time, it's retrieved from cache. You can set <code>cacheable</code> to <code>yes</code> to store variables across your playbook executions using a fact cache. You may need to look into precedence strategies used by ansible to evaluate the cacheable facts mentioned in their <a href="https://docs.ansible.com/ansible/latest/modules/set_fact_module.html?highlight=set_facts">documentation</a>.</p>
+
+            </div>
+                            <div class="col-sm-2 col-md-2 col-xs-12">
+                    <ins class="adsbygoogle"
+                        style="display:block"
+                        data-ad-client="ca-pub-6453469589570319"
+                        data-ad-slot="8792586132"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+                <div class="ad-gap">&nbsp;</div>
+                <ins class="adsbygoogle"
+                        style="display:block"
+                        data-ad-client="ca-pub-6453469589570319"
+                        data-ad-slot="8792586132"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                    <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                    <div class="ad-gap">&nbsp;</div>
+                    <ins class="adsbygoogle"
+                            style="display:block"
+                            data-ad-client="ca-pub-6453469589570319"
+                            data-ad-slot="8792586132"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
+                    <script>
+                            (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+                    </div>
+                    <ins class="adsbygoogle"
+                style="display:block"
+                data-ad-client="ca-pub-6453469589570319"
+                data-ad-slot="6593798201"
+                data-ad-format="auto"
+                data-full-width-responsive="true"></ins>
+            <script>
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            </script>
+        
+                <div class="cat-tags">
+            <span class="tags col-md-6">By : Mihir Bhende</span>
+                            <span class="categories col-md-6">
+                Categories : 
+                                <a href="https://techsemicolon.github.io/blog/categories/aws">aws</a>,                                 <a href="https://techsemicolon.github.io/blog/categories/ansible">ansible</a>                                </span>
+                                        <span class="tags col-md-6">
+                Tags : 
+                                <a href="https://techsemicolon.github.io/blog/tags/aws">aws</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/ansible">ansible</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/devops">devops</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/automation">automation</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/set_facts">set_facts</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/set">set</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/facts">facts</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/variables">variables</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/onthefly">onthefly</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/fly">fly</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/dynamically">dynamically</a>,                                 <a href="https://techsemicolon.github.io/blog/tags/dynamic">dynamic</a>                                </span>
+                    </div>
+
+        <div class="fb-comments" 
+            data-href="https://techsemicolon.github.io" 
+            data-numposts="5" width="100%">
+        </div>
+    </article>
+
+
+
+                </div>
+            </div>
+        </main>
+        <footer class="container">
+            <span>Tech.Semicolon | &copy; 2019 </span>
+        </footer>
+
+        <script src="https://techsemicolon.github.io/components/jquery/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+        <script src="https://techsemicolon.github.io/components/bootstrap/js/bootstrap.min.js"></script>
+                
+                <script src="https://techsemicolon.github.io/components/highlightjs/highlight.pack.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+
+                    </body>
+</html>

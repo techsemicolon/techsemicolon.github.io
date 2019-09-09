@@ -3,7 +3,7 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/atom.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-09-09T06:53:17+00:00</updated>
+    <updated>2019-09-09T06:56:13+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
@@ -11,7 +11,223 @@
             <link href="https://techsemicolon.github.io/blog/2019/07/07/ansible-everything-you-need-to-know-about-set-facts/"/>
             <updated>2019-07-07T00:00:00+00:00</updated>
             <id>https://techsemicolon.github.io/blog/2019/07/07/ansible-everything-you-need-to-know-about-set-facts/</id>
-            <content type="html"><![CDATA[]]></content>
+            <content type="html"><![CDATA[<p>If you have seen lot of ansible playbook examples, <code>set_facts</code> module is very common in most of them. Let us dive little deeper to know what is it and how it may help you to write dynamic playbooks.</p>
+
+<h3 id="the-jargon-%60set_facts%60--%3A">The jargon <code>set_facts</code>  :</h3>
+
+<p>If you just read <code>set_facts</code> in an ansible playbook, it is really hard to interpret what it really means. You may think like it is setting some kind of facts but what facts? I had the same doubt and I was little overwhelmed by the terminology in here. But, to understand in generic terms :</p>
+
+<p><code>set_facts</code> module sets variables once you know their values and optionally deciding if you need their values to be set or not.</p>
+
+<p>You may set simple variables in ansible using <code>vars</code>, <code>vars_file</code> or <code>include_vars</code> modules, however you know their values beforehand. In case of <code>set_facts</code>, you set variables <code>on the fly</code> depending on certain task results. These variables will be available to be used in the subsequent plays during an ansible playbook execution.</p>
+
+<h3 id="let%27s-see-a-real-life-use-case-%3A">Let's see a real life use case :</h3>
+
+<p>Before diving into an actual playbook and overal syntax, let's first take a real life use case, which will help us connect the dots.</p>
+
+<p>Use case : We need to spin up an instance on AWS and then add it into an existing AWS Target Group.</p>
+
+<p>Known Variables : We will have some known variables like the instance AMI id and the instance type.</p>
+
+<p>Unkwnon Variables : To add an instance to target group, we need the instance id. However, until that instance is spun up, we will not have the instance id. This will be set on the fly once instance is spun up.</p>
+
+<p>In this case, we will use known variables to spin up an instance. Once that task is done, we will get an instance id from AWS. Thats a <code>fact</code> which we have come across from that task. We will set it to a variable using <code>set_facts</code> module and then it can be used later to add instance into an existing AWS Target Group.</p>
+
+<h3 id="register-and-set_facts-go-hand-in-hand-%3A">Register and set_facts go hand in hand :</h3>
+
+<p>Until you have receieved a factual information or to be specific, a task result, you do not have facts to set using <code>set_facts</code> module. This is why I always feel <code>register</code> module and <code>set_facts</code> module go hand in hand.</p>
+
+<p>Please note that, there are lots of other ways to get factual information from a task and <code>register</code> is not the only way. But it is one of the most common ways you would get facts. Some other modules to get factual information can be <code>ansible_facts</code> to get package information (package_facts) from a host. The possibilities are much more.</p>
+
+<h3 id="set_facts-is-host-specific-%3A">set_facts is host specific :</h3>
+
+<p>A very important thing to note that when you set a fact using <code>set_facts</code> module, it is specific to the host within which task is currently running. As documentation says : <code>Variables are set on a host-by-host basis just like facts discovered by the setup module.</code> If your playbook has multiple hosts then you can not share a fact set using <code>set_facts</code> from one host to another.</p>
+
+<h3 id="diving-into-an-example-%3A">Diving into an example :</h3>
+
+<p>Let's take the use case we discussed earlier and make a simple playbook for it. We will have following structure :</p>
+
+<pre><code>ReleaseAMIUpdates/
+├── config.yml
+├── env.yml
+├── playbook.yml
+└── setup.sh
+</code></pre>
+
+<p>Please note that you may have more detailed structure based on your preferences. This article is about exploring <code>set_facts</code>, so we will focus more on its implementation.</p>
+
+<ul>
+<li>config.yml :</li>
+</ul>
+
+<p>This file will have the configuration variables which rarely change.</p>
+
+<pre><code class="yml">vpc_id: vpc-12345678
+ec2_iam_role: ec2-iam-role-name
+instance_type: t2.micro
+instance_volume_in_gb: 30
+instance_security_group: ec2-security-group-name
+ami_id: ami-12345678
+instance_key_name: ansible-instance.pem
+</code></pre>
+
+<ul>
+<li>env.yml :</li>
+</ul>
+
+<p>This file will have the configurations which are sensitive and may change .</p>
+
+<pre><code class="yml">region: us-west-1
+aws_access_key: your_aws_access_key
+aws_secret_key: your_aws_secret_key
+target_group: Test Ansible Target Group
+</code></pre>
+
+<ul>
+<li>setup.sh :</li>
+</ul>
+
+<p>This file will have any user-data boostrap commands you need to run as soon as new instance is spun up. We will use this to install nginx so that we can server web traffic with a simple web page.</p>
+
+<pre><code class="bash">#!/bin/bash
+
+# Update Package Lists
+apt-get update
+
+# Install add-apt-repository dependencies
+apt-get install software-properties-common -y
+apt-get install python-software-properties -y
+
+# Update Package Lists
+apt-get update -y
+
+# Install nginx 
+apt-get -y install nginx
+</code></pre>
+
+<p>Now you have above yml files set up, these files will act as environment variable files. We will refer the configurations specified above as variables in our playbook.</p>
+
+<ul>
+<li>playbook.yml :</li>
+</ul>
+
+<p>This file will contain all palybook tasks.
+</p>
+
+<pre><code class="yaml"># create a launch configuration using an AMI image and instance type as a basis
+- name: Launch new AMI Release
+  hosts: localhost
+  connection: local
+  vars_files:
+    - ./env.yml
+    - ./config.yml
+
+  tasks:
+
+  #  Get VPC public subnet details as it will be needed later while launching the sandbox instance
+  - name: Get VPC Subnet Details
+    ec2_vpc_subnet_facts:
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+      region: "{{ region }}"
+      filters:
+        vpc-id: "{{ vpc_id }}"
+        "tag:Availability": "Public"
+    # Save the result json in variable subnet_facts_public
+    register: subnet_facts_public
+
+  - name: Get VPC Subnet ids which are available and public
+    set_fact:
+      vpc_subnet_id_public: "{{ subnet_facts_public.subnets|selectattr('state', 'equalto', 'available')|map(attribute='id')|list|random }}"
+
+  # Launch instance with required settings
+  - name: Launch new instance
+    ec2:
+      key_name: "{{ instance_key_name }}"
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+      region: "{{ region }}"
+      image: "{{ ami_id }}"
+      instance_profile_name: "{{ ec2_iam_role }}"
+      vpc_subnet_id: "{{ vpc_subnet_id_public }}"
+      instance_type: "{{ instance_type }}"
+      group: "{{ instance_security_group }}"
+      assign_public_ip: False
+      # All commands specified in below will run as soon as instance is launched
+      user_data: "{{ lookup('file', 'setup.sh') }}"
+      wait: True
+      wait_timeout: 500
+      volumes: 
+        - device_name: /dev/sda1
+          volume_size: "{{ instance_volume_in_gb }}"
+          volume_type: gp2
+          encrypted: True
+          delete_on_termination: True
+      instance_tags:
+        Name: Ansible-Test-Instance
+    register: ec2
+
+  # Get instance id from registered facts in ec2
+  - name: Get instance id from registered facts in ec2
+    set_fact:
+      new_instance_id: "{{ ec2.instance_ids[0] }}"
+
+  # Add newly created instance into target group
+  - name: Add newly created instance into target group
+    elb_target_group:
+      name: "{{ target_group }}"
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+      region: "{{ region }}"
+      target_type: instance
+      health_check_interval: 30
+      health_check_path: /health
+      health_check_protocol: http
+      health_check_timeout: 15
+      healthy_threshold_count: 2
+      unhealthy_threshold_count: 2
+      protocol: http
+      port: 80
+      vpc_id: "{{ _vpc_id }}"
+      successful_response_codes: "200"
+      targets:
+        - Id: "{{ new_instance_id }}"
+          Port: 80
+      state: present
+
+</code></pre>
+
+<p>
+Lets walk through each task in above <code>playbook.yml</code> first before we run it :</p>
+
+<ol>
+<li>We already know our vpc id. But to spin up an instance, we will need to get subnet id. We will use ansible module <code>ec2_vpc_subnet_facts</code> to get the public subnets. We will register that result into <code>subnet_facts_public</code> variable.</li>
+<li>We will use <code>subnet_facts_public</code> variable to parse its content and get a public subnet which is available chosen randomly from set of available public subnets from the results. The type of parsing used is called <code>jinja</code> which comes within ansible. Once we have that fact, we will set it using <code>set_facts</code> into <code>vpc_subnet_id_public</code> variable on the fly.</li>
+<li>We will launch new instance and then get its information. We will register that into <code>ec2</code> variable.</li>
+<li>We will use <code>ec2</code> variable to parse its content and get the instance id of newly spun up instance. Once we have that fact, we will set it using <code>set_facts</code> into <code>new_instance_id</code> variable on the fly.</li>
+<li>Finally we will update our target group and add this instance into its targets.</li>
+</ol>
+
+<h3 id="conditionally-set-facts-%3A">Conditionally set facts :</h3>
+
+<p>You might need to set a fact using <code>set_facts</code> module when another variable or result registered contains some dependent value. In such case you can use <code>when</code> conditional.</p>
+
+<p>Example :</p>
+
+<p></p>
+
+<pre><code class="yaml">- name: Get VPC Subnet ids which are available and public
+    set_fact:
+      vpc_subnet_id_public: "{{ subnet_facts_public.subnets|selectattr('state', 'equalto', 'available')|map(attribute='id')|list|random }}"
+    when: region == "us-west-2" 
+</code></pre>
+
+<p></p>
+
+<h3 id="caching-a-set-fact-%3A">Caching a set fact :</h3>
+
+<p>You can cache a fact set from <code>set_facts</code> module so that when you execute your playbook next time, it's retrieved from cache. You can set <code>cacheable</code> to <code>yes</code> to store variables across your playbook executions using a fact cache. You may need to look into precedence strategies used by ansible to evaluate the cacheable facts mentioned in their <a href="https://docs.ansible.com/ansible/latest/modules/set_fact_module.html?highlight=set_facts">documentation</a>.</p>
+]]></content>
         </entry>
             <entry>
             <title type="html"><![CDATA[Ansible AWS rolling AMI update with zero downtime]]></title>
