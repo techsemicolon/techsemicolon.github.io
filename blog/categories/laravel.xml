@@ -3,9 +3,151 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/categories/laravel.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-09-09T06:56:13+00:00</updated>
+    <updated>2019-09-20T15:04:41+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Manage laravel .env file using AWS parameter store]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/07/10/aws-manage-env-file-using-ssm-laravel/"/>
+            <updated>2019-07-10T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/07/10/aws-manage-env-file-using-ssm-laravel/</id>
+            <content type="html"><![CDATA[<p>When you have an application hosted on AWS EC2 instances which runs on an environment file, like laravel framework needs <code>.env</code> environment file, it is always a pain to manage environment variables.</p>
+
+<p>Specially when you have multiple EC2 instances running for production on an auto-scaling setup. Please note that these are not host OS environment variable, but the application framework's environment variables in the respective env file.</p>
+
+<p>You may alternatively call them application configuration files. You mostly do not add them in git or bitbucket due to the possibility of them containing sensitive information, e.g. database passwords, AWS access credentials etc..</p>
+
+<h3 id="problem-statement-%3A">Problem statement :</h3>
+
+<ul>
+<li>You have environment .env file inside your EC2 AMI</li>
+<li>When you spin up an instance, the .env file comes from the AMI specified in the launch configuration, considering you have auto-scaling set up</li>
+<li>If you want to update any existing .env variable, you need to spin up new AMI and update production servers</li>
+</ul>
+
+<p>If your production environment has a setup like above, you may have experienced bit of pain in changing .env variables. Specially when there is a quick turnaround required due to some urgency or bug where you need to update an .env file variable asap.</p>
+
+<h3 id="ec2-user_data-coming-to-rescue-%3A">EC2 user_data coming to rescue :</h3>
+
+<p>When you spin up a new instance, you have an option in <code>Step 3: Configure Instance Details</code> screen inside <code>Advanced Details</code> called <code>user_data</code>. This looks something like below :</p>
+
+<p>You can write shell scripts in text area or upload a bash file as per your choice. When you launch an instance in Amazon EC2, these shell scripts will be run after the instance starts. You can also pass cloud-init directives but we will stick to shell script for this use case to fetch the environment variables from systems manager parameter store and generate an environment file, in our case <code>.env</code> file under laravel root.</p>
+
+<p><img src="/images/aws-ansible/user-data.png" alt="alt text1" /></p>
+
+<h3 id="setting-up-variables-in-parameter-store-%3A">Setting up variables in parameter store :</h3>
+
+<p>AWS has service called <code>Systems Manager</code> which contains a sub-service for resource sharing. This is called <code>Parameter Store</code>. There are couple of ways to store a parameter inside this service. We will be using <code>SecureString</code> option which makes sure the paramater value(which in our case is the enviromnent file contents) are encrypted inside AWS.</p>
+
+<p>You may think that instead of storing entire .env file content into a single text-area, why should we not create multiple paremeters for each variable in the .env file? That's a perfectly valid point. However, storing it in one paramter store decreases overall maintenability and also makes the shell script to retrive those values very compact.</p>
+
+<p>You can use below steps to store your <code>.env</code> file inside parameter store :</p>
+
+<ol>
+<li>Login to AWS console and switch to the region which contains your production setup</li>
+<li>Go to <code>Systems Manager</code> and click on <code>Parameter Store</code></li>
+<li>Click on <code>Create Parameter</code></li>
+<li>Add <code>Name</code> and <code>Description</code></li>
+<li>Select <code>Tier</code> as <code>Standard</code></li>
+<li>Select <code>Type</code> as <code>SecureString</code></li>
+<li>Select KMS key which managed encryption as per your choice</li>
+<li>Enter entire <code>.env</code> contents into the text-area</li>
+<li>Click on <code>Create Parameter</code> to save the parameter</li>
+</ol>
+
+<p><img src="/images/aws-ansible/create-parameter.png" alt="alt text1" /></p>
+
+<h3 id="accessing-the-paremeter-store-values-%3A">Accessing the paremeter store values :</h3>
+
+<p>Your EC2 instance which runs the application will be accessing these parameter store values. So you need to make sure your instance IAM role has following  permission in its policy.</p>
+
+<pre><code class="json">{
+    "Version": "2012-10-17",
+            "Statement": [
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+            ],
+            "Resource": [
+                "arn:aws:ssm:*:*:parameter/*"
+            ]
+        }
+    ]
+}
+</code></pre>
+
+<h3 id="shell-script-to-generate-.env-%3A">Shell script to generate .env :</h3>
+
+<p>We will be using following shell script to generate <code>.env</code> :</p>
+
+<pre><code class="bash">#!/bin/bash
+
+# Please update below varoables as per your production setup
+PARAMATER="APP_ENV"
+REGION="us-west-1"
+WEB_DIR="/var/www/html"
+WEB_USER="www-data"
+
+# Get parameters and put it into .env file inside application root
+aws ssm get-parameter --with-decryption --name $PARAMATER --region $REGION | jq '.Parameter.Value' &gt; $WEB_DIR/.env
+
+# Clear laravel configuration cache
+cd $WEB_DIR
+sudo -u $WEB_USER php artisan config:clear
+</code></pre>
+
+<h3 id="putting-pieces-together-%3A">Putting pieces together :</h3>
+
+<p>Let us now consider a very generic overview of how these pieces will fit together :</p>
+
+<ul>
+<li>You will have your <code>.env</code> file stored in AWS systems manager parameter store with encryption enabled at rest</li>
+<li>When a new instance will spin up, it will pull the env string and put into an <code>.env</code> file. This will happen using <code>user_data</code> setting</li>
+<li>It will clear the application env cache or any dependent commands to take new environmental file into effect</li>
+</ul>
+
+<h3 id="fundamental-implementation-situations-%3A">Fundamental implementation situations :</h3>
+
+<p>Let's say you have added a new variable in your env paramater group. You expect it to reflect ASAP in following situations :</p>
+
+<ul>
+<li><strong>All the new EC2 instances which will spin up after that point should always use the new env file variables</strong> :</li>
+</ul>
+
+<p>This can be easily implemented as we discussed earlier using <code>user_data</code>. When you spin up an instance manually you can add the above shell script to pull latest .env from parameter group in the <code>user_data</code> field.</p>
+
+<p>If you have auto-scaling enabled, make sure your launch configuration or launch template has the <code>user_data</code> field set with the shell script we discussed in the previous section. This will then make sure, whenever a new EC2 instance will spin up, it will always fetch the environmental paramater first from AWS systems manager's parameter group store and then make a branch new <code>.env</code> file.</p>
+
+<ul>
+<li><strong>The existing instances which are already running should fetch the updated env file variables</strong> :</li>
+</ul>
+
+<p>Let's first take out the case where you have instance not in any auto-scaling group. You can then manually SSH into instance and fetch the new .env. (Or automate it using Solution B)</p>
+
+<p>But in here main point of concern is when you have autoscaling setup and production is running on multiple instances. This is an area where we can have 2 solutions. First one is very easy to implement whereas second one can be a pain. Let's discuss both :</p>
+
+<p><code>Solution A</code> :</p>
+
+<p>From your existing auto-scaling instances, start terminating an instance one by one. Your auto-scaling setup will then spin up new instances. As we discussed earlier, considering your launch configuration already has the shell script to pull updated environment variables from parameter group at the instance start from <code>user_data</code> setting, the new instances will be ready with updated environmental veriables in their <code>.env</code> files.</p>
+
+<p>To add more automation, you may also do the termination activity using a lambda function or ansible based on a trigger when systems manager's parameter group is updated.</p>
+
+<p><code>Solution B</code> :</p>
+
+<p>This is important for applications where there ephemeral storage is important for some ongoing tasks. If we terminate the instances, the production application will lose some of it's ongoing process data. In this case we need to find an automated way to run the shell script on all those running instances, to update their <code>.env</code> variables.</p>
+
+<p>In this case, you can use AWS lambda for this purpose. The bottom line of this is <code>When systems manager's parameter group is updated, it will trigger a lambda function. That lambda function will SSH into all your running production instances and update the .env file</code>.</p>
+
+<p>There is already a github repo I have added sometime back on running SSH commands on EC2 instances. You can <a href="https://github.com/techsemicolon/ec2-run-commands-log-output">click here</a> to know more about it.</p>
+
+<h3 id="my-two-cents-%3A">My two cents :</h3>
+
+<p>This may definitely appear as an overhead... But as your application becomes large, setting these things up will make your life so much easier.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Laravel APP_KEY rotation policy for app security]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/"/>
@@ -1053,270 +1195,6 @@ $order = new Order([], 12.22, $customer);
 <p>If not properly thought, duplicate validations can cause redundancies. For example in above case, if instance of <code>Item</code> class contains a valid price is a concern of <code>Item</code> class. If that validation is also present in <code>Order</code> class as well, it created redundancies.</p>
 
 <p>You can find more assertion options available here : <a href="https://github.com/webmozart/assert">https://github.com/webmozart/assert</a></p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Laravel make custom class using console command]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/"/>
-            <updated>2019-01-11T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/11/laravel-make-custom-class-using-console-command/</id>
-            <content type="html"><![CDATA[<p>Laravel ships with built in console <code>make</code> commands to generate class files for controllers, models, migrations etc. For example creating a resourse controller, you can do :</p>
-
-<pre><code class="bash">php artisan make:controller CustomerController --resource
-</code></pre>
-
-<p>Depending in your project structure and design patterns, you might be using different classes like repositories, services etc. We can take advantage of console commands to save time and create it just like we created controller above.</p>
-
-<h3 id="file-generation-%3A">File generation :</h3>
-
-<p>We firstly create a template file which is like a blueprint of how thw new class file will look like. This file is called <code>stub</code> file.</p>
-
-<p>Then when command is run, we simply copy the stub to <code>class.php</code> and replace the dummyclass, dummynamespace etc with the new files class and namespace.</p>
-
-<p>Above steps are made much simpler by <code>GeneratorCommand</code> class.</p>
-
-<h3 id="the-generatorcommand-class-%3A">The GeneratorCommand class :</h3>
-
-<p>Laravel's make commands extend an abstract class <code>GeneratorCommand</code>. This class basically has all the methods which do making a directory, getting content of stub, replacing class &amp; namespace, saving the new file and so on.</p>
-
-<p>This is an abstract class which then extends the Illuminate <code>command</code> class.</p>
-
-<h3 id="example-%3A">Example :</h3>
-
-<p>Let's create a make command for generating <code>Repository</code> for a model.</p>
-
-<ul>
-<li>Create the stub :</li>
-</ul>
-
-<p>Create a directory called <code>stubs</code> in laravel project root. I really like non-php files outside the app folder, you can put the stubs in the location you prefer.</p>
-
-<p>Create a new file inside <code>stubs</code> directory called <code>Repository.stub</code>. We are eliminating the repository specific functions as the goal is to focus on creating class file. You can add your repository functions inside the stub or maybe create a base class and extend stubs class from it.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace DummyNamespace;
-
-use App\DummyModel;
-
-class DummyRepository
-{
-    protected $model;
-    /**
-       * Instantiate reporitory
-       * 
-       * @param DummyModel $model
-       */
-    public function __construct(DummyModel $model)
-    {
-        $this-&gt;model = $model;
-    }
-
-    // Your methods for repository
-}
-</code></pre>
-
-<p>The usual idea is whatever is to be replaced, we prefix it with <code>Dummy</code>.</p>
-
-<ul>
-<li>Creating command :</li>
-</ul>
-
-<p>Let's create command scaffolding from artisan :</p>
-
-<pre><code class="bash">php artisan make:command RepositoryMakeCommand
-</code></pre>
-
-<p>The make command classes are generally named in format <code>WhatToCreateMakeCommand</code>. If we had to create a service class, we could say <code>ServiceMakeCommand</code>.</p>
-
-<p>We need to edit the <code>RepositoryMakeCommand.php</code> file which will be generated inside <code>app/Console/Commands</code> folder.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace App\Console\Commands;
-
-use Illuminate\Console\GeneratorCommand;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Exception\InvalidArgumentException;
-
-class RepositoryMakeCommand extends GeneratorCommand
-{
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $name = 'make:repository';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Create a new model repository';
-
-    /**
-     * The type of class being generated.
-     *
-     * @var string
-     */
-    protected $type = 'Repository';
-
-    /**
-     * The name of class being generated.
-     *
-     * @var string
-     */
-    private $repositoryClass;
-
-    /**
-     * The name of class being generated.
-     *
-     * @var string
-     */
-    private $model;
-
-    /**
-     * Execute the console command.
-     *
-     * @return bool|null
-     */
-    public function fire(){
-
-        $this-&gt;setRepositoryClass();
-
-        $path = $this-&gt;getPath($this-&gt;repositoryClass);
-
-        if ($this-&gt;alreadyExists($this-&gt;getNameInput())) {
-            $this-&gt;error($this-&gt;type.' already exists!');
-
-            return false;
-        }
-
-        $this-&gt;makeDirectory($path);
-
-        $this-&gt;files-&gt;put($path, $this-&gt;buildClass($this-&gt;repositoryClass));
-
-        $this-&gt;info($this-&gt;type.' created successfully.');
-
-        $this-&gt;line("&lt;info&gt;Created Repository :&lt;/info&gt; $this-&gt;repositoryClass");
-    }
-
-    /**
-     * Set repository class name
-     *
-     * @return  void
-     */
-    private function setRepositoryClass()
-    {
-        $name = ucwords(strtolower($this-&gt;argument('name')));
-
-        $this-&gt;model = $name;
-
-        $modelClass = $this-&gt;parseName($name);
-
-        $this-&gt;repositoryClass = $modelClass . 'Repository';
-
-        return $this;
-    }
-
-    /**
-     * Replace the class name for the given stub.
-     *
-     * @param  string  $stub
-     * @param  string  $name
-     * @return string
-     */
-    protected function replaceClass($stub, $name)
-    {
-        if(!$this-&gt;argument('name')){
-            throw new InvalidArgumentException("Missing required argument model name");
-        }
-
-        $stub = parent::replaceClass($stub, $name);
-
-        return str_replace('DummyModel', $this-&gt;model, $stub);
-    }
-
-    /**
-     * 
-     * Get the stub file for the generator.
-     *
-     * @return string
-     */
-    protected function getStub()
-    {
-        return  base_path('stubs/Repository.stub');
-    }
-    /**
-     * Get the default namespace for the class.
-     *
-     * @param  string  $rootNamespace
-     * @return string
-     */
-    protected function getDefaultNamespace($rootNamespace)
-    {
-        return $rootNamespace . '\Repo';
-    }
-
-    /**
-     * Get the console command arguments.
-     *
-     * @return array
-     */
-    protected function getArguments()
-    {
-        return [
-            ['name', InputArgument::REQUIRED, 'The name of the model class.'],
-        ];
-    }
-}
-</code></pre>
-
-<ul>
-<li>Registering the command :</li>
-</ul>
-
-<p>Finally we need to register this command to make available in artisan console. We can do that by adding it inside <code>app/Console/Kernel.php</code>.</p>
-
-<p>Inside <code>protected $commands = []</code> array add the class path :</p>
-
-<pre><code class="php">\App\Console\Commands\RepositoryMakeCommand::class,
-</code></pre>
-
-<ul>
-<li>Using the command :</li>
-</ul>
-
-<pre><code class="bash">php artisan make:repository Customer
-</code></pre>
-
-<p>This will create a <code>CustomerRepository.php</code> inside <code>app/Repo</code> folder :</p>
-
-<pre><code class="php">&lt;?php
-
-namespace App\Repo;
-
-use App\Customer;
-
-class CustomerRepository
-{
-    protected $model;
-    /**
-       * Instantiate reporitory
-       * 
-       * @param Customer $model
-       */
-    public function __construct(Customer $model)
-    {
-        $this-&gt;model = $model;
-    }
-
-    // Your methods for repository
-}
-</code></pre>
-
-<p>You can extend this implementation as per your project structure needs. This indeed saves time in longer run and makes sure all generated classes have common blueprint structure.</p>
 ]]></content>
         </entry>
     </feed>

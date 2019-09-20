@@ -3,9 +3,151 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/tags/php.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-09-09T06:56:13+00:00</updated>
+    <updated>2019-09-20T15:04:41+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Manage laravel .env file using AWS parameter store]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/07/10/aws-manage-env-file-using-ssm-laravel/"/>
+            <updated>2019-07-10T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/07/10/aws-manage-env-file-using-ssm-laravel/</id>
+            <content type="html"><![CDATA[<p>When you have an application hosted on AWS EC2 instances which runs on an environment file, like laravel framework needs <code>.env</code> environment file, it is always a pain to manage environment variables.</p>
+
+<p>Specially when you have multiple EC2 instances running for production on an auto-scaling setup. Please note that these are not host OS environment variable, but the application framework's environment variables in the respective env file.</p>
+
+<p>You may alternatively call them application configuration files. You mostly do not add them in git or bitbucket due to the possibility of them containing sensitive information, e.g. database passwords, AWS access credentials etc..</p>
+
+<h3 id="problem-statement-%3A">Problem statement :</h3>
+
+<ul>
+<li>You have environment .env file inside your EC2 AMI</li>
+<li>When you spin up an instance, the .env file comes from the AMI specified in the launch configuration, considering you have auto-scaling set up</li>
+<li>If you want to update any existing .env variable, you need to spin up new AMI and update production servers</li>
+</ul>
+
+<p>If your production environment has a setup like above, you may have experienced bit of pain in changing .env variables. Specially when there is a quick turnaround required due to some urgency or bug where you need to update an .env file variable asap.</p>
+
+<h3 id="ec2-user_data-coming-to-rescue-%3A">EC2 user_data coming to rescue :</h3>
+
+<p>When you spin up a new instance, you have an option in <code>Step 3: Configure Instance Details</code> screen inside <code>Advanced Details</code> called <code>user_data</code>. This looks something like below :</p>
+
+<p>You can write shell scripts in text area or upload a bash file as per your choice. When you launch an instance in Amazon EC2, these shell scripts will be run after the instance starts. You can also pass cloud-init directives but we will stick to shell script for this use case to fetch the environment variables from systems manager parameter store and generate an environment file, in our case <code>.env</code> file under laravel root.</p>
+
+<p><img src="/images/aws-ansible/user-data.png" alt="alt text1" /></p>
+
+<h3 id="setting-up-variables-in-parameter-store-%3A">Setting up variables in parameter store :</h3>
+
+<p>AWS has service called <code>Systems Manager</code> which contains a sub-service for resource sharing. This is called <code>Parameter Store</code>. There are couple of ways to store a parameter inside this service. We will be using <code>SecureString</code> option which makes sure the paramater value(which in our case is the enviromnent file contents) are encrypted inside AWS.</p>
+
+<p>You may think that instead of storing entire .env file content into a single text-area, why should we not create multiple paremeters for each variable in the .env file? That's a perfectly valid point. However, storing it in one paramter store decreases overall maintenability and also makes the shell script to retrive those values very compact.</p>
+
+<p>You can use below steps to store your <code>.env</code> file inside parameter store :</p>
+
+<ol>
+<li>Login to AWS console and switch to the region which contains your production setup</li>
+<li>Go to <code>Systems Manager</code> and click on <code>Parameter Store</code></li>
+<li>Click on <code>Create Parameter</code></li>
+<li>Add <code>Name</code> and <code>Description</code></li>
+<li>Select <code>Tier</code> as <code>Standard</code></li>
+<li>Select <code>Type</code> as <code>SecureString</code></li>
+<li>Select KMS key which managed encryption as per your choice</li>
+<li>Enter entire <code>.env</code> contents into the text-area</li>
+<li>Click on <code>Create Parameter</code> to save the parameter</li>
+</ol>
+
+<p><img src="/images/aws-ansible/create-parameter.png" alt="alt text1" /></p>
+
+<h3 id="accessing-the-paremeter-store-values-%3A">Accessing the paremeter store values :</h3>
+
+<p>Your EC2 instance which runs the application will be accessing these parameter store values. So you need to make sure your instance IAM role has following  permission in its policy.</p>
+
+<pre><code class="json">{
+    "Version": "2012-10-17",
+            "Statement": [
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:GetParameters",
+                "ssm:GetParameter",
+            ],
+            "Resource": [
+                "arn:aws:ssm:*:*:parameter/*"
+            ]
+        }
+    ]
+}
+</code></pre>
+
+<h3 id="shell-script-to-generate-.env-%3A">Shell script to generate .env :</h3>
+
+<p>We will be using following shell script to generate <code>.env</code> :</p>
+
+<pre><code class="bash">#!/bin/bash
+
+# Please update below varoables as per your production setup
+PARAMATER="APP_ENV"
+REGION="us-west-1"
+WEB_DIR="/var/www/html"
+WEB_USER="www-data"
+
+# Get parameters and put it into .env file inside application root
+aws ssm get-parameter --with-decryption --name $PARAMATER --region $REGION | jq '.Parameter.Value' &gt; $WEB_DIR/.env
+
+# Clear laravel configuration cache
+cd $WEB_DIR
+sudo -u $WEB_USER php artisan config:clear
+</code></pre>
+
+<h3 id="putting-pieces-together-%3A">Putting pieces together :</h3>
+
+<p>Let us now consider a very generic overview of how these pieces will fit together :</p>
+
+<ul>
+<li>You will have your <code>.env</code> file stored in AWS systems manager parameter store with encryption enabled at rest</li>
+<li>When a new instance will spin up, it will pull the env string and put into an <code>.env</code> file. This will happen using <code>user_data</code> setting</li>
+<li>It will clear the application env cache or any dependent commands to take new environmental file into effect</li>
+</ul>
+
+<h3 id="fundamental-implementation-situations-%3A">Fundamental implementation situations :</h3>
+
+<p>Let's say you have added a new variable in your env paramater group. You expect it to reflect ASAP in following situations :</p>
+
+<ul>
+<li><strong>All the new EC2 instances which will spin up after that point should always use the new env file variables</strong> :</li>
+</ul>
+
+<p>This can be easily implemented as we discussed earlier using <code>user_data</code>. When you spin up an instance manually you can add the above shell script to pull latest .env from parameter group in the <code>user_data</code> field.</p>
+
+<p>If you have auto-scaling enabled, make sure your launch configuration or launch template has the <code>user_data</code> field set with the shell script we discussed in the previous section. This will then make sure, whenever a new EC2 instance will spin up, it will always fetch the environmental paramater first from AWS systems manager's parameter group store and then make a branch new <code>.env</code> file.</p>
+
+<ul>
+<li><strong>The existing instances which are already running should fetch the updated env file variables</strong> :</li>
+</ul>
+
+<p>Let's first take out the case where you have instance not in any auto-scaling group. You can then manually SSH into instance and fetch the new .env. (Or automate it using Solution B)</p>
+
+<p>But in here main point of concern is when you have autoscaling setup and production is running on multiple instances. This is an area where we can have 2 solutions. First one is very easy to implement whereas second one can be a pain. Let's discuss both :</p>
+
+<p><code>Solution A</code> :</p>
+
+<p>From your existing auto-scaling instances, start terminating an instance one by one. Your auto-scaling setup will then spin up new instances. As we discussed earlier, considering your launch configuration already has the shell script to pull updated environment variables from parameter group at the instance start from <code>user_data</code> setting, the new instances will be ready with updated environmental veriables in their <code>.env</code> files.</p>
+
+<p>To add more automation, you may also do the termination activity using a lambda function or ansible based on a trigger when systems manager's parameter group is updated.</p>
+
+<p><code>Solution B</code> :</p>
+
+<p>This is important for applications where there ephemeral storage is important for some ongoing tasks. If we terminate the instances, the production application will lose some of it's ongoing process data. In this case we need to find an automated way to run the shell script on all those running instances, to update their <code>.env</code> variables.</p>
+
+<p>In this case, you can use AWS lambda for this purpose. The bottom line of this is <code>When systems manager's parameter group is updated, it will trigger a lambda function. That lambda function will SSH into all your running production instances and update the .env file</code>.</p>
+
+<p>There is already a github repo I have added sometime back on running SSH commands on EC2 instances. You can <a href="https://github.com/techsemicolon/ec2-run-commands-log-output">click here</a> to know more about it.</p>
+
+<h3 id="my-two-cents-%3A">My two cents :</h3>
+
+<p>This may definitely appear as an overhead... But as your application becomes large, setting these things up will make your life so much easier.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Laravel APP_KEY rotation policy for app security]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/06/14/laravel-app-key-rotation-policy-for-security/"/>
@@ -1346,569 +1488,6 @@ $counts = collect($customers)
 <p>Please note that the <code>pipe()</code> helper method is different than the <code>laravel pipelines</code>. However, if you read about pipelines, its is kind of similar conceptually to generic tap function where you can pass an object through multiple classes to perform set of task and then return the result value once all the tasks have been finished. A <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">handy article</a> for the same is <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">here</a> if you want a quick read.</p>
 
 <p>Even if these methods are very handy, sometimes if you chain it to much it loses the element fo readability. I will suggest it is preferable to follow what the domain logic wants and group the similar processes together to tap or pipe.</p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Laravel Module Pattern]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/"/>
-            <updated>2019-01-06T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/06/laravel-module-pattern/</id>
-            <content type="html"><![CDATA[<p>Laravel has a folder structure which ties similar entities of MVC together e.g. controllers in one folder, views into another. There are few set-backs of this approach :</p>
-
-<ul>
-<li>If your project scales exponentially having lot of module, each of these directories scale as well. It becomes difficult to maintain.</li>
-<li>If you want to remove the module entirely, there are files scattered in different folders to consider. This sometimes lead to unused files still present in your project repository.</li>
-<li>Re-using a module into different project is a hassle (unless you have it installed coumpled as a plugin via composer)</li>
-<li>While using code editors, as the module files are in different folders. We might need to expand the folders in project sidebar to view them at a glance. The scattered folder structure makes it difficult to for a quick view. (Forgive me for being picky here ;))</li>
-</ul>
-
-<h4 id="implementation-%3A">Implementation :</h4>
-
-<p>Before you dive in to further sections, if you are familier with basic concepts of larave, most part of the code will be very familier to you. Tt is really easier that you might think.</p>
-
-<ul>
-<li>Creating the module :</li>
-</ul>
-
-<p>Let's create a new folder called <code>Modules</code> in the project root. (You might want to create it inside app folder, I prefer it this way.) To use the <code>\Modules</code> namespace, we need to autoload it from composer.json in the psr-4 section.</p>
-
-<pre><code class="json"> "autoload": {
-        "psr-4": {
-            "App\\": "app/",
-            "Modules\\": "Modules/",
-        }
-    },
-</code></pre>
-
-<p>Let's dump the updated autoloads by doing following from terminal shell :</p>
-
-<pre><code class="bash">composer dump-autoload
-</code></pre>
-
-<p>Now we are good to start with the first module. Let's consider a ticket module where user can submit a ticket from frontend and we store it into the database. We will not focus much on the actual implementation of  the ticketing ystem. We will emphasize on the structure of module.</p>
-
-<ul>
-<li>Create a new directory <code>Ticket</code>.</li>
-</ul>
-
-<p>Create a new directory <code>Ticket</code> inside <code>Modules</code> folder. I like to keep module names singular (Ticket instead of Tickets).</p>
-
-<ul>
-<li>Creating a service provider class :</li>
-</ul>
-
-<p>On a broader level, frameworks like laravel have special entry point wrappers which can find, register and instantiate the core functionalities. In case of Laravel it's the ServiceProvider class.</p>
-
-<p>Create a new file <code>TicketServiceProvider.php</code> inside <code>Modules/Ticket</code>.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot() {}
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<p>To make sure laravel considers this while booting up, we need to register it. Add this inside <code>config/app.php</code>'s  <code>providers</code> array :</p>
-
-<pre><code class="php">App\Modules\Ticket\TicketServiceProvider::class,
-</code></pre>
-
-<ul>
-<li>Creating migrations :</li>
-</ul>
-
-<p>We need to create a table to store new ticket data. Create a folder <code>Migrations</code> inside <code>Modules/Ticket</code>. 
-Now we can create a new migration from terminal shell :</p>
-
-<pre><code class="bash">php artisan make:migration create_tickets_table --path=Modules/Ticket/Migrations
-</code></pre>
-
-<p>It will create a new migration class inside <code>Modules/Ticket/Migrations</code> path. Let's add the table script :</p>
-
-<pre><code class="php">&lt;?php
-
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Migrations\Migration;
-
-class CreateTicketsTable extends Migration
-{
-    /**
-     * Run the migrations.
-     *
-     * @return void
-     */
-    public function up()
-    {
-        Schema::create('tickets', function (Blueprint $table) {
-            $table-&gt;increments('id');
-            $table-&gt;string('title')-&gt;nullable();
-            $table-&gt;text('body')-&gt;nullable();
-            $table-&gt;boolean('is_closed')-&gt;default(0);
-            $table-&gt;timestamps();
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-        Schema::dropIfExists('tickets');
-    }
-}
-</code></pre>
-
-<p>However, you must have noticed that this is not coming from Laravel's default <code>database/migrations</code> folder. We need to inform laravel to load this file as well for running migration. It can be done from service provider by adding following in boot method.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot() {
-
-        // Load ticket module migrations from 
-        // `Modules/Ticket/Migrations` folder path
-        $this-&gt;loadMigrationsFrom(__DIR__.'/Migrations');
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<p>Now to run the migration from terminal shell :</p>
-
-<pre><code class="bash">php artisan migrate
-</code></pre>
-
-<ul>
-<li>Alternatively:</li>
-</ul>
-
-<p>If you are thinking <code>migrations are done very rarely, so why should we register it in service provider for a registration overhead?</code> Laravel has got you covered.</p>
-
-<p>You can skip the step of doing <code>loadMigrationsFrom()</code> in service provider class. Instead you can specify the path while running migrations :</p>
-
-<pre><code class="bash">php artisan migrate --path=Modules/Ticket/Migrations
-</code></pre>
-
-<p>If your project has CICD deployments, mostly it will just have the migrate command without the path option. The first method is preferable to keep it simple for deployments.</p>
-
-<ul>
-<li>Creating Model :</li>
-</ul>
-
-<p>Create a file <code>Ticket.php</code> inside <code>Modules/Ticket</code>. (You may create a <code>Models</code> folder inside <code>Modules/Ticket</code> and create model class inside it as per your preference.)</p>
-
-<pre><code class="php">&lt;?php
-
-namespace App\Modules\Ticket;
-
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-
-class Ticket extends Model
-{
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'tickets';
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'title',
-        'body',
-        'is_closed'
-    ];
-
-}
-</code></pre>
-
-<ul>
-<li>Creating Controller :</li>
-</ul>
-
-<p>Create a new directory inside <code>Modules/Ticket</code> called <code>Http</code>. Let's create <code>TicketController.php</code> inside it :</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket\Http;
-
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Modules\Ticket\Ticket;
-
-class TicketController extends Controller
-{
-    /**
-     * Display a form for the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        return view('tickets.create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  Request  $request
-     * @param  UserRepository $users
-     * 
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
-    {
-        $request-&gt;validate([
-            'title' =&gt; 'string|required|max:255',
-            'body'  =&gt; 'string|required'
-        ]);
-
-        // Create new ticket
-        $ticket = Ticket::create($request-&gt;only('title', 'body'));
-
-        return redirect()-&gt;route('ticket.new')-&gt;withSuccess('Thank you for raising a ticket. We will get back to you at the earliest.');
-    }
-}
-</code></pre>
-
-<ul>
-<li>Creating Routes :</li>
-</ul>
-
-<p>Create a new file called <code>TicketRoutes.php</code> inside <code>Modules/Ticket</code>.</p>
-
-<pre><code class="php">&lt;?php 
-
-Route::group(['namespace' =&gt; 'Modules\Ticket', 'middleware' =&gt; ['web', 'auth']], function () {
-
-    Route::get('ticket/new', [ 'as' =&gt; 'ticket.new', 'uses' =&gt; 'TicketController@create' ]);
-    Route::post('ticket/store', [ 'as' =&gt; 'ticket.store', 'uses' =&gt; 'TicketController@store' ]);
-});
-</code></pre>
-
-<p>We need to tell laravel to register these routes as those are coming from a custom folder. We can do that from service provider :</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot() {
-
-        // Load ticket module migrations from 
-        // `Modules/Ticket/Migrations` folder path
-        $this-&gt;loadMigrationsFrom(__DIR__.'/Migrations');
-
-        // Load routes
-        $this-&gt;loadRoutesFrom(__DIR__.'/TickerRoutes.php');
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<ul>
-<li>Creating Views :</li>
-</ul>
-
-<p>Create a new directory inside <code>Modules/Ticket</code> called <code>Views</code>. This will contain al views for our module. This is again not coming from Laravel's default <code>resources/views</code> folder. We need to tell laravel to load these views. It can be done from service provider by adding following in boot method.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot() {
-
-        // Load ticket module migrations from 
-        // `Modules/Ticket/Migrations`
-        $this-&gt;loadMigrationsFrom(__DIR__.'/Migrations');
-
-        // Load routes from `Modules/Ticket/TickerRoutes.php`
-        $this-&gt;loadRoutesFrom(__DIR__.'/TickerRoutes.php');
-
-        // Load views from `Modules/Ticket/Views`
-        $this-&gt;loadViewsFrom(__DIR__.'/Views', 'ticket');
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<p>Note : Sometimes you may see <code>loadViewsFrom()</code> called without the second argument which is the package name. The difference is if you want to render a view without a package name you do <code>ticket.create</code> (file path : <code>Modules/Ticket/Views/ticket/create.blade.php</code>. If you specify package name, you do <code>ticket::create</code> (file path : <code>Modules/Ticket/Views/create.blade.php</code>)</p>
-
-<p>Let's create a simple view <code>create.blade.php</code> which basically has a form :</p>
-
-<p></p>
-
-<pre><code>@extends('layouts.app')
-
-@section('content')
-    &lt;div class="panel panel-default"&gt;
-        &lt;div class="panel-body"&gt;
-            &lt;div class="col-md-4 col-md-offset-4"&gt;
-                &lt;form role="form" method="POST" action="{{ route('ticket.store') }}"&gt;
-                    @csrf
-                    &lt;div class="form-group"&gt;
-                        &lt;label&gt;Title *&lt;/label&gt;
-                        &lt;input class="form-control" placeholder="Title for your ticket" id="title" name="title"&gt;
-                        @if ($errors-&gt;has('title'))
-                            &lt;span class="invalid-feedback" role="alert"&gt;
-                                &lt;strong&gt;{{ $errors-&gt;first('title') }}&lt;/strong&gt;
-                            &lt;/span&gt;
-                        @endif
-                    &lt;/div&gt;
-                    &lt;div class="form-group"&gt;
-                        &lt;label&gt;Description *&lt;/label&gt;
-                        &lt;textarea class="form-control" placeholder="How can we assist you?" id="body" name="body"&gt;&lt;/textarea&gt;
-                        @if ($errors-&gt;has('body'))
-                            &lt;span class="invalid-feedback" role="alert"&gt;
-                                &lt;strong&gt;{{ $errors-&gt;first('body') }}&lt;/strong&gt;
-                            &lt;/span&gt;
-                        @endif
-                    &lt;/div&gt;
-                    &lt;button type="submit" class="btn btn-primary"&gt;Submit Ticket&lt;/button&gt;
-                &lt;/form&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-@endsection
-</code></pre>
-
-<p></p>
-
-<ul>
-<li>Creating Policies :</li>
-</ul>
-
-<p>If you would like to use policy to authorize the requests, create a file <code>TicketPolicy.php</code> inside <code>Modules/Ticket</code>.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace App\Modules;
-
-use App\User;
-
-
-class TicketPolicy
-{
-
-    /**
-     * Determines user access
-     *
-     * @param User $user
-     * @return bool
-     */
-    public function index($user)
-    {
-        return true;
-    }
-
-    /**
-     * Determines user access
-     *
-     * @param User $user
-     * @return bool
-     */
-    public function store($user)
-    {
-        return true;
-    }
-}
-</code></pre>
-
-<p>As you must have thought by now, we need to register the policy using the laravel Gate contract inside service provider :</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Modules\Ticket\Ticket.php;
-use Modules\Ticket\TicketPolicy.php;
-use Illuminate\Contracts\Auth\Access\Gate as GateContract;
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot(GateContract $gate) {
-
-        // Load ticket module migrations from 
-        // `Modules/Ticket/Migrations`
-        $this-&gt;loadMigrationsFrom(__DIR__.'/Migrations');
-
-        // Load routes from `Modules/Ticket/TickerRoutes.php`
-        $this-&gt;loadRoutesFrom(__DIR__.'/TickerRoutes.php');
-
-        // Load views from `Modules/Ticket/Views`
-        $this-&gt;loadViewsFrom(__DIR__.'/Views', 'ticket');
-
-        // Load the policies from `Modules/Ticket/TicketPolicy.php`
-        $gate-&gt;policy(Ticket::class, TicketPolicy::class);
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<ul>
-<li>Creating config files :</li>
-</ul>
-
-<p>We can have config files to access environmental variables specific for this module. For example in this ticket module let's say we need to configure an email to cc to. Create a file <code>TicketConfig.php</code> inside inside <code>Modules/Ticket</code>.</p>
-
-<pre><code class="php">&lt;?php
-
-return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Email to cc for submitted tickets
-    |--------------------------------------------------------------------------
-    |
-    | Type : string
-    |
-    */
-
-    'ticket_cc_email' =&gt; env('TICKET_CC_EMAIL', null),
-
-];
-</code></pre>
-
-<p>Now, let's register this inside service provider.</p>
-
-<pre><code class="php">&lt;?php
-
-namespace Modules\Ticket;
-
-use Modules\Ticket\Ticket.php;
-use Modules\Ticket\TicketPolicy.php;
-use Illuminate\Contracts\Auth\Access\Gate as GateContract;
-use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-
-class TicketServiceProvider extends BaseServiceProvider
-{
-    /**
-     * Bootstrap any application services.
-     *
-     * @return void
-     */
-    public function boot(GateContract $gate) {
-
-        // Load ticket module migrations from 
-        // `Modules/Ticket/Migrations`
-        $this-&gt;loadMigrationsFrom(__DIR__.'/Migrations');
-
-        // Load routes from `Modules/Ticket/TickerRoutes.php`
-        $this-&gt;loadRoutesFrom(__DIR__.'/TickerRoutes.php');
-
-        // Load views from `Modules/Ticket/Views`
-        $this-&gt;loadViewsFrom(__DIR__.'/Views', 'ticket');
-
-        // Load the policies from `Modules/Ticket/TicketPolicy.php`
-        $gate-&gt;policy(Ticket::class, TicketPolicy::class);
-
-        // Load the configurations from `Modules/Ticket/TicketConfig.php`
-        $this-&gt;mergeConfigFrom(
-            __DIR__.'/TicketConfig.php', 'ticket';
-        );
-    }
-
-    /**
-     * Register any application services.
-     *
-     * @return void
-     */
-    public function register() {}
-}
-</code></pre>
-
-<p>We can then access the configurations as :</p>
-
-<pre><code class="php">$ccEmail = config('ticket.ticket_cc_email');
-</code></pre>
-
-<p>Now you can see entire module is bundled to a single folder. Easy to manage. There is a downside of registrations inside service provider class which in general you do not worry about. However, this is structurally more intuitive and re-usable.</p>
-
-<p>If you would like your module to have more extensive and detailed structure, you can simply use this ready composer plugin : <a href="https://nwidart.com/laravel-modules/v4/introduction">nwidart/laravel-modules</a></p>
-
-<p>Note : The structure and coding style are my personal opinions. There can be multiple ways to accomplish the same result. I feel just knowing the possibility that it can be done, opens new doors of imaginations based on personal comfort.</p>
 ]]></content>
         </entry>
     </feed>
