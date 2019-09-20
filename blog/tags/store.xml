@@ -3,7 +3,7 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/tags/store.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-09-20T15:04:41+00:00</updated>
+    <updated>2019-09-20T15:12:59+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
@@ -96,6 +96,7 @@ aws ssm get-parameter --with-decryption --name $PARAMATER --region $REGION | jq 
 
 # Clear laravel configuration cache
 cd $WEB_DIR
+chown $WEB_USER. .env
 sudo -u $WEB_USER php artisan config:clear
 </code></pre>
 

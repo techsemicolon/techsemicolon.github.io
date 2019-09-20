@@ -175,6 +175,7 @@ aws ssm get-parameter --with-decryption --name $PARAMATER --region $REGION | jq 
 
 # Clear laravel configuration cache
 cd $WEB_DIR
+chown $WEB_USER. .env
 sudo -u $WEB_USER php artisan config:clear
 </code></pre>
 
