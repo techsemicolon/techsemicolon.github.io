@@ -3,9 +3,207 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/tags/php.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-09-20T15:12:59+00:00</updated>
+    <updated>2019-10-10T12:02:56+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[PHP OPcache important settings and revalidation simplified]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/10/05/php-fpm-and-opcache-settings-and-invalidation-simplified/"/>
+            <updated>2019-10-05T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/10/05/php-fpm-and-opcache-settings-and-invalidation-simplified/</id>
+            <content type="html"><![CDATA[<h3 id="about-opcache-%3A">About OPcache :</h3>
+
+<p>PHP as a language is an interpreted. But the interpretation happens from the binaries. These binaries are compiled into intermediate bytecodes. OPcache comes into picture during the compilation phase where it stores the precompiled script's bytecodes into a shared memory. When next time PHP needs to compile the same PHP script, the precompile bytecodes from the shared memory are used.. Therefore removing the requirement for PHP to load and parse scripts on each request. As a result improving overall PHP performance.</p>
+
+<p>The OPcache extension is bundled with PHP 5.5.0 and later versions.</p>
+
+<h3 id="why-it-is-needed-%3A">Why it is needed :</h3>
+
+<p>Okay wait... Let's really get into a very vital need of this OPcache in the ever growing world of PHP frameworks. Any PHP framework has some core package files which we never change. These php package files really let us use the framework capabilities. For example for laravel, we have <code>illuminate</code>'s laraval packages. Now on top of that, we install new PHP packages as and when needed using dependency managers like <code>composer</code>. We hardly change these files unless we update/install/remove a package dependency.</p>
+
+<p>Now, independent of which PHP framework you are using, these core PHP script files which constitute framework more or less are compiled for each request to generate their bytecodes for interpretation. Similarly, the dependency package PHP script are compied as per their need for that particular request.</p>
+
+<p>Why do we really need to compile these core PHP script files which we indeed hardly change?? Isn't that an overly unneccessary overhead for PHP compilation process to compile these hundreds of PHP script files on each request and thenm intrepret them? Doesn't make much sense right? There you go.. OPcache to the rescue...</p>
+
+<h3 id="important-settings-of-opcache-%3A">Important settings of OPcache :</h3>
+
+<p>As OPcache overall sounds really fascinating which internally optimizes the compilation process of PHP scripts, it is equally important to know the important settings. Cache handling, cache clearing and cache storing and overall invalidation depends on these settings.</p>
+
+<ul>
+<li>Finding the php.ini to work with : 
+You need to find the php.ini which is currently in use. There are different ways to find it. You can find it from terminal using :</li>
+</ul>
+
+<pre><code class="bash">php --ini | grep -i loaded
+</code></pre>
+
+<p>OR create a temporary script file called 'info.php` and have following content on it :</p>
+
+<pre><code class="php">phpinfo();
+</code></pre>
+
+<p>Once you open this file into browser, you would be able to see which php.ini is used.</p>
+
+<p>Mostly if you have php version 7.x with fpm installed then it will be inside <code>/etc/php/7.x/fpm/php.ini</code>. Or if you have 7.x with apache2 installed then it will be inside <code>/etc/php/7.x/apache2/php.ini</code>.</p>
+
+<ul>
+<li><p>Enable opcache :</p>
+
+<p>In the loaded and used <code>php.ini</code>, you can enable and disable opcache by updating following directive :</p>
+
+<pre><code>opcache.enable=1 //Enables OPcache
+opcache.enable=0 //Disables OPcache
+</code></pre>
+
+<p>OPCache also can be enabled for CLI, PHP running from the command line interface(terminal) :</p>
+
+<pre><code>opcache.enable_cli=1 //Enables OPcache
+opcache.enable_cli=0 //Disables OPcache
+</code></pre></li>
+<li><p>OPcache RAM usage :</p>
+
+<p>When the entire cache is stored into shared memory, the default max size of that memory storage is <code>64MB</code> before PHP <code>7.0.0</code> and <code>128MB</code> for after versions. You can update it as per your memory. Ideally 64MB to 128MB size is more than enough for most of the PHP frameworks.
+In the loaded and used <code>php.ini</code>, you can change this setting by updating following directive :</p>
+
+<pre><code>opcache.memory_consumption=128
+</code></pre></li>
+<li><p>Cached script limit :</p>
+
+<p>By default OPcache can cache <code>2000</code> files before PHP <code>7.0.0</code> and <code>10000</code> for after versions. You can increase this number as per your requirement. For frameworks like PHP Magento you could probably have this value bumped up as the core files are large in number.</p>
+
+<p>First know count of PHP scripting files in your codebase :</p>
+
+<pre><code class="bash"># Make sure you change this path as per your setup
+cd  /var/www/html 
+# Count number of php files
+find . -type f -print | grep php | wc -l
+</code></pre>
+
+<p>Now above will givbe you a numeric count of total PHP script files in your codebase. Now you can set OPcache setting accordingly. In the loaded and used <code>php.ini</code>, you can change this setting by updating following directive :</p>
+
+<pre><code>opcache.max_accelerated_files=20000
+</code></pre></li>
+<li><p>Set automated cache clearing :</p>
+
+<p>When you have new updates in cached PHP script files, OPcache will attempt to clear and then revalidate their cache. This is set using <code>validate_timestamps</code> directive and it happens periodically based on other directive setting <code>revalidate_freq</code>. When this directive is disabled, you MUST reset OPcache manually via opcache_reset(), opcache_invalidate() or by restarting the Web server for changes to the filesystem to take effect.
+In the loaded and used <code>php.ini</code>, you can change this setting by updating following directive :</p>
+
+<pre><code>opcache.validate_timestamps=1 //Enabled
+opcache.validate_timestamps=0 //Disabled
+</code></pre></li>
+<li><p>Revalidation and it's frequency :</p>
+
+<p>OPcache revalidates the opcache afer certain number of seconds to check if your code has changed. <code>0</code> value signifies that it checks your PHP code every single request which is unneccessary.
+By default it happens every 2 seconds. If you have PHP files changing hardly on your setup, it makes sence to increase the frequency duration. As revalidation also takes memory, bumping this up might save unneccessary memory revalidation usage.
+In the loaded and used <code>php.ini</code>, you can change this setting by updating following directive :</p>
+
+<pre><code>opcache.revalidate_freq=120
+</code></pre>
+
+<p>OR you can totally disable this revalidation by updating following directive :</p>
+
+<pre><code>opcache.validate_timestamps=0 //Disables OPcache revalidation
+</code></pre>
+
+<p>In your development or sandbox environment you can set this to 0 so that changes take effect immediately. However, it is as good as disabling which can save lot of syscalls.</p></li>
+<li><p>Skipping caching selecively :</p>
+
+<p>If you know that let's say <code>user.php</code> file in your framework changes often and you do not really want to clear cache everytime it changes. You can basically have OPcache ignore the caching of this file. It is called blacklisting file in terms of OPcache. This setting is littlbit different. It takes an absolute path location of a <code>.txt</code> file. In this text file you can specify the files you want to blacklist(skip) for caching.
+In the loaded and used <code>php.ini</code>, you can change this setting by updating following directive :</p>
+
+<pre><code>opcache.blacklist_filename=/etc/php/7.x/fpm/opcache_blacklist.txt
+</code></pre>
+
+<p>You can have whatever name you want for this text file. And then inside <code>opcache_blacklist.txt</code> :</p>
+
+<pre><code class="bash">#Specific file inside /var/www/html/
+/var/www/html/user.php 
+
+#All files starting with user* inside /var/www/html/
+/var/www/html/user
+
+#Wildcare usage inside /var/www/html/
+/var/www/*-user.php
+</code></pre></li>
+<li><p>Increasing request response shutdown :</p>
+
+<p>PHP OPcache uses a mechanism which checks for repetitive occurances of strings and internally stores single value of it with remaining ones having pointer to the same value. The fascinating thing is instead of having a pool of these strings for each and every FPM process, this shares it across all of your FPM processes.</p>
+
+<p>In OPcache settings, you can control how much memory this process can use from directive <code>opcache.interned_strings_buffer</code> Its default value is <code>4</code>(MB) before PHP <code>7.0.0</code> and <code>8</code>(MB) for after versions.</p>
+
+<p>In the loaded and used <code>php.ini</code>, you can change this setting by updating following directive :</p>
+
+<pre><code>opcache.interned_strings_buffer=12
+</code></pre></li>
+</ul>
+
+<p>Note that to have changes to take effect from php.ini, you need to restart PHP FPM or apache2 depending on your setup.</p>
+
+<h3 id="clearing-the-opcache-%3A">Clearing the OPcache :</h3>
+
+<p>When OPcache is enabled, any changes in cached PHP script files will not take effect until OPcache is cleared or it is revalidated. This is applicable when you release new updates into a OPcache enabled PHP server.</p>
+
+<p>To clear cache there are multiple ways :</p>
+
+<ul>
+<li><p>Clearing from browser :</p>
+
+<p>You can have a file <code>opcache_refresh.php</code> with following content :</p>
+
+<pre><code class="php">try{
+    opcache_reset();
+    echo "OPcache has been cleared successfully!";
+}
+catch(\Exception $e){
+    echo "Oops.. OPcache could not be cleared!";
+}
+</code></pre>
+
+<p>When you request this file from browser, it will reset(clear) the opcache and any new changes done inside the cached files will start reflecting.</p></li>
+<li><p>Clearing from terminal :</p>
+
+<p>If you have nginx with PHP FPM :</p>
+
+<pre><code class="bash">sudo service php7.x-fpm reload
+</code></pre>
+
+<p>If you have apache2 :</p>
+
+<pre><code class="bash">sudo service apache2 reload
+</code></pre></li>
+<li><p>Using cachetool :</p>
+
+<p>This is very useful when you do not want to have an open PHP file to reset opcache and you do not want to reload FPM or apache2 for the same. <a href="http://gordalina.github.io/cachetool/"><code>cachetool</code></a> is a way between the two :</p>
+
+<p>To Install  :</p>
+
+<pre><code class="bash">// Download the phar
+curl -sO http://gordalina.github.io/cachetool/downloads/cachetool.phar
+// Set permissions
+chmod +x cachetool.phar
+</code></pre>
+
+<p>Now you can clear opcache using following command :</p>
+
+<pre><code class="bash">// Using an automatically guessed fastcgi server
+php cachetool.phar opcache:reset --fcgi
+
+// Using php fpm socket
+php cachetool.phar opcache:reset --fcgi=/var/run/php7.x-fpm.sock
+</code></pre></li>
+</ul>
+
+<h3 id="opcache-and-the-automated-deployments-%3A">OPcache and the automated deployments :</h3>
+
+<p>When you have automated deployments set up on your PHP server, you need to incorporate OPcache clearing so that new changes take effect.</p>
+
+<p>If you do not perform this manually, eventually OPcache will revalidate itself based on your OPcache revalidation settings assuming you have <code>validate_timestamps</code> set to <code>1</code>. But it is pretty handy to do it manually as part of your automated deployment scripts to make sure changes take immediate effect.</p>
+
+<p>From my personal experience, relading FPM or apache2 to clear OPcache is not a good option. Even if it gracefully reloads PHP processes, any request which is(unfortunarely) ongoing on the server gives <code>502 bad gateway</code>. I would rather use the alternative like <code>cachetool</code> mentioned in above section which does not affect any ongoing PHP processes at all.</p>
+
+<p>The sequence when you reload OPcache matters. As soon as git or any of your deployment methods pulls the latest PHP code changes, you should first clear the OPcache. Then you can run all the remaining deployment commands which may use the updated PHP files. This makes sure the deployment commands do not use cached PHP script opcodes even when the sever has pulled the latest changes.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[Manage laravel .env file using AWS parameter store]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/07/10/aws-manage-env-file-using-ssm-laravel/"/>
@@ -1382,113 +1580,6 @@ class CustomerRepository
 <p></p>
 
 <p>You can also extend this idea for input, select etc. I think once you set such directives in a project, your blade views become readble. Plus less code in a bladel file is always better.</p>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Laravel tap vs tap vs pipe]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/"/>
-            <updated>2019-01-08T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/01/08/laravel-tap-vs-tap-vs-pipe/</id>
-            <content type="html"><![CDATA[<p>If you are wondering having tap 2 times in the article title is a mistake, apparently it is not. Laravel has large set of helper functions which are generic and helper functions specific to collections. Tap and pipe are very popular amongst laravel enthusiasts. Let's dive into each of of those to see what really makes them special and what differentiates them :</p>
-
-<h3 id="the-tap-function-%3A">The tap() function :</h3>
-
-<p>The reason of having tap 2 times in the article header is that, there are 2 implementations of tap helper function in laravel. One is in generic context and one specific to handling collections.</p>
-
-<ul>
-<li>The generic tap() function :</li>
-</ul>
-
-<p>The name tap suggests that it basically does set of actions using the value and then returns the value as if nothing happened. In other words, the tap function accepts two arguments <code>$value</code> and <code>a Closure</code>. The <code>$value</code> will be passed to the closure function. You can perform your actions in the closure where the return value of the Closure is irrelevant. At the end tap returns the same <code>$value</code> at the end.</p>
-
-<p>For example :</p>
-
-<pre><code class="php">$user = tap($user, function ($user) {
-
-    $user-&gt;notify(new SendWelcomeEmail());
-
-});
-</code></pre>
-
-<p>In the above snippet, we are passing <code>$user</code> instance to tap as first argument which is then cascaded as a parameter to closure. The closure will execute and basically send a new welcome email. Then control will come back to tap which will return the <code>$user</code> instance back.</p>
-
-<p>Even you can just eliminate the closure and call function on it directly like below.</p>
-
-<pre><code class="php">$user = tap($user)-&gt;notify(new SendWelcomeEmail());
-</code></pre>
-
-<p>The above will still return the user instance. The beauty of it is, you can chain the tap calls. Let's say you need to update the user role, then send the welcome email and then assign user some permissions. You can chain it all like :</p>
-
-<pre><code class="php">$user = tap($user)-&gt;update([
-    'role' =&gt; 'Customer' 
-])
--&gt;notify(new SendWelcomeEmail())
--&gt;assignPermissions('CustomerRole');
-</code></pre>
-
-<p>The use of this method can be handy when certain methods do not return the object as you want. A great example is the update method itself on the eloquent model. It returns integer when used otherwise. But if used as above with tap function, it returns the object it performed the update.</p>
-
-<ul>
-<li>The collection tap() function :</li>
-</ul>
-
-<p>The tap function for collection can be used in collection function chaining. I think of it similar to javascript debug breakpoints. You pin it to print something at a point of time in your javascript and then move ahead after removing the breakpoint.</p>
-
-<p>For example consider following example :</p>
-
-<pre><code class="php"><br />$customers = collect([
-    ['name' =&gt; 'mihir',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
-    ['name' =&gt; 'george', 'is_active' =&gt; true,  'category' =&gt; 'silver'],
-    ['name' =&gt; 'nathen', 'is_active' =&gt; false, 'category' =&gt; 'platinum'],
-    ['name' =&gt; 'steve',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
-    ['name' =&gt; 'shawn',  'is_active' =&gt; false, 'category' =&gt; 'gold']
-]);
-
-$activeGoldCustomers = collect($customers)
-    -&gt;where('is_active', true)
-    -&gt;tap(function ($activeCustomers) {
-        $this-&gt;sendActiveCustomerEmail($activeCustomers);
-    })
-    -&gt;where('category', 'gold')
-    -&gt;tap(function ($goldCustomers) {
-        $this-&gt;sendOfferCode('100%Discount');
-    });
-</code></pre>
-
-<p>In above example, we are just returning the customers who are currently active and fall under category gold. However, using the tap function we can perform certain actions on the go as we filter those. When we filtered for <code>is_active = true</code>, we sent activation email. Then when we added another filter for <code>category = gold</code>, we sent offer code just for active customer from gold category.</p>
-
-<p>You can also find this handy in dumping data for debugging during the developement cycle.</p>
-
-<p>The fundamental concept of <code>tap()</code> is just use the value and perform actions but NEVER CHANGE the value. If you think then what can change the value? <code>pipe()</code> is the answer.</p>
-
-<h3 id="the-pipe-function-%3A">The pipe() function :</h3>
-
-<p>Pipe function is just applicable for collections. For example consider following example :</p>
-
-<pre><code class="php"><br />$customers = collect([
-    ['name' =&gt; 'mihir',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
-    ['name' =&gt; 'george', 'is_active' =&gt; true,  'category' =&gt; 'silver'],
-    ['name' =&gt; 'nathen', 'is_active' =&gt; false, 'category' =&gt; 'platinum'],
-    ['name' =&gt; 'steve',  'is_active' =&gt; true,  'category' =&gt; 'gold'],
-    ['name' =&gt; 'shawn',  'is_active' =&gt; false, 'category' =&gt; 'gold']
-]);
-
-$counts = collect($customers)
- -&gt;pipe(function($customers) {
-    return [
-        'active_count'      =&gt; $customers-&gt;where('is_active', true)-&gt;count(),
-        'gold_count'        =&gt; $customers-&gt;where('category', 'gold')-&gt;count(),
-        'silver_count'      =&gt; $customers-&gt;where('category', 'silver')-&gt;count(),
-        'platinum_count'    =&gt; $customers-&gt;where('category', 'platinum')-&gt;count()
-    ];
-});
-</code></pre>
-
-<p>Above will basicaly return <code>[3, 3, 1, 1]</code>, but it is very clean and less code is always better.</p>
-
-<p>Please note that the <code>pipe()</code> helper method is different than the <code>laravel pipelines</code>. However, if you read about pipelines, its is kind of similar conceptually to generic tap function where you can pass an object through multiple classes to perform set of task and then return the result value once all the tasks have been finished. A <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">handy article</a> for the same is <a href="https://medium.com/@jeffochoa/understanding-laravel-pipelines-a7191f75c351">here</a> if you want a quick read.</p>
-
-<p>Even if these methods are very handy, sometimes if you chain it to much it loses the element fo readability. I will suggest it is preferable to follow what the domain logic wants and group the similar processes together to tap or pipe.</p>
 ]]></content>
         </entry>
     </feed>

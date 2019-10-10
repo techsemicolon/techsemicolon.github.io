@@ -2,9 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://techsemicolon.github.io</loc>
-    <lastmod>2019-09-20</lastmod>
+    <lastmod>2019-10-10</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>https://techsemicolon.github.io/blog/2019/10/05/php-fpm-and-opcache-settings-and-invalidation-simplified/</loc>
+    <lastmod>2019-10-05T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>https://techsemicolon.github.io/blog/2019/07/10/aws-manage-env-file-using-ssm-laravel/</loc>
