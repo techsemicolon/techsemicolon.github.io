@@ -3,7 +3,7 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/tags/linux.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-10-21T21:19:22+00:00</updated>
+    <updated>2019-10-21T21:20:45+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
             <entry>
@@ -11,9 +11,7 @@
             <link href="https://techsemicolon.github.io/blog/2019/10/19/complete-setup-guide-for-openvpn-on-aws-with-certbot-ssl/"/>
             <updated>2019-10-19T00:00:00+00:00</updated>
             <id>https://techsemicolon.github.io/blog/2019/10/19/complete-setup-guide-for-openvpn-on-aws-with-certbot-ssl/</id>
-            <content type="html"><![CDATA[<h3 id="about-openvpn-%3A">About OpenVPN :</h3>
-
-<p>OpenVPN is a commercial VPN solutions service to secure your data communications. You can use this in number of ways like hiding your internet identity, remote access to company, inside IoT security and many more. My most favorite use of OpenVPN is to use it as SSH whitelisting, so you can SSH to your server instances only when you are connected to a certain VPN.</p>
+            <content type="html"><![CDATA[<p>OpenVPN is a commercial VPN solutions service to secure your data communications. You can use this in number of ways like hiding your internet identity, remote access to company, inside IoT security and many more. My most favorite use of OpenVPN is to use it as SSH whitelisting, so you can SSH to your server instances only when you are connected to a certain VPN.</p>
 
 <p>Remember, OpenVPN service is not free, but it's cost is very affordable and reasonable for a personal as well as corporate setup!</p>
 
