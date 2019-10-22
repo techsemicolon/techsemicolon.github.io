@@ -3,9 +3,272 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/blog/tags/open.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-10-21T21:20:45+00:00</updated>
+    <updated>2019-10-22T19:39:33+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[New AWS EC2 instance connect can save you instance ssh headaches]]></title>
+            <link href="https://techsemicolon.github.io/blog/2019/10/20/now-aws-ec2-aws-instance-connect-can-save-you-instance-user-ssh-headaches/"/>
+            <updated>2019-10-20T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2019/10/20/now-aws-ec2-aws-instance-connect-can-save-you-instance-user-ssh-headaches/</id>
+            <content type="html"><![CDATA[<p>AWS EC2 is one of the most commonly used service for hosting instances on AWS cloud. When you have multiple team members, you have to handle headaches of managing their SSH acces. Well... What if I tell you that now :</p>
+
+<ul>
+<li>You can manage EC2 ssh access by adding just AWS IAM user policy. Oh yes! You read that right!</li>
+<li>NO need to add SSH keys and manage those on your own for providing access to users in the organization</li>
+<li>NO need to release production instance updates to add or remove new users and their SSH keys</li>
+<li>NO need to worry about the key rotation, key management done by AWS automatically</li>
+<li>All connection requests using EC2 Instance Connect are logged to AWS CloudTrail so that you can audit connection requests</li>
+<li>Optionally, If your instance is publically accessible, you can SSH directly from an AWS browser shell window without even doing SSH locally</li>
+<li>Last but not the least, you can set this up entirely on an instance under just 15 minutes</li>
+</ul>
+
+<p>This is all possible now, thanks to the new AWS service called <code>EC2 instance connect</code>. If this does not convince you to explore more about this, nothing else will!</p>
+
+<h4 id="aws-instance-connect-%3A">AWS Instance Connect :</h4>
+
+<p>This is by far one of my favorite AWS service announcement of 2019. We all have had our headaches to manage SSH keys on EC2 instances, add new keys for new users, rotate the keys to add more security, remove the keys for users who left the company. Oh man, give me more tissues!</p>
+
+<p>But the new <code>AWS EC2 connect</code> is the ultimate saviour.</p>
+
+<p><code>AWS EC2 Instance Connect</code> provides a simple and secure way to connect to your instances using <code>Secure Shell (SSH)</code>. With EC2 Instance Connect, you use <code>AWS Identity and Access Management</code> (IAM) policies and principals to control SSH access to your instances, removing the need to share and manage SSH keys. All connection requests using EC2 Instance Connect are logged to <code>AWS CloudTrail</code> so that you can audit connection requests.</p>
+
+<p>You can use Instance Connect to connect to your Linux instances using one or all of below :</p>
+
+<ul>
+<li>A browser-based client</li>
+<li>The Amazon EC2 Instance Connect CLI</li>
+<li>The SSH client of your choice.</li>
+</ul>
+
+<p>The cheery on the top is <code>temporary nature of the SSH public key</code>. When you connect to an instance using EC2 Instance Connect, the instance connect API pushes a <code>one time use SSH public key</code> to the instance which is getting connected. It uses instance metadata for the same. And it key just stays there for <code>60 seconds</code>, so that SSH is done correctly. That key is then removed and for next connection the same process is done internally by AWS EC2 instance connect.</p>
+
+<p>An IAM policy attached to your IAM user authorizes your IAM user to push the public key to the instance metadata and for the users who do not have this policy attached, they can not connect to the instance.</p>
+
+<p>The SSH daemon internally uses AuthorizedKeysCommand and AuthorizedKeysCommandUser, which are configured when Instance Connect is installed, to look up the public key from the instance metadata for authentication, and connects you to the instance.</p>
+
+<p>Isn't that awesome!</p>
+
+<h3 id="a-heads-up-on-instance-os-support-%3A">A heads up on instance OS support :</h3>
+
+<p>The EC2 instance connect is currently supported for :</p>
+
+<ul>
+<li>Amazon Linux 2 having any version</li>
+<li>Ubuntu 16.04 or later versions</li>
+</ul>
+
+<p>Hoping that AWS will add support for the other operating systems!</p>
+
+<h3 id="step-1---spinning-up-the-ec2-server-to-dryrun-ecv2-instance-connect-%3A">Step 1 - Spinning up the EC2 server to dryrun ECV2 Instance Connect :</h3>
+
+<p>I would highly recommend to NOT try installing anything on your working instance. It is always safe to try it out on a small vanilla instance, know the gotchas and then be prepared to do it on production or any of your existing instances. So for the dryrun we will spin up a test EC2 instance.</p>
+
+<ul>
+<li>Login to your AWS Console and go to the region you want the instance to be in</li>
+<li>Select EC2 service and click on <code>Launch</code> to spin up a new instance</li>
+<li>The EC2 launch wizard will be shown, search for <code>ubuntu</code> and press <code>enter</code></li>
+<li>It will show number of ubuntu AMIs. Let's choose <code>Ubuntu Server 18.04 LTS</code></li>
+<li>Now click on <code>select</code></li>
+<li>Click on <code>continue</code> and choose instance type as <code>t2.micro</code> as it is inside the <code>free tier</code> usage</li>
+<li>Click on <code>Next: Configure Instance Details</code></li>
+<li>In this step you dont need to worry about VPC and instance role as this instance is just a test one. You can keep the default settings</li>
+<li>Click on <code>Next: Add Storage</code></li>
+<li>Keep the default storage as it is as we won't need any extra storage space</li>
+<li>Click on <code>Next: Add Tags</code> and add the tags you need for this instance</li>
+<li>Click on <code>Next: Configure Security Group</code></li>
+<li>You need to select <code>Create a new security group</code>. Add security group name as <code>Temporary EC2 Connect SG</code>. And add just a rule for port 22(SSH) open to all with value <code>0.0.0.0/0</code></li>
+<li>Click on <code>Review and Launch</code></li>
+<li>Verify the details once in this final summary screen and click on <code>Launch</code></li>
+<li>It will ask you to select a <code>key pair</code> create a new one as <code>EC2-Connect-Dryrun-key-pair</code> and download it.</li>
+<li>Now finally.. Click on <code>Launch Instances</code></li>
+</ul>
+
+<p>You are done with launching the instance..</p>
+
+<h4 id="step-2-%3A-install-ec2-instance-connect-on-the-instance-%3A">Step 2 : Install EC2 Instance Connect on the instance :</h4>
+
+<p>Now, we will install EC2 instance connect service on our new EC2 instance with AWS CLI. You can SSH to your instance using following command :</p>
+
+<pre><code class="bash">ssh -i EC2-Connect-Dryrun-key-pair.pem ubuntu@x.x.x.x
+</code></pre>
+
+<p>Where x.x.x.x is the new instance IP address. Now you can use below set of commands to install AWS CLI and then EC2 instance connect :</p>
+
+<pre><code class="bash"># Update the packages as we are logging to the instance for the first time
+sudo apt-get -y update
+# Install python 3 and pip3 which is needed to install AWS CLI
+sudo add-apt-repository ppa:ubuntu-toolchain-r/ppa
+sudo apt install -y python3.7 python3-pip
+# Install AWS CLI
+sudo pip3 install awscli --upgrade --user
+# Install EC2 instance connect
+sudo apt-get install -y ec2-instance-connect
+# Make sure instance connect files are created properly
+ls -1  /usr/share/ec2-instance-connect/
+</code></pre>
+
+<p>You can verify the instance connect has updated the ssh setting by running follwing command :</p>
+
+<pre><code class="bash">sudo cat /lib/systemd/system/ssh.service.d/ec2-instance-connect.conf
+</code></pre>
+
+<p>This should give output containing following strings :</p>
+
+<pre><code class="bash">AuthorizedKeysCommand /usr/share/ec2-instance-connect/eic_run_authorized_keys %u %f
+AuthorizedKeysCommandUser ec2-instance-connect
+</code></pre>
+
+<p>Now, you are done with the setup on your instance. Believe it or not, that is it for the instance changes!</p>
+
+<h4 id="step-3-%3A-create-policy-to-allow-ssh-connect-access-%3A">Step 3 : Create policy to allow SSH Connect Access :</h4>
+
+<p>We will create a new <code>IAM policy</code> which we can attach to a user so that user can SSH to the instance. Below is the policy JSON :</p>
+
+<pre><code class="json">{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": "ec2-instance-connect:SendSSHPublicKey",
+        "Resource": [
+            "arn:aws:ec2:region:account-id:instance/i-1234567890abcdef0",
+            "arn:aws:ec2:region:account-id:instance/i-0598c7d356eba48d7"
+        ],
+        "Condition": {
+            "StringEquals": {
+                "ec2:osuser": "ubuntu"
+            }
+        }
+      },
+      {
+        "Effect": "Allow",
+        "Action": "ec2:DescribeInstances",
+        "Resource": "*"
+      }
+    ]
+}
+</code></pre>
+
+<p>Make sure you replace the resources with their respective arns. e.g. <code>arn:aws:ec2:us-west-1:12341274:instance/i-1234567890abcdef0</code> where region is <code>us-west-1</code> and account id is <code>12341274</code>.</p>
+
+<p>Let's now understand this policy. This policy will allow user to send a new SSH public key to the instances specified in the resources array. This pushed public key will allow the SSH connection to the instance.</p>
+
+<p>The <code>ec2:osuser</code> as <code>ubuntu</code> is the SSH connection linux user. Realistically <code>ubuntu</code> is the main super user. We will change this on the last part of this article where we can have different linux user having less priviledges on the instance. For now, let's keep going.</p>
+
+<p>The second policy rule <code>ec2:DescribeInstances</code> is used by the user to get instance details from its instance id. We will be using instance id instead of public or private DNS or IP. So this rule is required in the policy so that part of the process works.</p>
+
+<ul>
+<li>Login to your AWS Console</li>
+<li>Select IAM service and click on <code>Policies</code> tab on the left menu</li>
+<li>Click on <code>Create Policy</code></li>
+<li>Click on <code>JSON</code> tab and enter above policy JSON in it. Make sure you replace the instance ARN as per your instance metadata details</li>
+<li>Click on <code>Review Policy</code></li>
+<li>Give policy name as <code>EC2-SSH-Access</code> and enter description you need</li>
+<li>Click on <code>Create</code></li>
+</ul>
+
+<p>Now we have the policy ready which can give access to any user to connect to the instance via Secure Shell (SSH).</p>
+
+<h4 id="step-4-%3A-create-a-new-user-and-attach-policy-%3A">Step 4 : Create a new User and attach policy :</h4>
+
+<p>We will create a new user as <code>user-with-ssh-access</code> and attach above policy.</p>
+
+<ul>
+<li>Login to your AWS Console</li>
+<li>Select IAM service and click on <code>Users</code> tab on the left menu</li>
+<li>Click on <code>Add User</code></li>
+<li>Give user name as <code>user-with-ssh-access</code></li>
+<li>In <code>Select AWS access type</code> choose <code>Programmatic access</code></li>
+<li>Click on <code>Next: Permissions</code></li>
+<li>In set permiossions tab choose <code>Attach existing policies directly</code></li>
+<li>Search our policy <code>EC2-SSH-Access</code> and select it</li>
+<li>Click on <code>Next: Tags</code> and add tags as per your need</li>
+<li>Click on <code>Next</code> which will review your user</li>
+<li>Click on <code>Create</code></li>
+</ul>
+
+<p>Now, we will need to add AWS credentials to this user so that we can use those to connect.</p>
+
+<ul>
+<li>Login to your AWS Console</li>
+<li>Select IAM service and click on <code>Users</code> tab on the left menu</li>
+<li>Search our user <code>user-with-ssh-access</code> and click on it</li>
+<li>User <code>Summary</code> page will appear, click on <code>Security credentials</code> tab</li>
+<li>In <code>Access Keys</code> section click on <code>Create access key</code></li>
+<li>It will give you <code>Access Key Id</code> and <code>Secret Access Key</code>. Make sure you save it locally in notepad or somewhere safe as we will need it to ssh to the instance</li>
+</ul>
+
+<h4 id="step-5-%3A-setting-up-local-system-for-secure-shellssh-connection-%3A">Step 5 : Setting up local system for Secure Shell(SSH) connection :</h4>
+
+<p>Locally you need to have AWS CLI installed. If you do not have it, make sure you install it. <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html">Click Here</a> to folow the steps.</p>
+
+<p>Once install run following on your terminal :</p>
+
+<pre><code class="bash">aws configure
+</code></pre>
+
+<p>If you get error like <code>aws command not found</code> find where the aws service is installed on your computer by doing <code>which aws</code>. Sometimes you need to add full path like <code>/usr/local/bin/aws configure</code></p>
+
+<p>It will ask you details like below :</p>
+
+<pre><code class="bash">AWS Access Key ID : ********************
+AWS Secret Access Key : ****************************
+Default region name [None]: us-west-1
+Default output format [None]:
+</code></pre>
+
+<p>Make sure you add the access key and secret access key we got from earlier step and specify the region in which your EC2 instance resides.</p>
+
+<p>Now, you need to also install <code>EC2 Instance Connect</code> on your local system as it is used to ssh to the instance. Use following command to do the same :</p>
+
+<pre><code class="bash">sudo pip install ec2instanceconnectcli
+</code></pre>
+
+<p>And done! Your local system is ready to SSH connect!</p>
+
+<h4 id="step-5-%3A-connect-to-the-instance-via-secure-shellssh-%3A">Step 5 : Connect to the instance via Secure Shell(SSH) :</h4>
+
+<p>After all above steps are done, we can now SSH to our instance. To ssh we will use <code>mssh</code> command which ships with EC2 instance connect service.</p>
+
+<pre><code class="bash">mssh ubuntu@i-xxxxxxxxxxxxxxx
+</code></pre>
+
+<p>Where <code>i-xxxxxxxxxxxxxxx</code> is the instance id of our test instance we spun up in step 1. You would be able to SSH to the instance if you have followed above steps correctly.</p>
+
+<h4 id="real-world-use-cases-for-ssh-users-%3A">Real world use cases for SSH users :</h4>
+
+<p>In above setup, we used <code>ubuntu</code> user to SSH connect. However, in real world we can divide our organizational users who need access into groups based on access they need. For example :</p>
+
+<ul>
+<li>You can create a user named <code>administrator</code> on your EC2 instance and then use that as <code>ec2:osuser</code> in our policy for system administrators.</li>
+<li>You can create a user named <code>developer</code> on your EC2 instance and then use that as <code>ec2:osuser</code> in our policy for application team which might have access to just the application codebase.</li>
+</ul>
+
+<p>Please note that what access and permission the connected user must have is in your hands. The responsibility of EC2 instance connect is just to allow the IAM user to SSH to the instance with allowed SSH user.</p>
+
+<p><a href="https://aws.amazon.com/premiumsupport/knowledge-center/new-user-accounts-linux-instance/">Click Here</a> to know more about quick steps to add new user to the instance.</p>
+
+<h4 id="managing-the-ssh-access-%3A">Managing the ssh access :</h4>
+
+<p>You can create multiple policies based on the resources and os username the IAM user can SSH to. If you want to give a new user ssh access, you can just attach respective policy to the user. Similarly, you can just remove an existing ssh cononect policy to remove the SSH access from an existing user.</p>
+
+<p>This is a HUGEEEE plus point of this service.</p>
+
+<h4 id="accessing-the-connection-logs-%3A">Accessing the connection logs :</h4>
+
+<p>EC2 connect pushes the SSH connection logs to <code>AWS Cloudtrail</code>. To view the logs follow below steps :</p>
+
+<ul>
+<li>Login to your AWS Console</li>
+<li>Select Clourtrail service and go to the region you have EC2 instance connect resources in</li>
+<li>Click on <code>Event History</code> tab on the left menu</li>
+<li>Addd <code>Event source</code> as the filter type and enter <code>ec2-instance-connect.amazonaws.com</code> as it's value</li>
+</ul>
+
+<p>You would be able to see all the SSH conection logs. Beautiful fact is that, even if you have 10 different IAM users using same SSH user, let's say <code>developer</code>, in the logs, you would be able to differentiate which user connected to SSH via <code>developer</code> connection user.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[A complete setup guide for OpenVPN on AWS with free CertBot SSL]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/10/19/complete-setup-guide-for-openvpn-on-aws-with-certbot-ssl/"/>
