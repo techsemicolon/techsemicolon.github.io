@@ -3,9 +3,259 @@
     <title><![CDATA[Tech.Semicolon]]></title>
     <link href="https://techsemicolon.github.io/atom.xml" rel="self"/>
     <link href="https://techsemicolon.github.io/"/>
-    <updated>2019-10-22T19:39:33+00:00</updated>
+    <updated>2020-02-05T12:38:40+00:00</updated>
     <id>https://techsemicolon.github.io/</id>
         <generator uri="http://sculpin.io/">Sculpin</generator>
+            <entry>
+            <title type="html"><![CDATA[Stream Nginx and PHP FPM logs into AWS cloudwatch]]></title>
+            <link href="https://techsemicolon.github.io/blog/2020/02/04/stream-nginx-fpm-logs-into-aws-clodwatch/"/>
+            <updated>2020-02-04T00:00:00+00:00</updated>
+            <id>https://techsemicolon.github.io/blog/2020/02/04/stream-nginx-fpm-logs-into-aws-clodwatch/</id>
+            <content type="html"><![CDATA[<p>When you have a web application running on AWS instances, you may have control over some cloud monitors of the instances such as <code>Memory Usage</code>, <code>CPU Utilization</code> or even metrics related to storage space. But :</p>
+
+<ul>
+<li>What if you want to have your nginx and PHP FPM logs steamed on AWS?</li>
+<li>You want to set up a cloudwatch alarm if nginx throws an error?</li>
+<li>You have an autoscaling setup and you want to steam nginx logs of all servers at a central log group on cloudwatch?</li>
+<li>You do not want to incorporate any 3rd party monitoring tool and want to stick to AWS?</li>
+<li>Last but not the least, you want it to be cost effective as logs are going to pile up as time goes?</li>
+</ul>
+
+<p>Well, this is all possible now! Let's find out how...</p>
+
+<h4 id="aws-cloudwatch-agent-%3A">AWS Cloudwatch Agent :</h4>
+
+<p>The first and very basic question comes to mind when streaming any custom log file into AWS cloudwatch is : <code>How I am going to stream the logs continously to AWS cloudwatch</code> The answer is using <a href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Install-CloudWatch-Agent.html"><code>AWS Cloudwatch Agent</code></a></p>
+
+<p>On a broader level, once you install AWS Cloudwatch Agent on your EC2 instance, it's going to have a service called <code>awslogs</code> available for you. This service is responsible for streaming any log file you wish to track on AWS cloudwatch. This service will take care of how to push the logs, how much log buffer to push at a time, how much kbs of data to push at a time and so on.</p>
+
+<p>As any unix service would have, the <code>awslogs</code> service also has very handy configuration file using which you can tweak the above parameters which contribute to pushing the log stream into AWS cloudwatch.</p>
+
+<h3 id="giving-permissions-to-push-to-cloudwatch-%3A">Giving permissions to push to cloudwatch :</h3>
+
+<p>When we have the AWS Cloudwatch agent installed and the <code>awslogs</code> service running, you will expect the log streaming on AWS cloudwatch inside AWS region you specified. But, it will not work directly.</p>
+
+<p>This is because, the instance should have permission to push logs into cloudwatch. For this we will create a new policy called <code>AWS-cloudwatch-agent-policy</code>.</p>
+
+<ol>
+<li>Login to AWS Console and go to <code>IAM</code> service.</li>
+<li>Go to <code>Policies</code> from the L.H.S. menu</li>
+<li>Click on <code>Create Policy</code></li>
+<li>A visual editor for policy will be shown. But we are going to save time here. Click on the <code>json</code> tab and enter following json in there :</li>
+</ol>
+
+<pre><code class="json">{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+                "logs:DescribeLogStreams"
+            ],
+            "Resource": [
+                "arn:aws:logs:*:*:*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestedRegion": "xx-xxxx-x"
+                }
+            }
+        }
+    ]
+}
+</code></pre>
+
+<p>Make sure you replace <code>xx-xxxx-x</code> with the region you want to steam logs into. e.g. <code>us-west-1</code>
+5. Click on <code>Review Policy</code>
+6. Give <code>Name</code> as <code>AWS-cloudwatch-agent-policy</code>. If you want to be specific(which I would recommend), add the region name in there e.g. <code>AWS-cloudwatch-agent-policy-us-west-1</code>
+7. Give <code>Description</code> and click on <code>Create Policy</code></p>
+
+<p>Now, we have the policy ready. We need to attach this policy to an <code>IAM User</code> or <code>IAM Role</code> so that EC2 instance can stream logs into AWS cloudwatch. There are 2 ways to do it :</p>
+
+<p>A. If your EC2 instance is having an instance IAM role attached to it, then simply attach this policy to that role. You can find this by going into <code>EC2 instances</code> section and looking for instance property called <code>IAM Role</code>.</p>
+
+<p>OR</p>
+
+<p>B. If you do not have any IAM role attached to your instance, then create a new IAM user with name <code>AWS-cloudwatch-agent-user</code> with ONLY <code>programatic access</code> enabled. Then attach the policy we created above to this user. Make sure you save the <code>Access Keys</code> and <code>Secret Access Keys</code> for this user. We will need it shortly.</p>
+
+<h4 id="installing-the-agent-%3A">Installing the agent :</h4>
+
+<p>Now that we have the permissions sorted out, let's install AWS cloudwatch agent, which is the easiest task to do. I am using an <code>ubuntu</code> EC2 instance so I will follow the steps relevent to it in this article. If you are using any other operating systems, feel free to visit the <a href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/install-CloudWatch-Agent-on-EC2-Instance.html">installation documentation</a></p>
+
+<ol>
+<li>SSH into your ubuntu EC2 instance</li>
+<li>Run following commands :</li>
+</ol>
+
+<pre><code class="bash"># Switch to root user
+sudo -s
+# Update the packages
+apt-get update -y
+# Download the ubuntu cloudwatch agent setup file
+cd /root
+curl https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py -O
+# Install the cloudwatch agent
+# Make sure you replace xx-xxxx-x with your region e.g. us-west-1
+sudo python ./awslogs-agent-setup.py --region=xx-xxxx-x
+</code></pre>
+
+<ol start="3">
+<li>Once you run the <code>awslogs-agent-setup.py</code>, it will ask you couple of questions in the prompt like below :</li>
+</ol>
+
+<p>When it will ask for <code>AWS Access Key ID</code> &amp; <code>AWS Secret Access Key</code>, if you have chosen the option A in previous section which is using <code>IAM Role</code> of the instance, then press continue(enter) without anything. If you have chosen the option B which is using an <code>IAM User</code> with programatic access, add the <code>AWS Access Key ID</code> &amp; <code>AWS Secret Access Key</code> of that user and then proceed with the prompt.</p>
+
+<p>On the remaining prompt, just follow what we have below. We will just start with basic bare bones because, we are going to update these settings from config file in next step.</p>
+
+<pre><code class="bash">Step 1 of 5: Installing pip ...libyaml-dev does not exist in system DONE
+
+Step 2 of 5: Downloading the latest CloudWatch Logs agent bits ... DONE
+
+Step 3 of 5: Configuring AWS CLI ...
+AWS Access Key ID [None]:
+AWS Secret Access Key [None]:
+Default region name [us-west-1]:
+Default output format [None]:
+
+Step 4 of 5: Configuring the CloudWatch Logs Agent ...
+Path of log file to upload [/var/log/syslog]:
+Destination Log Group name [/var/log/syslog]:
+
+Choose Log Stream name:
+  1. Use EC2 instance id.
+  2. Use hostname.
+  3. Custom.
+Enter choice [1]: 1
+
+Choose Log Event timestamp format:
+  1. %b %d %H:%M:%S    (Dec 31 23:59:59)
+  2. %d/%b/%Y:%H:%M:%S (10/Oct/2000:13:55:36)
+  3. %Y-%m-%d %H:%M:%S (2008-09-08 11:52:54)
+  4. Custom
+Enter choice [1]: 3
+
+Choose initial position of upload:
+  1. From start of file.
+  2. From end of file.
+Enter choice [1]: 2
+More log files to configure? [Y]: N
+
+Step 5 of 5: Setting up agent as a daemon ...DONE
+
+
+------------------------------------------------------
+- Configuration file successfully saved at: /var/awslogs/etc/awslogs.conf
+- You can begin accessing new log events after a few moments at https://console.aws.amazon.com/cloudwatch/home?region=us-west-1#logs:
+- You can use 'sudo service awslogs start|stop|status|restart' to control the daemon.
+- To see diagnostic information for the CloudWatch Logs Agent, see /var/log/awslogs.log
+- You can rerun interactive setup using 'sudo python ./awslogs-agent-setup.py --region us-west-1 --only-generate-config'
+</code></pre>
+
+<h3 id="testing-the-initial-setup-%3A">Testing the initial setup :</h3>
+
+<p>Let's first check if the <code>awslogs</code> service is running :</p>
+
+<pre><code class="bash">sudo service awslogs status
+</code></pre>
+
+<p>This should show as active.</p>
+
+<p>Now let's see if our instance is streaming anything :</p>
+
+<pre><code class="bash">sudo tail -f /var/log/awslogs.log
+</code></pre>
+
+<p>You should either see something like <code>cwlogs.push.publisher</code> which is publishing log successfully. If you have any issue with permissions, you should see the error here.</p>
+
+<p>If everything is working, you should see a log group called <code>/var/log/syslog</code> when you visit https://console.aws.amazon.com/cloudwatch/home?region=xx-xxxx-x#logs: where <code>xx-xxxx-x</code> is your AWS region. If you click on the log group, you should see syslogs streaming in there. whohooo!</p>
+
+<p><img src="/images/aws-cloudwatch-agent/log-group.png" alt="AWS CloudWatch Log Group" /></p>
+
+<p><img src="/images/aws-cloudwatch-agent/log-stream.png" alt="AWS CloudWatch Log Stream" /></p>
+
+<h3 id="updating-the-configurations-%3A">Updating the configurations :</h3>
+
+<p>Let's first stop the <code>awslogs</code> service for a moment to avoid any syslogs steaming into AWS cloudwatch.</p>
+
+<pre><code class="bash">sudo service awslogs stop
+</code></pre>
+
+<p>Now, we are going to update the configuration file <code>/var/awslogs/etc/awslogs.conf</code>. Edit this file and add below contents in it :</p>
+
+<pre><code>[general]
+state_file = /var/awslogs/state/agent-state
+
+[nginx]
+file = /var/log/nginx/error.log
+log_group_name = nginx_error_logs
+log_stream_name = {instance_id}-{hostname}
+datetime_format = %b %d %H:%M:%S
+initial_position = end_of_file
+
+[phpfpm]
+file = /var/log/php7.2-fpm.log
+log_group_name = php_fpm_logs
+log_stream_name = {instance_id}-{hostname}
+datetime_format = %b %d %H:%M:%S
+initial_position = end_of_file
+</code></pre>
+
+<p>Note : Make sure you verify the log file paths as per your server settings.</p>
+
+<p>Let's quickly go over what we have set. The <code>general</code> section is what this service needs to keep its state intact. We have kept it as it is.</p>
+
+<p>The next 2 sections <code>nginx</code> and <code>phpfpm</code> will stream the logs. 
+1. <code>file</code> : The absolute path of the respective log file
+2. <code>log_group_name</code> : Log group which will cloud all similar logs together in AWS cloudwatch
+3. <code>log_stream_name</code> : The name of the stream of this log group pushed from an instance
+4. <code>datetime_format</code> : The format of logged timestemp
+5. <code>initial_position</code> : If you would like to stream the new lines from end of the time or from begining of the file(start_of_file)</p>
+
+<p>If you wish to know more about these options, visit this <a href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AgentReference.html">documentation</a></p>
+
+<p>Once you save this file, start the <code>awslogs</code> service :</p>
+
+<pre><code class="bash">sudo service awslogs start
+</code></pre>
+
+<p>Finally, you will now see nginx and phpfpm logs steaming into your AWS cloudwtch logs in their respective log groups.</p>
+
+<h4 id="avoiding-streaming-of-notices-and-warnings-%3A">Avoiding streaming of notices and warnings :</h4>
+
+<p>At this point in your setup, the <code>awslogs</code> service will stream every log entry from the files you are streaming, no matter if it's an <code>info</code>, <code>notice</code>, <code>warning</code> or an <code>error</code>.</p>
+
+<p>You would not want to pile up your AWS cloudwatch logs with anything which you do not want to track. You can get around this from choosing either of below options :</p>
+
+<p>A. Updating nginx and php fpm service configurations and making sure their log levels are set just to log <code>errors</code> or <code>warnings</code> if you want.
+B. You can use the <code>awslogs</code> configuration option called <code>multi_line_start_pattern</code> where you can specify a regex which will determine the start of the line.</p>
+
+<h4 id="setting-up-a-cloudwatch-alarm-%3A">Setting up a cloudwatch alarm :</h4>
+
+<p>Now that we have the nginx and phpfpm logs into AWS cloudwatch, it's time to do the main step. Let's set up an alarm.</p>
+
+<ol>
+<li>Login to AWS Console and go to <code>Cloudwatch</code> service.</li>
+<li>Go to <code>Alarms &gt; Alarm</code> from the L.H.S. menu</li>
+<li>Click on <code>Create Alarm</code></li>
+<li>Click on <code>Select Metric</code> and search for <code>Log Group</code>, you will see <code>Logs &gt; Log Group Metrics</code>, select that</li>
+<li>From <code>LogGroupName</code>, select the log group you want to monitor. You should see <code>nginx_error_logs</code> and <code>php_fpm_logs</code> in the listing, choose any one of them</li>
+<li>You will see the screen where we specify the alarm conditions. You can set duration of 5 minutes for a static threshold when incoming logs are greater than 50. This means that if for a period of 5 minutes, if any of the log group we select have more than 50 logs, this alarm will go on.</li>
+</ol>
+
+<p><img src="/images/aws-cloudwatch-agent/log-alarm.png" alt="AWS CloudWatch Log Alarm" /></p>
+
+<h4 id="pricing-%3A">Pricing :</h4>
+
+<p>The AWS cloudwatch agent is free because it's a native service running on your instance. However, what you pay is for the amount of logs you collect, stream and store over AWS cloudwatch. You can check the pricing from their <a href="https://aws.amazon.com/cloudwatch/pricing/">documentation</a>. However, you will find it's much cheaper than most of the 3rd party services providing similar log monitoring service.</p>
+
+<h4 id="final-words-%3A">Final words :</h4>
+
+<p>It's said that you can spread over different cloud providers or service providers to explore more. But in my experience, AWS has these native options which are cost effective, easy and standard to set up.. Plus you have everything in one console, you should definitely give it a try before shifting to a 3rd party solution implementing the same thing.</p>
+]]></content>
+        </entry>
             <entry>
             <title type="html"><![CDATA[New AWS EC2 instance connect can save you instance ssh headaches]]></title>
             <link href="https://techsemicolon.github.io/blog/2019/10/20/now-aws-ec2-aws-instance-connect-can-save-you-instance-user-ssh-headaches/"/>
@@ -2249,152 +2499,6 @@ jQuery(document).ready(function($){
     }
 });
 </script>
-]]></content>
-        </entry>
-            <entry>
-            <title type="html"><![CDATA[Everything you need to know about laravel required validations]]></title>
-            <link href="https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/"/>
-            <updated>2019-05-30T00:00:00+00:00</updated>
-            <id>https://techsemicolon.github.io/blog/2019/05/30/laravel-validation-required-if-with-unless-all-and-custom-if/</id>
-            <content type="html"><![CDATA[<p>One of the strong part of the laravel core is the set of <code>validations</code> which validate your application's incoming data. One of the most common validation rule which is used in applications is <code>required</code>. We will see how can we make use of different types of required rules as well as build custom required rules conditionally.</p>
-
-<ul>
-<li>Required rule :</li>
-</ul>
-
-<p>As per the laravel's documentation. when we use <code>required</code> rule, the field under validation must be present and also it should be non-empty. Empty includes null value, empty string, empty array and uploaded file with no path.</p>
-
-<p>In below request both <code>first_name</code> and <code>last_name</code> should be present and non-empty.</p>
-
-<pre><code class="php">$request-&gt;validate([
-    'first_name' =&gt; 'required|unique:posts|max:255',
-    'last_name' =&gt; 'required',
-]);
-</code></pre>
-
-<ul>
-<li>Required rule based on other/supporting field(s) :</li>
-</ul>
-
-<p>Many times when designing complex and nested forms, we need to have required validation <code>only if</code> an other incoming data field is present. Now there are multiple cases in this :</p>
-
-<ol>
-<li>When you want <code>just single supporting field to be present</code>, then  you can use <code>required_with</code> like below :</li>
-</ol>
-
-<p>In below request the <code>city</code>, <code>state</code>, <code>zipcode</code> and <code>country</code> will be required if <code>address_line</code> is present in the incoming data.</p>
-
-<pre><code class="php">$request-&gt;validate([
-    'address_line' =&gt; 'sometimes|boolean',
-    'city' =&gt; 'required_with:address_line',
-    'state' =&gt; 'required_with:address_line',
-    'zipcode' =&gt; 'required_with:address_line',
-    'country' =&gt; 'required_with:address_line'
-]);
-</code></pre>
-
-<ol start="2">
-<li>When you want <code>any one of the supporting set of fields just to be present</code>, then  you can use <code>required_with</code> and pass multiple fields like below :</li>
-</ol>
-
-<p>In below request the we want to set validation rule for the <code>notify_new_updates</code> field. We can not notify if we do not have either of user phone number, email or fax. So the validation  <code>required_with:phone,email,fax</code> signifies that <code>notify_new_updates</code> will be required if one of the field phone, email or fax is present.</p>
-
-<pre><code class="php">$request-&gt;validate([
-    'name' =&gt; 'required|string',
-    'phone' =&gt; 'sometimes|string',
-    'email' =&gt; 'sometimes|email',
-    'fax' =&gt; 'sometimes|string',
-    'notify_new_updates' =&gt; 'boolean|required_with:phone,email,fax'
-]);
-</code></pre>
-
-<ol start="3">
-<li>When you want <code>all of the supporting set of fields to be present</code>, then you can use <code>required_with_all</code> and pass multiple fields like below :</li>
-</ol>
-
-<p>In below request the validation <code>required_with_all:phone,email,fax</code> signifies that <code>notify_new_updates</code> will be required if all the field phone, email and fax are present.</p>
-
-<pre><code class="php">$request-&gt;validate([
-    'name' =&gt; 'required|string',
-    'phone' =&gt; 'sometimes|string',
-    'email' =&gt; 'sometimes|email',
-    'fax' =&gt; 'sometimes|string',
-    'notify_new_updates' =&gt; 'boolean|required_with_all:phone,email,fax'
-]);
-</code></pre>
-
-<ol start="4">
-<li>When you want <code>any one of the supporting set of fields NOT to be present</code>, then  you can use <code>required_without</code> and pass one or more fields like below :</li>
-</ol>
-
-<p>In below request the <code>use_billing_as_shipping</code> will be required when <code>shipping_address</code> is NOT present.</p>
-
-<pre><code class="php">$request-&gt;validate([
-    'billing_address' =&gt; 'required|string',
-    'shipping_address' =&gt; 'sometimes|string',
-    'use_billing_as_shipping' =&gt; 'boolean|required_without:shipping_address'
-]);
-</code></pre>
-
-<p>Similarly you can use <code>required_without_all</code> where it will need <code>sll of the supporting set of fields NOT to be present</code>.</p>
-
-<ol start="5">
-<li>When you want the other field not only to be present but also it should have a very specific value, then you can use <code>required_if</code> like below</li>
-</ol>
-
-<p>In below request the <code>admin_notification_email</code> will be required if and only if the <code>is_admin</code> field is present having value of <code>1</code>.</p>
-
-<pre><code class="php">$request-&gt;validate([
-    'is_admin' =&gt; 'required|boolean',
-    'admin_notification_email' =&gt; 'required_if:is_admin,1|email',
-]);
-</code></pre>
-
-<ol start="6">
-<li>When you want the other field not only to be present but it should have a very specific value, then you can use <code>required_if</code> like below</li>
-</ol>
-
-<p>In below request the <code>displayname</code> will be required unless the <code>nickname</code> field is empty.</p>
-
-<pre><code class="php">$request-&gt;validate([
-    'nickname' =&gt; 'sometimes|string',
-    'displayname' =&gt; 'required_unless:nickname,',
-]);
-</code></pre>
-
-<ul>
-<li>Custom and complex required if validation rules :</li>
-</ul>
-
-<p>We sometimes need to have complex set of conditional rule for required if. With laravel it's much easier than you could have imagined.</p>
-
-<p>Laravel's <code>Rule</code> facade has <code>Rule::requiredIf()</code> method which we can use for this purpose. The beautify of this method is, it takes a boolean value or a closure which return a boolean value. This gives us lot of flexibility to have complex logic for required if rule.</p>
-
-<ol>
-<li>requiredIf() with simple boolean :</li>
-</ol>
-
-<p>Below example will make <code>employee_id</code> field required only if current user is an employee and the employee's company is still active.</p>
-
-<pre><code class="php">$request-&gt;validate([
-    'employee_id' =&gt; Rule::requiredIf($request-&gt;user()-&gt;is_employee &amp;&amp; $request-&gt;user()-&gt;employee-&gt;company-&gt;is_active)
-]);
-</code></pre>
-
-<ol start="2">
-<li>requiredIf() with closure :</li>
-</ol>
-
-<p>Below example will make <code>golden_discount_voucher</code> field required only if current user is a customer and has orders to fillfull criteria that the customer belongs to golden account category.</p>
-
-<pre><code class="php">$request-&gt;validate([
-    'golden_discount_voucher' =&gt; Rule::requiredIf(function() use($request){
-
-        return  $request-&gt;user()-&gt;is_customer &amp;&amp;
-                $request-&gt;user()-&gt;customer-&gt;orders-&gt;where('orders.grand_total', '&gt;', '1000')-&gt;count() &gt; 10;
-    })
-]);
-</code></pre>
 ]]></content>
         </entry>
     </feed>

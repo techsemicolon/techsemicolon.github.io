@@ -2,9 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://techsemicolon.github.io</loc>
-    <lastmod>2019-10-22</lastmod>
+    <lastmod>2020-02-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>https://techsemicolon.github.io/blog/2020/02/04/stream-nginx-fpm-logs-into-aws-clodwatch/</loc>
+    <lastmod>2020-02-04T00:00:00+00:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
     <url>
     <loc>https://techsemicolon.github.io/blog/2019/10/20/now-aws-ec2-aws-instance-connect-can-save-you-instance-user-ssh-headaches/</loc>
